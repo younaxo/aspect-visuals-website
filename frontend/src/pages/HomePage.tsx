@@ -1,27 +1,40 @@
+import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { DiscordLogin } from '../components/Auth/DiscordLogin'
+
 export function HomePage() {
+  const { isAuthenticated } = useAuth()
+
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
-      <div className="panel flex min-h-0 flex-1 flex-col p-8">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-500">Aspect Visuals</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-50">Главная страница</h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-zinc-400">
-          Базовая инфраструктура готова: тёмная тема Apple Design, стеклянная морфология и каркас авторизации через Discord.
+    <div className="page-stack">
+      <section className="hero-panel">
+        <p className="eyebrow">Visuals</p>
+        <h1 className="hero-title">Aspect Visuals</h1>
+        <p className="hero-text">
+          Клиент визуалов с Discord-авторизацией, подписками и магазином. Тёмная тема, стекло и аккуратная типографика.
         </p>
-        <div className="mt-8 min-h-0 flex-1 overflow-hidden rounded-lg border border-white/10 bg-black/40 p-4">
-          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-600">Status</p>
-          <div>
-            <div className="term-line">
-              <span className="text-zinc-600">ok</span> Frontend · Vite + React + Tailwind
-            </div>
-            <div className="term-line">
-              <span className="text-zinc-600">ok</span> Backend · Express + Prisma
-            </div>
-            <div className="term-line">
-              <span className="text-zinc-600">ok</span> Auth · Discord OAuth2 + JWT
-            </div>
-          </div>
+        <div className="hero-actions">
+          <Link to="/shop" className="btn-primary">
+            Магазин
+          </Link>
+          {!isAuthenticated && <DiscordLogin label="Войти через Discord" />}
         </div>
-      </div>
-    </section>
+      </section>
+
+      <section className="feature-grid" aria-label="Возможности">
+        <article className="feature-card">
+          <h2>Подписки</h2>
+          <p>Базовый и премиум доступ, ключи и тестовый день раз в три месяца.</p>
+        </article>
+        <article className="feature-card">
+          <h2>Discord</h2>
+          <p>Вход через Discord и синхронизация ролей сервера с аккаунтом на сайте.</p>
+        </article>
+        <article className="feature-card">
+          <h2>Магазин</h2>
+          <p>Пакеты, допы и промокоды — без лишнего шума, только нужные покупки.</p>
+        </article>
+      </section>
+    </div>
   )
 }

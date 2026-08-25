@@ -1,44 +1,148 @@
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { DiscordLogin } from '../Auth/DiscordLogin'
 import { Button } from '../Common/Button'
+import { Logo } from '../Common/Logo'
+import { useAuth } from '../../hooks/useAuth'
+import { getDiscordAvatarUrl } from '../../hooks/useDiscord'
+import { getHighestRole } from '../../utils/discordRoles'
 
-interface HeaderProps {
-  onMinimize?: () => void
-  onMaximize?: () => void
-  onClose?: () => void
-}
+const navItems = [
+  { to: '/', label: 'Главная' },
+  { to: '/news', label: 'Новости' },
+  { to: '/shop', label: 'Магазин' },
+]
 
-export function Header({ onMinimize, onMaximize, onClose }: HeaderProps) {
+const fallbackAvatar =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2327272a'/%3E%3Ccircle cx='32' cy='24' r='12' fill='%2352525b'/%3E%3Cpath d='M8 58c4-14 16-20 24-20s20 6 24 20' fill='%2352525b'/%3E%3C/svg%3E"
+
+export function Header() {
+  const { user, isAuthenticated, logout } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+  const role = getHighestRole(user)
+  const avatar = user ? getDiscordAvatarUrl(user.discordId, user.avatar) : fallbackAvatar
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [])
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 768) setMenuOpen(false)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  const closeMenus = () => {
+    setMenuOpen(false)
+    setProfileOpen(false)
+  }
+
   return (
-    <header className="flex h-10 shrink-0 items-center justify-between border-b border-white/10 pl-4">
-      <div className="flex items-center gap-2">
-        <div className="h-4 w-4 shrink-0 text-zinc-400">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" className="h-full w-full" fill="none">
-            <g fill="currentColor">
-              <polygon points="238,50 60,420 145,420 238,225" />
-              <polygon points="262,50 262,225 355,420 440,420" />
-              <polygon points="250,380 180,240 320,240" />
-              <polygon points="175,445 325,445 345,465 155,465" />
-            </g>
+    <header className="site-header">
+      <Link to="/" className="site-brand" onClick={closeMenus} aria-label="Aspect Visuals">
+        <Logo className="h-8 w-8" />
+        <span className="site-brand-name">Aspect Visuals</span>
+      </Link>
+
+      <nav className="header-nav" aria-label="Основная навигация">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="header-actions">
+        <button
+          type="button"
+          className="menu-toggle"
+          aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <svg className="icon" viewBox="0 0 24 24">
+            {menuOpen ? (
+              <path d="M18 6 6 18M6 6l12 12" />
+            ) : (
+              <>
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </>
+            )}
           </svg>
-        </div>
-        <span className="text-xs text-zinc-500">Aspect Visuals</span>
+        </button>
+
+        {isAuthenticated && user ? (
+          <div className="profile-menu" ref={profileRef}>
+            <button
+              type="button"
+              className="profile-chip"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((open) => !open)}
+            >
+              <span className="avatar-wrap">
+                <img className="avatar" src={avatar} alt="" draggable={false} />
+                <span className="online-dot" aria-hidden="true" />
+              </span>
+              <span className="profile-meta">
+                <span className="profile-name">{user.username}</span>
+                <span className="profile-role">{role?.name ?? 'Профиль'}</span>
+              </span>
+            </button>
+            {profileOpen && (
+              <div className="profile-dropdown" role="menu">
+                <Link to="/settings" className="dropdown-link" role="menuitem" onClick={closeMenus}>
+                  Настройки
+                </Link>
+                <Button
+                  variant="logout"
+                  onClick={() => {
+                    closeMenus()
+                    void logout()
+                  }}
+                >
+                  Выйти
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <DiscordLogin />
+        )}
       </div>
-      <div className="flex">
-        <Button variant="window" aria-label="Свернуть" onClick={onMinimize}>
-          <svg className="icon icon-sm" viewBox="0 0 24 24">
-            <path d="M5 12h14" />
-          </svg>
-        </Button>
-        <Button variant="window" aria-label="Развернуть" onClick={onMaximize}>
-          <svg className="icon icon-sm" viewBox="0 0 24 24">
-            <rect x="6" y="6" width="12" height="12" rx="1" />
-          </svg>
-        </Button>
-        <Button variant="close" aria-label="Закрыть" onClick={onClose}>
-          <svg className="icon icon-sm" viewBox="0 0 24 24">
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </Button>
-      </div>
+
+      {menuOpen && (
+        <nav className="mobile-nav" aria-label="Мобильная навигация">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+              onClick={closeMenus}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
     </header>
   )
 }

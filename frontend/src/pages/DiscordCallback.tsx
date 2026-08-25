@@ -26,12 +26,12 @@ export function DiscordCallback() {
 
   if (error) {
     return (
-      <section className="panel p-8">
-        <h1 className="text-xl font-semibold text-zinc-50">Discord Callback</h1>
-        <p className="mt-2 text-sm text-red-400">{error}</p>
+      <section className="content-panel">
+        <h1 className="page-title">Вход через Discord</h1>
+        <p className="page-text error-text">{error}</p>
       </section>
     )
   }
 
-  return <Loader label="Discord Callback" progress={64} />
+  return <Loader label="Входим через Discord…" progress={64} />
 }

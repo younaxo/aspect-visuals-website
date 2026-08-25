@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-type ButtonVariant = 'primary' | 'ghost' | 'window' | 'close' | 'logout'
+type ButtonVariant = 'primary' | 'ghost' | 'logout'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
@@ -10,8 +10,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClass: Record<ButtonVariant, string> = {
   primary: 'btn-primary',
   ghost: 'btn-ghost',
-  window: 'win-btn',
-  close: 'win-btn close',
   logout: 'logout-btn',
 }
 
