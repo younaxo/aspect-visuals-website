@@ -49,7 +49,7 @@ export function Header() {
   }
 
   return (
-    <header className="site-header">
+    <header className="site-header liquid-glass">
       <Link to="/" className="site-brand" onClick={closeMenus} aria-label="Aspect Visuals">
         <Logo className="h-8 w-8" />
         <span className="site-brand-name">Aspect Visuals</span>
@@ -93,7 +93,7 @@ export function Header() {
           <div className="profile-menu" ref={profileRef}>
             <button
               type="button"
-              className="profile-chip"
+              className={`profile-chip ${profileOpen ? 'open' : ''}`}
               aria-expanded={profileOpen}
               onClick={() => setProfileOpen((open) => !open)}
             >
@@ -107,19 +107,32 @@ export function Header() {
               </span>
             </button>
             {profileOpen && (
-              <div className="profile-dropdown" role="menu">
-                <Link to="/settings" className="dropdown-link" role="menuitem" onClick={closeMenus}>
-                  Настройки
-                </Link>
-                <Button
-                  variant="logout"
-                  onClick={() => {
-                    closeMenus()
-                    void logout()
-                  }}
-                >
-                  Выйти
-                </Button>
+              <div className="profile-dropdown liquid-glass" role="menu">
+                <div className="profile-dropdown-banner" />
+                <div className="profile-dropdown-body">
+                  <div className="profile-dropdown-user">
+                    <span className="avatar-wrap avatar-lg">
+                      <img className="avatar" src={avatar} alt="" draggable={false} />
+                      <span className="online-dot" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="profile-name">{user.username}</p>
+                      <p className="profile-role">{role?.name ?? 'Пользователь'}</p>
+                    </div>
+                  </div>
+                  <Link to="/settings" className="dropdown-link" role="menuitem" onClick={closeMenus}>
+                    Настройки
+                  </Link>
+                  <Button
+                    variant="logout"
+                    onClick={() => {
+                      closeMenus()
+                      void logout()
+                    }}
+                  >
+                    Выйти
+                  </Button>
+                </div>
               </div>
             )}
           </div>

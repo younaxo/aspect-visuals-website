@@ -14,6 +14,10 @@ export default {
           950: "#09090b",
         },
       },
+      fontFamily: {
+        sans: ["Geologica", "Arial", "sans-serif"],
+        secondary: ["Arial", "Helvetica", "sans-serif"],
+      },
     },
   },
   plugins: [],

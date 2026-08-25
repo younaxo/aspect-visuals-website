@@ -7,7 +7,7 @@ export function HomePage() {
 
   return (
     <div className="page-stack">
-      <section className="hero-panel">
+      <section className="hero-panel liquid-glass">
         <p className="eyebrow">Visuals</p>
         <h1 className="hero-title">Aspect Visuals</h1>
         <p className="hero-text">
@@ -22,15 +22,15 @@ export function HomePage() {
       </section>
 
       <section className="feature-grid" aria-label="Возможности">
-        <article className="feature-card">
+        <article className="feature-card liquid-glass">
           <h2>Подписки</h2>
           <p>Базовый и премиум доступ, ключи и тестовый день раз в три месяца.</p>
         </article>
-        <article className="feature-card">
+        <article className="feature-card liquid-glass">
           <h2>Discord</h2>
           <p>Вход через Discord и синхронизация ролей сервера с аккаунтом на сайте.</p>
         </article>
-        <article className="feature-card">
+        <article className="feature-card liquid-glass">
           <h2>Магазин</h2>
           <p>Пакеты, допы и промокоды — без лишнего шума, только нужные покупки.</p>
         </article>
