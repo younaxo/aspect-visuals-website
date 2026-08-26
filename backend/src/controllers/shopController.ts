@@ -141,19 +141,31 @@ async function activateSubscription(userId: string, subscriptionId: string) {
   await syncSubscriptionRoles(userId)
 }
 
+function sortSubscriptions<T extends { type: string; duration: number; price: Prisma.Decimal | number }>(items: T[]) {
+  const family = (type: string) => (type === 'PREMIUM' ? 1 : 0)
+  const days = (duration: number) => (duration <= 0 ? 10_000 : duration)
+  return [...items].sort((a, b) => {
+    const byFamily = family(a.type) - family(b.type)
+    if (byFamily) return byFamily
+    const byDays = days(a.duration) - days(b.duration)
+    if (byDays) return byDays
+    return Number(a.price) - Number(b.price)
+  })
+}
+
 export async function getSubscriptions(_req: AuthRequest, res: Response) {
   const items = await prisma.subscription.findMany({
     where: { isActive: true, type: { not: 'TEST' } },
-    orderBy: [{ type: 'asc' }, { duration: 'asc' }, { price: 'asc' }],
   })
-  res.json({ subscriptions: items.map(serializeSub) })
+  res.json({ subscriptions: sortSubscriptions(items).map(serializeSub) })
 }
 
 export async function getProducts(_req: AuthRequest, res: Response) {
+  const rank: Record<string, number> = { BETA: 0, HWID_RESET: 1 }
   const items = await prisma.product.findMany({
     where: { isActive: true },
-    orderBy: { price: 'asc' },
   })
+  items.sort((a, b) => (rank[a.type] ?? 9) - (rank[b.type] ?? 9) || Number(a.price) - Number(b.price))
   res.json({ products: items.map(serializeProduct) })
 }
 

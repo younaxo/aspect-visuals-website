@@ -6,11 +6,29 @@ import { cartItemFromProduct, cartItemFromSubscription, useCartStore } from '../
 import { useToastStore } from '../../store/toastStore'
 import { useAuth } from '../../hooks/useAuth'
 import type { ShopProduct, ShopSubscription } from '../../types'
-import { Button } from '../Common/Button'
 import { ProductCard } from './ProductCard'
 import { SubscriptionCard } from './SubscriptionCard'
 
 type Filter = 'all' | 'BASIC' | 'PREMIUM' | 'LIFETIME' | 'PRODUCTS'
+
+function durationKey(item: ShopSubscription) {
+  return item.duration <= 0 ? 10_000 : item.duration
+}
+
+function sortSubs(items: ShopSubscription[]) {
+  return [...items].sort((a, b) => {
+    const family = (type: string) => (type === 'PREMIUM' ? 1 : 0)
+    return family(a.type) - family(b.type) || durationKey(a) - durationKey(b) || a.price - b.price
+  })
+}
+
+function isPremium(item: ShopSubscription) {
+  return item.type === 'PREMIUM'
+}
+
+function isLifetime(item: ShopSubscription) {
+  return item.duration <= 0
+}
 
 export function Shop() {
   const { isAuthenticated } = useAuth()
@@ -26,7 +44,7 @@ export function Shop() {
     queryKey: ['shop', 'subscriptions'],
     queryFn: async () => {
       const { data } = await shopApi.subscriptions()
-      return (data as { subscriptions: ShopSubscription[] }).subscriptions
+      return sortSubs((data as { subscriptions: ShopSubscription[] }).subscriptions)
     },
   })
 
@@ -34,93 +52,130 @@ export function Shop() {
     queryKey: ['shop', 'products'],
     queryFn: async () => {
       const { data } = await shopApi.products()
-      return (data as { products: ShopProduct[] }).products
+      const items = (data as { products: ShopProduct[] }).products
+      const rank: Record<string, number> = { BETA: 0, HWID_RESET: 1 }
+      return [...items].sort((a, b) => (rank[a.type] ?? 9) - (rank[b.type] ?? 9) || a.price - b.price)
     },
   })
 
-  const subscriptions = useMemo(() => {
-    const items = subsQuery.data ?? []
-    if (filter === 'all' || filter === 'PRODUCTS') return items
-    if (filter === 'LIFETIME') return items.filter((item) => item.duration === 0 || item.type === 'LIFETIME')
-    return items.filter((item) => item.type === filter)
-  }, [subsQuery.data, filter])
-
+  const allSubs = subsQuery.data ?? []
+  const basic = useMemo(
+    () => allSubs.filter((item) => !isPremium(item) && (filter !== 'LIFETIME' || isLifetime(item))),
+    [allSubs, filter],
+  )
+  const premium = useMemo(
+    () => allSubs.filter((item) => isPremium(item) && (filter !== 'LIFETIME' || isLifetime(item))),
+    [allSubs, filter],
+  )
   const products = productsQuery.data ?? []
+
+  const showBasic = filter === 'all' || filter === 'BASIC' || filter === 'LIFETIME'
+  const showPremium = filter === 'all' || filter === 'PREMIUM' || filter === 'LIFETIME'
+  const showProducts = filter === 'all' || filter === 'PRODUCTS'
 
   const add = (item: ShopSubscription | ShopProduct, kind: 'subscription' | 'product') => {
     if (!isAuthenticated) {
       navigate('/login')
       return
     }
-    addItem(kind === 'subscription' ? cartItemFromSubscription(item as ShopSubscription) : cartItemFromProduct(item as ShopProduct))
+    addItem(
+      kind === 'subscription'
+        ? cartItemFromSubscription(item as ShopSubscription)
+        : cartItemFromProduct(item as ShopProduct),
+    )
     showToast('Добавлено в корзину', 'success')
     setConfirmItem(null)
   }
 
   return (
     <section className="shop-page">
-      <header className="shop-hero content-panel">
-        <p className="eyebrow">Магазин</p>
-        <h1 className="page-title">Подписки и товары</h1>
-        <p className="page-text">Цены в рублях. После оплаты роль в Discord выдаётся автоматически, если она задана у тарифа.</p>
-        <Link to="/shop/cart" className="btn-ghost">
-          Корзина{cartCount ? ` (${cartCount})` : ''}
-        </Link>
-      </header>
+      <div className="shop-panel">
+        <div className="shop-panel-head">
+          <div>
+            <p className="eyebrow">Магазин</p>
+            <h1 className="shop-panel-title">Пакеты и дополнения</h1>
+            <p className="shop-panel-text">Цены в рублях. После оплаты роль в Discord выдаётся, если она задана у тарифа.</p>
+          </div>
+          <Link to="/shop/cart" className="btn-ghost">
+            Корзина{cartCount ? ` (${cartCount})` : ''}
+          </Link>
+        </div>
 
-      <div className="shop-filters">
-        {(
-          [
-            ['all', 'Все'],
-            ['BASIC', 'Базовые'],
-            ['PREMIUM', 'Премиум'],
-            ['LIFETIME', 'Навсегда'],
-            ['PRODUCTS', 'Допы'],
-          ] as Array<[Filter, string]>
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            className={`shop-filter ${filter === value ? 'active' : ''}`}
-            onClick={() => setFilter(value)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {filter !== 'PRODUCTS' && (
-        <div className="shop-grid">
-          {subscriptions.map((item) => (
-            <SubscriptionCard
-              key={item.id}
-              item={item}
-              onSelect={(selected) => {
-                setConfirmKind('subscription')
-                setConfirmItem(selected)
-              }}
-            />
+        <div className="shop-filters">
+          {(
+            [
+              ['all', 'Все'],
+              ['BASIC', 'Базовые'],
+              ['PREMIUM', 'Премиум'],
+              ['LIFETIME', 'Навсегда'],
+              ['PRODUCTS', 'Допы'],
+            ] as Array<[Filter, string]>
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={`shop-filter ${filter === value ? 'active' : ''}`}
+              onClick={() => setFilter(value)}
+            >
+              {label}
+            </button>
           ))}
         </div>
-      )}
 
-      {(filter === 'all' || filter === 'PRODUCTS') && (
-        <>
-          <h2 className="shop-section-title">Дополнительно</h2>
-          <div className="shop-grid">
-            {products.map((item) => (
-              <ProductCard
-                key={item.id}
-                item={item}
-                onBuy={(selected) => {
-                  setConfirmKind('product')
-                  setConfirmItem(selected)
-                }}
-              />
-            ))}
-          </div>
-        </>
-      )}
+        {showBasic && basic.length > 0 && (
+          <>
+            {filter === 'all' && <h2 className="shop-section-title">Базовые</h2>}
+            <div className="shop-grid">
+              {basic.map((item) => (
+                <SubscriptionCard
+                  key={item.id}
+                  item={item}
+                  onSelect={(selected) => {
+                    setConfirmKind('subscription')
+                    setConfirmItem(selected)
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {showPremium && premium.length > 0 && (
+          <>
+            {filter === 'all' && <h2 className="shop-section-title">Премиум</h2>}
+            <div className="shop-grid">
+              {premium.map((item) => (
+                <SubscriptionCard
+                  key={item.id}
+                  item={item}
+                  onSelect={(selected) => {
+                    setConfirmKind('subscription')
+                    setConfirmItem(selected)
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {showProducts && (
+          <>
+            {filter === 'all' && <h2 className="shop-section-title">Дополнительно</h2>}
+            <div className="shop-grid">
+              {products.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  item={item}
+                  onBuy={(selected) => {
+                    setConfirmKind('product')
+                    setConfirmItem(selected)
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       {confirmItem && (
         <div className="shop-modal-backdrop" role="presentation" onClick={() => setConfirmItem(null)}>
@@ -130,10 +185,12 @@ export function Shop() {
               {confirmItem.name} — {confirmItem.price} ₽
             </p>
             <div className="shop-modal-actions">
-              <Button onClick={() => add(confirmItem, confirmKind)}>Купить</Button>
-              <Button variant="ghost" onClick={() => setConfirmItem(null)}>
+              <button type="button" className="auth-submit" style={{ marginTop: 0, width: 'auto', padding: '0 18px' }} onClick={() => add(confirmItem, confirmKind)}>
+                Купить
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => setConfirmItem(null)}>
                 Отмена
-              </Button>
+              </button>
             </div>
           </div>
         </div>

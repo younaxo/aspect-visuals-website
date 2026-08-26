@@ -1,5 +1,4 @@
 import type { ShopSubscription } from '../../types'
-import { Button } from '../Common/Button'
 
 interface SubscriptionCardProps {
   item: ShopSubscription
@@ -8,21 +7,22 @@ interface SubscriptionCardProps {
 
 function durationLabel(days: number): string {
   if (days <= 0) return 'Навсегда'
-  if (days === 1) return '1 день'
   if (days % 30 === 0) return `${days / 30} мес.`
   return `${days} дн.`
 }
 
 export function SubscriptionCard({ item, onSelect }: SubscriptionCardProps) {
   return (
-    <article className={`shop-card ${item.popular ? 'is-popular' : ''}`}>
+    <article className={`shop-lib-card ${item.popular ? 'is-popular' : ''}`}>
       {item.badge && <span className="shop-badge">{item.badge}</span>}
-      <h3>{item.name}</h3>
-      <p className="shop-price">
-        {item.price} ₽<span> / {durationLabel(item.duration)}</span>
+      <p className="shop-lib-title">{item.name}</p>
+      <p className="shop-lib-meta">
+        {item.price} ₽ · {durationLabel(item.duration)}
       </p>
-      <p className="shop-desc">{item.description || 'Доступ к клиенту Aspect Visuals'}</p>
-      <Button onClick={() => onSelect(item)}>Выбрать</Button>
+      <p className="shop-lib-desc">{item.description}</p>
+      <button type="button" className="shop-lib-btn" onClick={() => onSelect(item)}>
+        Выбрать
+      </button>
     </article>
   )
 }
