@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { Loader } from '../Common/Loader'
 import { useAuth } from '../../hooks/useAuth'
-import { isAdmin } from '../../utils/discordRoles'
+import { isPanelAdmin } from '../../utils/discordRoles'
 
 export function AdminRoute() {
   const { user, isAuthenticated, isLoading, accessToken } = useAuth()
@@ -14,7 +14,7 @@ export function AdminRoute() {
     return <Navigate to="/login" replace />
   }
 
-  if (!isAdmin(user)) {
+  if (!isPanelAdmin(user)) {
     return <Navigate to="/" replace />
   }
 

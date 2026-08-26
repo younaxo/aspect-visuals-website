@@ -7,6 +7,10 @@ export type PromoRecord = {
   type: string
   value: Prisma.Decimal
   minOrderAmount: Prisma.Decimal | null
+  subscriptionType?: string | null
+  durationDays?: number | null
+  note?: string | null
+  folderId?: string | null
   validFrom: Date
   validUntil: Date | null
   maxUses: number
@@ -32,6 +36,10 @@ export function serializePromo(promo: PromoRecord) {
     type: promo.type,
     value: money(promo.value),
     minOrderAmount: money(promo.minOrderAmount ?? 0),
+    subscriptionType: promo.subscriptionType ?? null,
+    durationDays: promo.durationDays ?? null,
+    note: promo.note ?? null,
+    folderId: promo.folderId ?? null,
     validFrom: promo.validFrom,
     validUntil: promo.validUntil,
     maxUses: promo.maxUses,
@@ -74,6 +82,10 @@ export async function inspectPromo(code: string, userId?: string | null, amount?
   const minAmount = money(promo.minOrderAmount ?? 0)
   if (minAmount > 0 && orderAmount > 0 && orderAmount < minAmount) {
     return { ok: false as const, message: `Минимальная сумма заказа — ${minAmount} ₽` }
+  }
+
+  if (promo.type === 'BASIC' || promo.type === 'PREMIUM' || promo.type === 'SUBSCRIPTION') {
+    return { ok: true as const, promo, discount: 0, total: orderAmount }
   }
 
   const discount = Number.isFinite(amount) ? computeDiscount(orderAmount, promo) : 0

@@ -22,8 +22,16 @@ import { AdminRoute } from './components/Auth/AdminRoute'
 import { PromoCodes } from './components/Admin/PromoCodes'
 import { ActivationKeys } from './components/Admin/ActivationKeys'
 import { BonusCodes } from './components/Admin/BonusCodes'
-import { AdminPage } from './components/Admin/AdminPage'
+import { AdminLayout } from './components/Admin/AdminLayout'
+import { Dashboard } from './components/Admin/Dashboard'
+import { UsersList } from './components/Admin/UsersList'
+import { SubscriptionsList } from './components/Admin/SubscriptionsList'
+import { ProductsList } from './components/Admin/ProductsList'
+import { PurchasesList } from './components/Admin/PurchasesList'
+import { AdminLogs } from './components/Admin/AdminLogs'
+import { AdminSettings } from './components/Admin/Settings'
 import { Chat } from './components/Chat/Chat'
+import { ActivatePage } from './components/Shop/ActivatePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,15 +92,22 @@ function App() {
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
             <Route path="discord-auth" element={<DiscordCallback />} />
             <Route element={<AdminRoute />}>
-              <Route path="admin" element={<AdminPage />}>
-                <Route index element={<Navigate to="/admin/promo" replace />} />
+              <Route path="admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="users" element={<UsersList />} />
+                <Route path="subscriptions" element={<SubscriptionsList />} />
+                <Route path="products" element={<ProductsList />} />
                 <Route path="promo" element={<PromoCodes />} />
                 <Route path="bonus" element={<BonusCodes />} />
                 <Route path="keys" element={<ActivationKeys />} />
+                <Route path="purchases" element={<PurchasesList />} />
+                <Route path="logs" element={<AdminLogs />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="chat" element={<Chat />} />
+              <Route path="activate" element={<ActivatePage />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
               <Route path="shop/cart" element={<Cart />} />

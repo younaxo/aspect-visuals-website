@@ -42,6 +42,12 @@ model User {
   messageReactions       MessageReaction[]
   chatPresence           ChatUser?
   lastTestSubscriptionAt DateTime?
+  balance                Decimal             @default(0)
+  deletedAt              DateTime?
+  isDeleted              Boolean             @default(false)
+  adminLogs              AdminLog[]
+  ban                    Ban?
+  bansIssued             Ban[]               @relation("BannedBy")
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 }
@@ -78,30 +84,49 @@ model Product {
   activationBatches ActivationBatch[]
 }
 
+model CodeFolder {
+  id              String           @id @default(cuid())
+  name            String
+  kind            String
+  createdAt       DateTime         @default(now())
+  promoCodes      PromoCode[]
+  bonusCodes      BonusCode[]
+  activationKeys  ActivationKey[]
+}
+
 model PromoCode {
-  id             String          @id @default(cuid())
-  code           String          @unique
-  type           String
-  value          Decimal
-  minOrderAmount Decimal?        @default(0)
-  validFrom      DateTime        @default(now())
-  validUntil     DateTime?
-  maxUses        Int             @default(1)
-  usedCount      Int             @default(0)
-  oncePerUser    Boolean         @default(true)
-  isActive       Boolean         @default(true)
-  createdBy      String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  usedBy         PromoCodeUsed[]
-  purchases      Purchase[]
+  id               String          @id @default(cuid())
+  code             String          @unique
+  type             String
+  value            Decimal         @default(0)
+  minOrderAmount   Decimal?        @default(0)
+  subscriptionType String?
+  durationDays     Int?
+  note             String?
+  folderId         String?
+  folder           CodeFolder?     @relation(fields: [folderId], references: [id])
+  validFrom        DateTime        @default(now())
+  validUntil       DateTime?
+  maxUses          Int             @default(1)
+  usedCount        Int             @default(0)
+  oncePerUser      Boolean         @default(true)
+  isActive         Boolean         @default(true)
+  createdBy        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  usedBy           PromoCodeUsed[]
+  purchases        Purchase[]
 }
 
 model BonusCode {
   id               String          @id @default(cuid())
   code             String          @unique
-  days             Int
-  subscriptionType String
+  days             Int             @default(0)
+  amount           Decimal         @default(0)
+  subscriptionType String          @default("BALANCE")
+  note             String?
+  folderId         String?
+  folder           CodeFolder?     @relation(fields: [folderId], references: [id])
   maxUses          Int             @default(1)
   usedCount        Int             @default(0)
   oncePerUser      Boolean         @default(true)
@@ -198,6 +223,9 @@ model ActivationKey {
   expiresAt      DateTime?
   durationDays   Int?
   isUsed         Boolean           @default(false)
+  note           String?
+  folderId       String?
+  folder         CodeFolder?       @relation(fields: [folderId], references: [id])
   batchId        String?
   batch          ActivationBatch?  @relation(fields: [batchId], references: [id])
   createdAt      DateTime          @default(now())
@@ -312,4 +340,42 @@ model EmailVerification {
   createdAt  DateTime  @default(now())
 
   @@index([userId])
+}
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  targetType String
+  targetId   String?
+  details    Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model Ban {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  bannedBy    String
+  admin       User      @relation("BannedBy", fields: [bannedBy], references: [id])
+  reason      String?
+  expiresAt   DateTime?
+  isPermanent Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
 }

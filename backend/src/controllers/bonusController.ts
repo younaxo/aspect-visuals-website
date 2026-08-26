@@ -22,14 +22,17 @@ function serializeBonus(item: {
   id: string
   code: string
   days: number
+  amount: unknown
   subscriptionType: string
+  note: string | null
+  folderId: string | null
   maxUses: number
   usedCount: number
   oncePerUser: boolean
   isActive: boolean
   validUntil: Date | null
 }) {
-  return item
+  return { ...item, amount: Number(item.amount) }
 }
 
 export async function redeemBonus(req: AuthRequest, res: Response) {
@@ -68,6 +71,18 @@ export async function redeemBonus(req: AuthRequest, res: Response) {
       }
     }
 
+    const amount = Number(bonus.amount)
+    if (amount > 0) {
+      await prisma.user.update({
+        where: { id: req.userId },
+        data: { balance: { increment: amount } },
+      })
+      await prisma.bonusCodeUsed.create({ data: { userId: req.userId, bonusCodeId: bonus.id } })
+      await prisma.bonusCode.update({ where: { id: bonus.id }, data: { usedCount: { increment: 1 } } })
+      res.json({ ok: true, amount, kind: 'BALANCE' })
+      return
+    }
+
     const subscription = await prisma.subscription.findFirst({
       where: { type: bonus.subscriptionType, isActive: true },
       orderBy: { duration: 'asc' },
@@ -99,15 +114,12 @@ export async function redeemBonus(req: AuthRequest, res: Response) {
 }
 
 export async function createBonus(req: AuthRequest, res: Response) {
-  const code = asString(req.body?.code).toUpperCase()
-  const days = Math.max(1, Number(req.body?.days) || 0)
-  const subscriptionType = asString(req.body?.subscriptionType).toUpperCase() || 'BASIC'
-  if (!code || !days) {
-    res.status(400).json({ message: 'Укажите код и количество дней' })
-    return
-  }
-  if (subscriptionType !== 'BASIC' && subscriptionType !== 'PREMIUM') {
-    res.status(400).json({ message: 'Тип подписки: BASIC или PREMIUM' })
+  const code = asString(req.body?.code).toUpperCase() || `BONUS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+  const amount = Math.max(0, Number(req.body?.amount) || 0)
+  const days = Math.max(0, Number(req.body?.days) || 0)
+  const subscriptionType = asString(req.body?.subscriptionType).toUpperCase() || (amount > 0 ? 'BALANCE' : 'BASIC')
+  if (!code || (amount <= 0 && !days)) {
+    res.status(400).json({ message: 'Укажите код и сумму на баланс или дни подписки' })
     return
   }
 
@@ -116,7 +128,10 @@ export async function createBonus(req: AuthRequest, res: Response) {
       data: {
         code,
         days,
+        amount,
         subscriptionType,
+        note: asString(req.body?.note) || null,
+        folderId: asString(req.body?.folderId) || null,
         maxUses: Math.max(1, Number(req.body?.maxUses) || 1),
         oncePerUser: req.body?.oncePerUser !== false,
         validUntil: asDate(req.body?.validUntil),
@@ -141,7 +156,10 @@ export async function updateBonus(req: AuthRequest, res: Response) {
     where: { id },
     data: {
       days: Number(req.body?.days) || existing.days,
+      amount: req.body?.amount === undefined ? undefined : Number(req.body.amount) || 0,
       subscriptionType: asString(req.body?.subscriptionType) || existing.subscriptionType,
+      note: req.body?.note === undefined ? undefined : asString(req.body.note) || null,
+      folderId: req.body?.folderId === undefined ? undefined : asString(req.body.folderId) || null,
       maxUses: Number(req.body?.maxUses) || existing.maxUses,
       isActive: typeof req.body?.isActive === 'boolean' ? req.body.isActive : undefined,
       validUntil: req.body?.validUntil === undefined ? undefined : asDate(req.body.validUntil),
@@ -166,13 +184,14 @@ export async function deleteBonus(req: AuthRequest, res: Response) {
 
 export async function listBonus(_req: AuthRequest, res: Response) {
   const items = await prisma.bonusCode.findMany({
-    include: { _count: { select: { usedBy: true } } },
+    include: { _count: { select: { usedBy: true } }, folder: true },
     orderBy: { createdAt: 'desc' },
   })
   res.json({
     bonusCodes: items.map((item) => ({
       ...serializeBonus(item),
       uses: item._count.usedBy,
+      folder: item.folder,
     })),
   })
 }

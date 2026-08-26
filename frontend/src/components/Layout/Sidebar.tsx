@@ -5,7 +5,7 @@ import { ru } from 'date-fns/locale'
 import { Button } from '../Common/Button'
 import { UserNameLine } from '../Profile/UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
-import { getHighestRole, isAdmin } from '../../utils/discordRoles'
+import { getHighestRole, isPanelAdmin } from '../../utils/discordRoles'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 
 const fallbackAvatar =
@@ -92,7 +92,10 @@ export function Sidebar() {
             <Link to="/profile" className="dropdown-link" onClick={close}>
               Профиль
             </Link>
-            {isAdmin(user) && (
+            <Link to="/activate" className="dropdown-link" onClick={close}>
+              Активация ключа
+            </Link>
+            {isPanelAdmin(user) && (
               <Link to="/admin" className="dropdown-link" onClick={close}>
                 Админ-панель
               </Link>

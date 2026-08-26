@@ -278,6 +278,17 @@ export async function login(req: Request, res: Response) {
       return
     }
 
+    if (user.isDeleted) {
+      res.status(401).json({ message: 'Аккаунт удалён' })
+      return
+    }
+
+    const ban = await prisma.ban.findUnique({ where: { userId: user.id } })
+    if (ban && (ban.isPermanent || !ban.expiresAt || ban.expiresAt > new Date())) {
+      res.status(403).json({ message: ban.reason ? `Аккаунт заблокирован: ${ban.reason}` : 'Аккаунт заблокирован' })
+      return
+    }
+
     if (requireEmailVerification() && !user.isEmailVerified) {
       res.status(403).json({ message: 'Подтвердите email, чтобы войти' })
       return

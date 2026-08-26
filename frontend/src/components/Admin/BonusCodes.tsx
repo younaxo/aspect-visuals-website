@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import api from '../../api'
 import { Button } from '../Common/Button'
 import { useToastStore } from '../../store/toastStore'
+import { FolderField } from './FolderField'
 
 interface BonusRow {
   id: string
   code: string
+  amount: number
   days: number
   subscriptionType: string
+  note: string | null
+  folderId: string | null
+  folder?: { name: string } | null
   maxUses: number
   usedCount: number
   isActive: boolean
@@ -17,9 +22,10 @@ interface BonusRow {
 
 const emptyForm = {
   code: '',
-  days: '7',
-  subscriptionType: 'BASIC',
+  amount: '100',
   maxUses: '50',
+  note: '',
+  folderId: '',
   validUntil: '',
 }
 
@@ -27,6 +33,7 @@ export function BonusCodes() {
   const showToast = useToastStore((state) => state.showToast)
   const [items, setItems] = useState<BonusRow[]>([])
   const [form, setForm] = useState(emptyForm)
+  const [folderFilter, setFolderFilter] = useState('')
   const [busy, setBusy] = useState(false)
 
   const load = async () => {
@@ -38,14 +45,21 @@ export function BonusCodes() {
     void load()
   }, [])
 
+  const visible = useMemo(
+    () => items.filter((item) => !folderFilter || item.folderId === folderFilter),
+    [items, folderFilter],
+  )
+
   const save = async () => {
     setBusy(true)
     try {
       await api.post('/api/admin/bonus', {
         code: form.code.trim().toUpperCase(),
-        days: Number(form.days),
-        subscriptionType: form.subscriptionType,
+        amount: Number(form.amount),
+        subscriptionType: 'BALANCE',
         maxUses: Number(form.maxUses),
+        note: form.note.trim() || null,
+        folderId: form.folderId || null,
         validUntil: form.validUntil || null,
       })
       showToast('Бонус-код создан', 'success')
@@ -65,60 +79,20 @@ export function BonusCodes() {
     <div className="admin-grid">
       <article className="admin-card liquid-glass">
         <h2 className="shop-section-title">Новый бонус-код</h2>
-        <p className="page-text">Начисляет дни подписки напрямую, без оплаты.</p>
+        <p className="page-text">Начисляет деньги на баланс пользователя.</p>
         <div className="admin-form">
+          <input className="profile-input" placeholder="Код" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} />
+          <input className="profile-input" type="number" min={1} placeholder="Сумма, ₽" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
           <label className="profile-field">
-            <span>Код</span>
-            <input
-              className="profile-input"
-              value={form.code}
-              onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })}
-            />
+            <span>Заметка</span>
+            <textarea className="profile-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
           </label>
+          <FolderField kind="BONUS" value={form.folderId} onChange={(folderId) => setForm({ ...form, folderId })} />
           <div className="admin-form-row">
-            <label className="profile-field">
-              <span>Дней</span>
-              <input
-                className="profile-input"
-                type="number"
-                min={1}
-                value={form.days}
-                onChange={(event) => setForm({ ...form, days: event.target.value })}
-              />
-            </label>
-            <label className="profile-field">
-              <span>Подписка</span>
-              <select
-                className="profile-input"
-                value={form.subscriptionType}
-                onChange={(event) => setForm({ ...form, subscriptionType: event.target.value })}
-              >
-                <option value="BASIC">Базовая</option>
-                <option value="PREMIUM">Премиум</option>
-              </select>
-            </label>
+            <input className="profile-input" type="number" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} />
+            <input className="profile-input" type="date" value={form.validUntil} onChange={(e) => setForm({ ...form, validUntil: e.target.value })} />
           </div>
-          <div className="admin-form-row">
-            <label className="profile-field">
-              <span>Максимум использований</span>
-              <input
-                className="profile-input"
-                type="number"
-                value={form.maxUses}
-                onChange={(event) => setForm({ ...form, maxUses: event.target.value })}
-              />
-            </label>
-            <label className="profile-field">
-              <span>Дата окончания</span>
-              <input
-                className="profile-input"
-                type="date"
-                value={form.validUntil}
-                onChange={(event) => setForm({ ...form, validUntil: event.target.value })}
-              />
-            </label>
-          </div>
-          <Button disabled={busy || !form.code.trim()} onClick={() => void save()}>
+          <Button disabled={busy} onClick={() => void save()}>
             Создать бонус-код
           </Button>
         </div>
@@ -126,20 +100,23 @@ export function BonusCodes() {
 
       <article className="admin-card liquid-glass">
         <h2 className="shop-section-title">Список</h2>
+        <FolderField kind="BONUS" value={folderFilter} onChange={setFolderFilter} />
         <ul className="admin-list">
-          {items.map((item) => (
+          {visible.map((item) => (
             <li key={item.id} className={`admin-list-item ${item.isActive ? '' : 'is-off'}`}>
               <div>
                 <strong className="admin-code">{item.code}</strong>
                 <p className="page-text">
-                  {item.days} дн. · {item.subscriptionType === 'PREMIUM' ? 'Премиум' : 'Базовая'} · {item.usedCount}/
-                  {item.maxUses}
+                  {Number(item.amount) > 0 ? `${item.amount} ₽ на баланс` : `${item.days} дн.`} · {item.usedCount}/{item.maxUses}
+                  {item.folder ? ` · ${item.folder.name}` : ''}
                 </p>
+                {item.note && <p className="page-text">{item.note}</p>}
               </div>
               {item.isActive && (
                 <Button
                   variant="ghost"
                   onClick={async () => {
+                    if (!confirm('Выключить бонус-код?')) return
                     await api.delete(`/api/admin/bonus/${item.id}`)
                     await load()
                   }}

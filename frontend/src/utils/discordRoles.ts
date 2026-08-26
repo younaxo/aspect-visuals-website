@@ -95,6 +95,14 @@ export function isAdmin(user: User | null): boolean {
   )
 }
 
+export function isPanelAdmin(user: User | null): boolean {
+  return (
+    hasRole(user, 'Owner') ||
+    hasRole(user, 'Developer') ||
+    hasRole(user, 'TechnicalAdministrator')
+  )
+}
+
 export function isStaff(user: User | null): boolean {
   return (
     hasRole(user, 'Owner') ||

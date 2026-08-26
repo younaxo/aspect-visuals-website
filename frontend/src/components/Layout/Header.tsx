@@ -4,7 +4,7 @@ import { Logo } from '../Common/Logo'
 import { Sidebar } from './Sidebar'
 import { useAuth } from '../../hooks/useAuth'
 import { useCartStore } from '../../store/cartStore'
-import { isAdmin } from '../../utils/discordRoles'
+import { isPanelAdmin } from '../../utils/discordRoles'
 import { useChatStore } from '../../store/chatStore'
 
 const navItems = [
@@ -104,7 +104,7 @@ export function Header() {
           ))}
           {isAuthenticated ? (
             <>
-              {user && isAdmin(user) && (
+              {user && isPanelAdmin(user) && (
                 <NavLink
                   to="/admin"
                   className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}

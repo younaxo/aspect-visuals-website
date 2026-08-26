@@ -48,3 +48,17 @@ export function isStaffRoles(roleDiscordIds: string[]): boolean {
 export function isAdminRoles(roleDiscordIds: string[]): boolean {
   return roleDiscordIds.some((id) => ADMIN_CHANNELS.has(id))
 }
+
+const PANEL_ROLES = new Set<string>([
+  ROLE_IDS.Owner,
+  ROLE_IDS.Developer,
+  ROLE_IDS.TechnicalAdministrator,
+])
+
+export function isPanelAdminRoles(roleDiscordIds: string[]): boolean {
+  return roleDiscordIds.some((id) => PANEL_ROLES.has(id))
+}
+
+export function isOwnerRole(roleDiscordIds: string[]): boolean {
+  return roleDiscordIds.includes(ROLE_IDS.Owner)
+}

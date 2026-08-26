@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma'
 export interface AuthRequest extends Request {
   userId?: string
   discordId?: string
+  adminAction?: { action: string; targetType: string }
 }
 
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
@@ -18,10 +19,18 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     }
 
     const payload = verifyAccessToken(token)
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } })
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      include: { ban: true },
+    })
 
-    if (!user) {
+    if (!user || user.isDeleted) {
       res.status(401).json({ message: 'Пользователь не найден' })
+      return
+    }
+
+    if (user.ban && (user.ban.isPermanent || !user.ban.expiresAt || user.ban.expiresAt > new Date())) {
+      res.status(403).json({ message: user.ban.reason ? `Аккаунт заблокирован: ${user.ban.reason}` : 'Аккаунт заблокирован' })
       return
     }
 

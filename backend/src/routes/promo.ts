@@ -7,6 +7,7 @@ import {
   deletePromoCode,
   getAllPromoCodes,
   getPromoCodeInfo,
+  redeemPromo,
   removePromoCode,
   updatePromoCode,
   validatePromoCode,
@@ -16,6 +17,7 @@ const router = Router()
 
 router.post('/promo/validate', optionalAuth, validatePromoCode)
 router.post('/promo/apply', authMiddleware, applyPromoCode)
+router.post('/promo/redeem', authMiddleware, redeemPromo)
 router.delete('/promo/remove', authMiddleware, removePromoCode)
 router.get('/promo/:code', optionalAuth, getPromoCodeInfo)
 router.post('/admin/promo', authMiddleware, adminMiddleware, createPromoCode)

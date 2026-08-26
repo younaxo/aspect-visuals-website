@@ -27,6 +27,8 @@ function serializeKey(
     usedAt: Date | null
     expiresAt: Date | null
     durationDays: number | null
+    note?: string | null
+    folderId?: string | null
     createdAt: Date
     product: { id: string; name: string } | null
     subscription: { id: string; name: string } | null
@@ -42,6 +44,8 @@ function serializeKey(
     usedAt: item.usedAt,
     expiresAt: item.expiresAt,
     durationDays: item.durationDays,
+    note: item.note ?? null,
+    folderId: item.folderId ?? null,
     createdAt: item.createdAt,
     batchId: item.batchId,
     product: item.product,
@@ -52,7 +56,8 @@ function serializeKey(
 
 export async function generateKeys(req: AuthRequest, res: Response) {
   const productId = asString(req.body?.productId) || null
-  const subscriptionId = asString(req.body?.subscriptionId) || null
+  let subscriptionId = asString(req.body?.subscriptionId) || null
+  const subscriptionType = asString(req.body?.subscriptionType).toUpperCase()
   const count = Math.min(200, Math.max(1, Number(req.body?.count) || 1))
   const name = asString(req.body?.name) || `Пачка ${new Date().toISOString().slice(0, 10)}`
   const expiresAt = asDate(req.body?.expiresAt)
@@ -62,8 +67,16 @@ export async function generateKeys(req: AuthRequest, res: Response) {
       ? null
       : Math.max(0, Number(durationRaw) || 0)
 
+  if (!productId && !subscriptionId && (subscriptionType === 'BASIC' || subscriptionType === 'PREMIUM')) {
+    const sub = await prisma.subscription.findFirst({
+      where: { type: subscriptionType, isActive: true },
+      orderBy: { duration: 'asc' },
+    })
+    subscriptionId = sub?.id ?? null
+  }
+
   if (!productId && !subscriptionId) {
-    res.status(400).json({ message: 'Выберите товар' })
+    res.status(400).json({ message: 'Выберите товар или тип подписки' })
     return
   }
 
@@ -108,6 +121,8 @@ export async function generateKeys(req: AuthRequest, res: Response) {
         generatedBy: req.userId,
         expiresAt,
         durationDays,
+        note: asString(req.body?.note) || null,
+        folderId: asString(req.body?.folderId) || null,
         batchId: batch.id,
       },
       include: { product: true, subscription: true },
@@ -232,7 +247,7 @@ export async function getMyKeys(req: AuthRequest, res: Response) {
 
 export async function getKeys(_req: AuthRequest, res: Response) {
   const items = await prisma.activationKey.findMany({
-    include: { product: true, subscription: true },
+    include: { product: true, subscription: true, folder: true },
     orderBy: { createdAt: 'desc' },
     take: 500,
   })

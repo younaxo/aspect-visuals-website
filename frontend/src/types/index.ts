@@ -24,6 +24,7 @@ export interface User {
   isEmailVerified?: boolean
   discordLinked?: boolean
   roles: Role[]
+  balance?: number
   createdAt: string
   updatedAt: string
 }

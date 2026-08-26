@@ -5,7 +5,6 @@ import { ImageUpload } from '../Common/ImageUpload'
 import { Button } from '../Common/Button'
 import { UserNameLine } from './UserNameLine'
 import { MySubscriptions } from './MySubscriptions'
-import { ActivationInput } from '../Shop/ActivationInput'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { useToastStore } from '../../store/toastStore'
@@ -301,7 +300,6 @@ export function Profile() {
             </div>
           </section>
 
-          <ActivationInput />
           <MySubscriptions />
         </div>
       </article>
