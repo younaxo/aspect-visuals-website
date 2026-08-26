@@ -46,7 +46,7 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <section className="auth-page content-panel">
+    <section className="auth-page content-panel liquid-glass ui-modal size-sm" style={{ margin: '40px auto' }}>
       <h1 className="page-title">Новый пароль</h1>
       <p className="page-text">Придумайте новый пароль для аккаунта.</p>
 

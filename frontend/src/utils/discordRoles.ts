@@ -16,17 +16,17 @@ export const DISCORD_ROLE_IDS: Record<RoleKey, string> = {
 export const DISCORD_ROLE_LABELS: Record<RoleKey, string> = {
   Owner: 'Owner',
   Developer: 'Developer',
-  TechnicalAdministrator: 'Technical Administrator',
-  Administrator: 'Administrator',
-  ChiefModerator: 'Chief Moderator',
-  Moderator: 'Moderator',
-  Support: 'Support',
-  SubscriberPlus: 'Subscriber+',
-  Subscriber: 'Subscriber',
-  Default: 'Default',
+  TechnicalAdministrator: 'Tech.Admin',
+  Administrator: 'Admin',
+  ChiefModerator: 'Chief Mod',
+  Moderator: 'Mod.',
+  Support: 'Media',
+  SubscriberPlus: 'Sub Pl',
+  Subscriber: 'Sub',
+  Default: 'Def',
 }
 
-const ROLE_PRIORITY: RoleKey[] = [
+export const ROLE_PRIORITY: RoleKey[] = [
   'Owner',
   'Developer',
   'TechnicalAdministrator',
@@ -70,15 +70,17 @@ export function getRoleIconUrl(roleKey?: RoleKey): string | null {
   return file ? `${ROLE_ICON_BASE}/${file}` : null
 }
 
+export function sortRolesByHierarchy(roles: Role[]): Role[] {
+  return [...roles].sort((a, b) => {
+    const ia = ROLE_PRIORITY.findIndex((key) => DISCORD_ROLE_IDS[key] === a.discordId)
+    const ib = ROLE_PRIORITY.findIndex((key) => DISCORD_ROLE_IDS[key] === b.discordId)
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+  })
+}
+
 export function getHighestRole(user: User | null): Role | null {
   if (!user?.roles?.length) return null
-
-  for (const key of ROLE_PRIORITY) {
-    const match = user.roles.find((role) => role.discordId === DISCORD_ROLE_IDS[key])
-    if (match) return match
-  }
-
-  return user.roles[0] ?? null
+  return sortRolesByHierarchy(user.roles)[0] ?? null
 }
 
 export function hasRole(user: User | null, roleKey: RoleKey): boolean {

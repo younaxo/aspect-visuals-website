@@ -27,8 +27,8 @@ export function AdminLayout() {
   return (
       <section className="admin-shell">
         <aside className="admin-sidebar liquid-glass">
-          <p className="eyebrow">Админ-панель</p>
-          <h1 className="admin-sidebar-title">Управление</h1>
+          <p className="eyebrow">Управление</p>
+          <h1 className="admin-sidebar-title">Админ-панель</h1>
           <p className="page-text">{user?.username}</p>
           <nav className="admin-side-nav" aria-label="Разделы админки">
             {links.map((item) => (

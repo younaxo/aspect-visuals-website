@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import api from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
+import { Modal } from '../Common/Modal'
 import { useToastStore } from '../../store/toastStore'
 
 interface PurchaseRow {
@@ -34,12 +36,17 @@ export function PurchasesList() {
   return (
     <article className="admin-card liquid-glass">
       <h2 className="shop-section-title">Покупки</h2>
-      <select className="profile-input" value={status} onChange={(e) => setStatus(e.target.value)}>
-        <option value="">Все статусы</option>
-        <option value="COMPLETED">COMPLETED</option>
-        <option value="PENDING">PENDING</option>
-        <option value="REFUNDED">REFUNDED</option>
-      </select>
+      <CustomSelect
+        value={status}
+        onChange={setStatus}
+        placeholder="Все статусы"
+        options={[
+          { value: '', label: 'Все статусы' },
+          { value: 'COMPLETED', label: 'COMPLETED' },
+          { value: 'PENDING', label: 'PENDING' },
+          { value: 'REFUNDED', label: 'REFUNDED' },
+        ]}
+      />
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -72,9 +79,10 @@ export function PurchasesList() {
         <Button variant="ghost" disabled={page * 20 >= total} onClick={() => setPage((p) => p + 1)}>Далее</Button>
       </div>
       {selected && (
-        <div className="admin-modal liquid-glass">
-          <h3>{selected.name}</h3>
-          <p className="page-text">{selected.user.username} · {selected.amount} ₽ · {selected.status}</p>
+        <Modal title={selected.name} onClose={() => setSelected(null)}>
+          <p className="page-text">
+            {selected.user.username} · {selected.amount} ₽ · {selected.status}
+          </p>
           {selected.status !== 'REFUNDED' && (
             <Button
               onClick={async () => {
@@ -87,8 +95,10 @@ export function PurchasesList() {
               Рефанд
             </Button>
           )}
-          <Button variant="ghost" onClick={() => setSelected(null)}>Закрыть</Button>
-        </div>
+          <Button variant="ghost" onClick={() => setSelected(null)}>
+            Закрыть
+          </Button>
+        </Modal>
       )}
     </article>
   )

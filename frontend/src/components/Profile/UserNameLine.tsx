@@ -1,6 +1,11 @@
 import type { KeyboardEvent } from 'react'
 import type { User } from '../../types'
-import { getHighestRole, getHighestRoleKey, getRoleIconUrl } from '../../utils/discordRoles'
+import {
+  DISCORD_ROLE_LABELS,
+  getRoleIconUrl,
+  getRoleKeyByDiscordId,
+  sortRolesByHierarchy,
+} from '../../utils/discordRoles'
 import { Tooltip } from '../Common/Tooltip'
 
 interface UserNameLineProps {
@@ -24,8 +29,7 @@ export function UserNameLine({
   onUsernameBlur,
   onUsernameKeyDown,
 }: UserNameLineProps) {
-  const role = getHighestRole(user)
-  const icon = getRoleIconUrl(getHighestRoleKey(user))
+  const roles = sortRolesByHierarchy(user.roles)
   const uid = typeof user.uid === 'number' ? user.uid : null
 
   return (
@@ -44,11 +48,20 @@ export function UserNameLine({
       ) : (
         <span className={compact ? 'profile-name' : 'profile-display-name'}>{user.username}</span>
       )}
-      {icon && (
-        <Tooltip content={role?.name ?? 'Роль'}>
-          <img className="role-icon" src={icon} alt={role?.name ?? ''} draggable={false} />
-        </Tooltip>
-      )}
+      {roles.map((role) => {
+        const key = getRoleKeyByDiscordId(role.discordId)
+        const label = key ? DISCORD_ROLE_LABELS[key] : role.name
+        const icon = getRoleIconUrl(key)
+        return icon ? (
+          <Tooltip key={role.id} content={label}>
+            <img className="role-icon" src={icon} alt={label} draggable={false} />
+          </Tooltip>
+        ) : (
+          <span key={role.id} className="role-chip compact">
+            {label}
+          </span>
+        )
+      })}
       {uid !== null && (
         <Tooltip content="Уникальный номер профиля">
           <span className="profile-uid">#{uid}</span>

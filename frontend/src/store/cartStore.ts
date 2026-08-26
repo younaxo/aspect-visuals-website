@@ -19,6 +19,7 @@ interface CartState {
   promoCode: string
   promoDiscount: number
   addItem: (item: CartItem) => void
+  setCheckoutItem: (item: CartItem) => void
   removeItem: (id: string, kind: CartKind) => void
   clearCart: () => void
   applyPromo: (code: string, discount: number) => void
@@ -64,6 +65,7 @@ export const useCartStore = create<CartState>()(
           }
           return { items: [...state.items, item] }
         }),
+      setCheckoutItem: (item) => set({ items: [item], promoCode: '', promoDiscount: 0 }),
       removeItem: (id, kind) =>
         set((state) => ({
           items: state.items.filter((item) => !(item.id === id && item.kind === kind)),

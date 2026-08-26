@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 
 export interface CodeFolder {
   id: string
@@ -41,14 +42,15 @@ export function FolderField({
     <label className="profile-field">
       <span>Папка</span>
       <div className="admin-form-row">
-        <select className="profile-input" value={value} onChange={(event) => onChange(event.target.value)}>
-          <option value="">Без папки</option>
-          {folders.map((folder) => (
-            <option key={folder.id} value={folder.id}>
-              {folder.name}
-            </option>
-          ))}
-        </select>
+        <CustomSelect
+          value={value}
+          onChange={onChange}
+          placeholder="Без папки"
+          options={[
+            { value: '', label: 'Без папки' },
+            ...folders.map((folder) => ({ value: folder.id, label: folder.name })),
+          ]}
+        />
         <input
           className="profile-input"
           placeholder="Новая папка"

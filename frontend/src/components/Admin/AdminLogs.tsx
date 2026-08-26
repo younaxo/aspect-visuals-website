@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 
 interface LogRow {
   id: string
@@ -36,12 +37,18 @@ export function AdminLogs() {
       <h2 className="shop-section-title">Логи администраторов</h2>
       <div className="admin-form-row">
         <input className="profile-input" placeholder="Поиск" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void load()} />
-        <select className="profile-input" value={action} onChange={(e) => setAction(e.target.value)}>
-          <option value="">Все действия</option>
-          {['CREATE', 'UPDATE', 'DELETE', 'BAN', 'UNBAN', 'REFUND'].map((item) => (
-            <option key={item} value={item}>{item}</option>
-          ))}
-        </select>
+        <CustomSelect
+          value={action}
+          onChange={setAction}
+          placeholder="Все действия"
+          options={[
+            { value: '', label: 'Все действия' },
+            ...['CREATE', 'UPDATE', 'DELETE', 'BAN', 'UNBAN', 'REFUND'].map((item) => ({
+              value: item,
+              label: item,
+            })),
+          ]}
+        />
       </div>
       <div className="admin-table-wrap">
         <table className="admin-table">

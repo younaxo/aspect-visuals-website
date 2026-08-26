@@ -5,6 +5,7 @@ import { useCartStore } from '../../store/cartStore'
 import { useToastStore } from '../../store/toastStore'
 import { Button } from '../Common/Button'
 import { CustomSelect } from '../Common/CustomSelect'
+import { Modal } from '../Common/Modal'
 
 interface PaymentModalProps {
   amount: number
@@ -38,30 +39,27 @@ export function PaymentModal({ amount, onClose }: PaymentModalProps) {
   }
 
   return (
-    <div className="shop-modal-backdrop" role="presentation" onClick={onClose}>
-      <div className="shop-modal" role="dialog" onClick={(event) => event.stopPropagation()}>
-        <h2>Перейти к оплате</h2>
-        <p>К оплате {amount} ₽</p>
-        <label className="profile-field">
-          <span>Способ</span>
-          <CustomSelect
-            value={method}
-            onChange={(value) => setMethod(value as 'unitpay' | 'stripe')}
-            options={[
-              { value: 'unitpay', label: 'UnitPay' },
-              { value: 'stripe', label: 'Stripe' },
-            ]}
-          />
-        </label>
-        <div className="shop-modal-actions">
-          <Button disabled={busy} onClick={() => void pay()}>
-            {busy ? 'Создаём платёж…' : 'Перейти к оплате'}
-          </Button>
-          <Button variant="ghost" onClick={onClose}>
-            Закрыть
-          </Button>
-        </div>
+    <Modal title="Перейти к оплате" onClose={onClose}>
+      <p className="page-text">К оплате {amount} ₽</p>
+      <label className="profile-field">
+        <span>Способ</span>
+        <CustomSelect
+          value={method}
+          onChange={(value) => setMethod(value as 'unitpay' | 'stripe')}
+          options={[
+            { value: 'unitpay', label: 'UnitPay' },
+            { value: 'stripe', label: 'Stripe' },
+          ]}
+        />
+      </label>
+      <div className="shop-modal-actions">
+        <Button disabled={busy} onClick={() => void pay()}>
+          {busy ? 'Создаём платёж…' : 'Перейти к оплате'}
+        </Button>
+        <Button variant="ghost" onClick={onClose}>
+          Закрыть
+        </Button>
       </div>
-    </div>
+    </Modal>
   )
 }

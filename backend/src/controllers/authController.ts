@@ -613,3 +613,79 @@ export async function logout(req: AuthRequest, res: Response) {
     res.status(500).json({ message: 'Не удалось выйти из аккаунта' })
   }
 }
+
+export async function telegramConfig(_req: Request, res: Response) {
+  try {
+    const { getTelegramBotUsername, telegramConfigured } = await import('../services/telegramService')
+    if (!telegramConfigured()) {
+      res.status(503).json({ message: 'Telegram-бот не настроен' })
+      return
+    }
+    const botUsername = await getTelegramBotUsername()
+    if (!botUsername) {
+      res.status(503).json({ message: 'Не удалось получить имя бота' })
+      return
+    }
+    res.json({ botUsername })
+  } catch (error) {
+    console.error('Telegram config error:', error)
+    res.status(500).json({ message: 'Не удалось загрузить Telegram' })
+  }
+}
+
+export async function telegramLogin(req: Request, res: Response) {
+  try {
+    const { verifyTelegramAuth, telegramConfigured } = await import('../services/telegramService')
+    if (!telegramConfigured()) {
+      res.status(503).json({ message: 'Telegram-бот не настроен' })
+      return
+    }
+
+    const payload = {
+      id: Number(req.body?.id),
+      first_name: parseString(req.body?.first_name) || undefined,
+      last_name: parseString(req.body?.last_name) || undefined,
+      username: parseString(req.body?.username) || undefined,
+      photo_url: parseString(req.body?.photo_url) || undefined,
+      auth_date: Number(req.body?.auth_date),
+      hash: parseString(req.body?.hash),
+    }
+
+    if (!verifyTelegramAuth(payload)) {
+      res.status(401).json({ message: 'Неверная подпись Telegram' })
+      return
+    }
+
+    const telegramId = String(payload.id)
+    const nickname = payload.username || payload.first_name || `tg_${telegramId.slice(-6)}`
+
+    let user = await prisma.user.findFirst({
+      where: { telegramId },
+    })
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          telegramId,
+          telegramLinked: true,
+          username: nickname.slice(0, 32),
+          avatar: payload.photo_url || null,
+        },
+      })
+      await attachDefaultRole(user.id)
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          telegramLinked: true,
+          avatar: user.avatar || payload.photo_url || null,
+        },
+      })
+    }
+
+    res.json(await authPayload(user.id))
+  } catch (error) {
+    console.error('Telegram login error:', error)
+    res.status(500).json({ message: 'Не удалось войти через Telegram' })
+  }
+}

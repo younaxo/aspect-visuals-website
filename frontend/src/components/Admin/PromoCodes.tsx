@@ -4,6 +4,7 @@ import api from '../../api'
 import { Button } from '../Common/Button'
 import { useToastStore } from '../../store/toastStore'
 import { FolderField } from './FolderField'
+import { CustomSelect } from '../Common/CustomSelect'
 
 interface PromoRow {
   id: string
@@ -110,12 +111,16 @@ export function PromoCodes() {
           </label>
           <label className="profile-field">
             <span>Тип</span>
-            <select className="profile-input" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>
-              <option value="BASIC">Подписка BASIC</option>
-              <option value="PREMIUM">Подписка PREMIUM</option>
-              <option value="PERCENTAGE">Скидка %</option>
-              <option value="FIXED">Скидка ₽</option>
-            </select>
+            <CustomSelect
+              value={form.type}
+              onChange={(type) => setForm({ ...form, type })}
+              options={[
+                { value: 'BASIC', label: 'Подписка BASIC' },
+                { value: 'PREMIUM', label: 'Подписка PREMIUM' },
+                { value: 'PERCENTAGE', label: 'Скидка %' },
+                { value: 'FIXED', label: 'Скидка ₽' },
+              ]}
+            />
           </label>
           {isDiscount ? (
             <div className="admin-form-row">

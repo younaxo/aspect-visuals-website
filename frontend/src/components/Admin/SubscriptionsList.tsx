@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import api from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 import { useToastStore } from '../../store/toastStore'
 
 const empty = {
@@ -55,11 +56,15 @@ export function SubscriptionsList() {
             <input className="profile-input" type="number" placeholder="Дней (0 — навсегда)" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
           </div>
           <div className="admin-form-row">
-            <select className="profile-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-              <option value="BASIC">BASIC</option>
-              <option value="PREMIUM">PREMIUM</option>
-              <option value="LIFETIME">LIFETIME</option>
-            </select>
+            <CustomSelect
+              value={form.type}
+              onChange={(type) => setForm({ ...form, type })}
+              options={[
+                { value: 'BASIC', label: 'BASIC' },
+                { value: 'PREMIUM', label: 'PREMIUM' },
+                { value: 'LIFETIME', label: 'LIFETIME' },
+              ]}
+            />
             <input className="profile-input" placeholder="Discord роль" value={form.discordRoleId} onChange={(e) => setForm({ ...form, discordRoleId: e.target.value })} />
           </div>
           <label className="profile-field">

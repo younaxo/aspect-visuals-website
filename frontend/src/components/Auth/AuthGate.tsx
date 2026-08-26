@@ -1,11 +1,11 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Logo } from '../Common/Logo'
 import { useAuth } from '../../hooks/useAuth'
 import { useDiscord } from '../../hooks/useDiscord'
 import { useToastStore } from '../../store/toastStore'
-import { authApi } from '../../api'
-import axios from 'axios'
+import { ForgotPasswordModal } from './ForgotPasswordModal'
+import { TelegramLoginButton } from './TelegramLoginButton'
 
 type AuthMode = 'login' | 'register'
 
@@ -26,7 +26,11 @@ export function AuthGate({ mode }: AuthGateProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [errorTone, setErrorTone] = useState<'error' | 'muted'>('error')
-  const [forgotBusy, setForgotBusy] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const onTelegramError = useCallback((message: string) => {
+    setErrorTone('error')
+    setError(message)
+  }, [])
 
   const isSignUp = mode === 'register'
 
@@ -82,29 +86,6 @@ export function AuthGate({ mode }: AuthGateProps) {
       showToast(message, 'error')
     } finally {
       setBusy(false)
-    }
-  }
-
-  const forgot = async () => {
-    setErrorTone('error')
-    const value = email.trim()
-    if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setError('Введите email, чтобы сбросить пароль.')
-      return
-    }
-    setForgotBusy(true)
-    try {
-      await authApi.forgotPassword(value)
-      setErrorTone('muted')
-      setError('Письмо для сброса пароля отправлено на email.')
-      showToast('Если аккаунт существует, ссылка отправлена', 'success')
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? (err.response?.data as { message?: string })?.message || 'Не удалось отправить ссылку'
-        : 'Не удалось отправить ссылку'
-      setError(message)
-    } finally {
-      setForgotBusy(false)
     }
   }
 
@@ -177,7 +158,7 @@ export function AuthGate({ mode }: AuthGateProps) {
             />
             {!isSignUp && (
               <div className="auth-forgot-wrap">
-                <button type="button" className="auth-forgot" disabled={forgotBusy} onClick={() => void forgot()}>
+                <button type="button" className="auth-forgot" onClick={() => setForgotOpen(true)}>
                   Забыли пароль?
                 </button>
               </div>
@@ -219,19 +200,7 @@ export function AuthGate({ mode }: AuthGateProps) {
                   </svg>
                   {discordBusy ? 'Открываем Discord…' : 'Войти через Discord'}
                 </button>
-                <button
-                  type="button"
-                  className="auth-oauth-btn"
-                  onClick={() => {
-                    setErrorTone('muted')
-                    setError('Вход через Telegram появится после связки с ботом.')
-                  }}
-                >
-                  <svg className="icon icon-fill" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.63c-.684.276-1.14.85-1.14 1.5 0 .52.316.98.84 1.24l4.18 2.05 1.66 5.74c.18.63.75 1.04 1.38.95.4-.05.74-.28.95-.62l2.35-3.9 4.56 3.36c.55.4 1.3.3 1.68-.22.2-.28.26-.62.18-.95L21.9 4.02c.18-.76-.2-1.35-.7-1.59z" />
-                  </svg>
-                  Войти через Telegram
-                </button>
+                <TelegramLoginButton onError={onTelegramError} />
               </div>
             </div>
           )}
@@ -239,6 +208,7 @@ export function AuthGate({ mode }: AuthGateProps) {
           <p className={`auth-error ${errorTone === 'muted' ? 'is-muted' : ''}`}>{error}</p>
         </form>
       </div>
+      {forgotOpen && <ForgotPasswordModal defaultEmail={email} onClose={() => setForgotOpen(false)} />}
     </div>
   )
 }

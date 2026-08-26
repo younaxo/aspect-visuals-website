@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import api from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
+import { Modal } from '../Common/Modal'
 import { useToastStore } from '../../store/toastStore'
-import { DISCORD_ROLE_IDS, DISCORD_ROLE_LABELS } from '../../utils/discordRoles'
-import type { RoleKey } from '../../types'
+import { DISCORD_ROLE_IDS, DISCORD_ROLE_LABELS, ROLE_PRIORITY } from '../../utils/discordRoles'
 
 interface AdminUser {
   id: string
@@ -54,14 +55,15 @@ export function UsersList() {
             if (event.key === 'Enter') void load()
           }}
         />
-        <select className="profile-input" value={role} onChange={(event) => setRole(event.target.value)}>
-          <option value="">Все роли</option>
-          {(Object.keys(DISCORD_ROLE_IDS) as RoleKey[]).map((key) => (
-            <option key={key} value={DISCORD_ROLE_IDS[key]}>
-              {DISCORD_ROLE_LABELS[key]}
-            </option>
-          ))}
-        </select>
+        <CustomSelect
+          value={role}
+          onChange={setRole}
+          placeholder="Все роли"
+          options={[
+            { value: '', label: 'Все роли' },
+            ...ROLE_PRIORITY.map((key) => ({ value: DISCORD_ROLE_IDS[key], label: DISCORD_ROLE_LABELS[key] })),
+          ]}
+        />
         <Button variant="ghost" onClick={() => void load()}>
           Найти
         </Button>
@@ -88,7 +90,20 @@ export function UsersList() {
                 <td>{user.username}</td>
                 <td>{user.discordId || '—'}</td>
                 <td>{user.email || '—'}</td>
-                <td>{user.roles.map((item) => item.name).join(', ') || '—'}</td>
+                <td>
+                  {user.roles
+                    .slice()
+                    .sort((a, b) => {
+                      const ia = ROLE_PRIORITY.findIndex((key) => DISCORD_ROLE_IDS[key] === a.discordId)
+                      const ib = ROLE_PRIORITY.findIndex((key) => DISCORD_ROLE_IDS[key] === b.discordId)
+                      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+                    })
+                    .map((item) => {
+                      const key = ROLE_PRIORITY.find((k) => DISCORD_ROLE_IDS[k] === item.discordId)
+                      return key ? DISCORD_ROLE_LABELS[key] : item.name
+                    })
+                    .join(' · ') || '—'}
+                </td>
                 <td>{user.subscriptions.map((item) => item.name).join(', ') || '—'}</td>
                 <td>{new Date(user.createdAt).toLocaleDateString('ru')}</td>
                 <td>{user.banned ? 'Бан' : 'Активен'}</td>
@@ -133,15 +148,15 @@ export function UsersList() {
       </div>
 
       {roleUser && (
-        <div className="admin-modal liquid-glass">
-          <h3>Роль: {roleUser.username}</h3>
-          <select className="profile-input" value={roleId} onChange={(event) => setRoleId(event.target.value)}>
-            {(Object.keys(DISCORD_ROLE_IDS) as RoleKey[]).map((key) => (
-              <option key={key} value={DISCORD_ROLE_IDS[key]}>
-                {DISCORD_ROLE_LABELS[key]}
-              </option>
-            ))}
-          </select>
+        <Modal title={`Роль: ${roleUser.username}`} onClose={() => setRoleUser(null)}>
+          <CustomSelect
+            value={roleId}
+            onChange={setRoleId}
+            options={ROLE_PRIORITY.map((key) => ({
+              value: DISCORD_ROLE_IDS[key],
+              label: DISCORD_ROLE_LABELS[key],
+            }))}
+          />
           <div className="shop-sub-actions">
             <Button
               onClick={async () => {
@@ -164,12 +179,11 @@ export function UsersList() {
               Отмена
             </Button>
           </div>
-        </div>
+        </Modal>
       )}
 
       {banUser && (
-        <div className="admin-modal liquid-glass">
-          <h3>Бан: {banUser.username}</h3>
+        <Modal title={`Бан: ${banUser.username}`} onClose={() => setBanUser(null)}>
           <input className="profile-input" placeholder="Причина" value={reason} onChange={(e) => setReason(e.target.value)} />
           <input className="profile-input" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
           <div className="shop-sub-actions">
@@ -191,7 +205,7 @@ export function UsersList() {
               Отмена
             </Button>
           </div>
-        </div>
+        </Modal>
       )}
     </article>
   )

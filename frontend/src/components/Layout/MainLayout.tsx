@@ -5,6 +5,7 @@ import { Footer } from './Footer'
 import { EdgeDock } from './EdgeDock'
 import { Toast } from '../Common/Toast'
 import { ChatNotifier } from '../Chat/ChatNotifier'
+import { ChatModal } from '../Chat/ChatModal'
 import { useAuthStore } from '../../store/authStore'
 import { applySettings } from '../../utils/settings'
 
@@ -34,6 +35,7 @@ export function MainLayout() {
       <Footer />
       <Toast />
       <ChatNotifier />
+      <ChatModal />
     </div>
   )
 }

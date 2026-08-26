@@ -5,7 +5,7 @@ import { ru } from 'date-fns/locale'
 import { Button } from '../Common/Button'
 import { UserNameLine } from '../Profile/UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
-import { getHighestRole, isPanelAdmin } from '../../utils/discordRoles'
+import { DISCORD_ROLE_LABELS, getHighestRole, getHighestRoleKey, isPanelAdmin } from '../../utils/discordRoles'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 
 const fallbackAvatar =
@@ -23,6 +23,8 @@ export function Sidebar() {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const role = getHighestRole(user)
+  const roleKey = getHighestRoleKey(user)
+  const roleLabel = roleKey ? DISCORD_ROLE_LABELS[roleKey] : role?.name ?? 'Профиль'
   const avatar = user ? getUserAvatarUrl(user) : fallbackAvatar
   const banner = user ? getUserBannerUrl(user.banner) : null
 
@@ -63,7 +65,7 @@ export function Sidebar() {
         </span>
         <span className="profile-meta">
           <span className="profile-name">{user.username}</span>
-          <span className="profile-role">{role?.name ?? 'Профиль'}</span>
+          <span className="profile-role">{roleLabel}</span>
         </span>
       </button>
 
@@ -90,6 +92,9 @@ export function Sidebar() {
               </div>
             </div>
             <Link to="/profile" className="dropdown-link" onClick={close}>
+              Аккаунт
+            </Link>
+            <Link to="/profile/me" className="dropdown-link" onClick={close}>
               Профиль
             </Link>
             {isPanelAdmin(user) && (

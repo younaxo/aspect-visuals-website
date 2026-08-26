@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { GuestRoute } from './components/Auth/GuestRoute'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -13,14 +14,17 @@ import { HomePage } from './pages/HomePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { Shop } from './components/Shop/Shop'
-import { Cart } from './components/Shop/Cart'
-import { Checkout } from './components/Shop/Checkout'
 import { MockPayPage } from './components/Shop/MockPayPage'
 import { ProfileHub } from './components/Profile/ProfileHub'
 import { AccountPanel } from './components/Profile/AccountPanel'
+import { Profile } from './components/Profile/Profile'
 import { ProfilePlaceholder } from './components/Profile/ProfilePlaceholder'
 import { Settings } from './components/Profile/Settings'
 import { MySubscriptions } from './components/Profile/MySubscriptions'
+import { DownloadClient } from './components/Profile/DownloadClient'
+import { DailyBonus } from './components/Profile/DailyBonus'
+import { ConfigsPage } from './components/Profile/ConfigsPage'
+import { CosmeticsPage } from './components/Profile/CosmeticsPage'
 import { AdminRoute } from './components/Auth/AdminRoute'
 import { PromoCodes } from './components/Admin/PromoCodes'
 import { ActivationKeys } from './components/Admin/ActivationKeys'
@@ -33,7 +37,16 @@ import { ProductsList } from './components/Admin/ProductsList'
 import { PurchasesList } from './components/Admin/PurchasesList'
 import { AdminLogs } from './components/Admin/AdminLogs'
 import { AdminSettings } from './components/Admin/Settings'
-import { Chat } from './components/Chat/Chat'
+import { useUiStore } from './store/uiStore'
+import { Checkout } from './components/Shop/Checkout'
+
+function OpenChatRedirect() {
+  const setChatOpen = useUiStore((state) => state.setChatOpen)
+  useEffect(() => {
+    setChatOpen(true)
+  }, [setChatOpen])
+  return <Navigate to="/" replace />
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,18 +121,21 @@ function App() {
               </Route>
             </Route>
             <Route element={<ProtectedRoute />}>
-              <Route path="chat" element={<Chat />} />
+              <Route path="chat" element={<OpenChatRedirect />} />
               <Route path="activate" element={<Navigate to="/profile" replace />} />
               <Route path="settings" element={<Navigate to="/profile/settings" replace />} />
               <Route path="profile" element={<ProfileHub />}>
                 <Route index element={<AccountPanel />} />
+                <Route path="me" element={<Profile />} />
+                <Route path="bonus" element={<DailyBonus />} />
+                <Route path="configs" element={<ConfigsPage />} />
+                <Route path="cosmetics" element={<CosmeticsPage />} />
                 <Route path="balance" element={<ProfilePlaceholder title="Баланс" text="Здесь будет история операций и пополнение." />} />
                 <Route path="subscriptions" element={<MySubscriptions />} />
-                <Route path="download" element={<ProfilePlaceholder title="Скачать клиент" text="Ссылки на клиент Aspect Visuals появятся здесь." />} />
+                <Route path="download" element={<DownloadClient />} />
                 <Route path="support" element={<ProfilePlaceholder title="Поддержка" text="Напишите в чат или на support@aspectvisuals.su." />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
-              <Route path="shop/cart" element={<Cart />} />
               <Route path="shop/checkout" element={<Checkout />} />
               <Route path="shop/pay/:orderId" element={<MockPayPage />} />
             </Route>

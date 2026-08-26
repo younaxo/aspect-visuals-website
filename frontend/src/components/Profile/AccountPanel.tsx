@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
-import { DISCORD_ROLE_LABELS, getHighestRoleKey } from '../../utils/discordRoles'
+import { RoleHierarchy } from './RoleHierarchy'
 import { KeyActivateBlock } from './KeyActivateBlock'
-import { Modal } from '../Common/Modal'
-import { Button } from '../Common/Button'
+import { ForgotPasswordModal } from '../Auth/ForgotPasswordModal'
+
+const GREETINGS = [
+  'Привет',
+  'Здравствуй',
+  'Хей',
+  'Рад видеть',
+  'С возвращением',
+  'Йо',
+  'Добро пожаловать',
+  'Салют',
+  'Как жизнь',
+  'На связи',
+]
 
 export function AccountPanel() {
   const { user: authUser } = useAuth()
   const { profile } = useProfile()
   const user = profile?.user ?? authUser
+  const greeting = useMemo(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)], [])
   const [passwordOpen, setPasswordOpen] = useState(false)
 
   if (!user) {
     return <p className="page-text">Загружаем профиль…</p>
   }
 
-  const roleKey = getHighestRoleKey(user)
-  const roleLabel = roleKey ? DISCORD_ROLE_LABELS[roleKey] : 'Пользователь'
   const uid = user.uid ?? user.discriminator ?? user.id.slice(-6)
   const balance = user.balance ?? 0
 
   return (
     <div className="account-panel">
-      <p className="activate-crumb">Главная / Мой профиль / Аккаунт</p>
+      <p className="activate-crumb">Главная / Мой аккаунт / Аккаунт</p>
       <h1 className="activate-hello">
-        Привет, <span>{user.username}</span>
+        {greeting}, <span className="hello-nick">{user.username}</span>
       </h1>
 
       <section className="account-info">
@@ -43,12 +53,9 @@ export function AccountPanel() {
             <dd>{uid}</dd>
           </div>
           <div>
-            <dt>Ваша роль</dt>
+            <dt>Роли</dt>
             <dd className="account-role">
-              <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
-              </svg>
-              {roleLabel}
+              <RoleHierarchy roles={user.roles} />
             </dd>
           </div>
           <div>
@@ -59,7 +66,7 @@ export function AccountPanel() {
             <dt>Пароль</dt>
             <dd className="account-password">
               <span>••••••••••</span>
-              <button type="button" className="icon-btn" aria-label="Изменить пароль" onClick={() => setPasswordOpen(true)}>
+              <button type="button" className="icon-btn" aria-label="Сбросить пароль" onClick={() => setPasswordOpen(true)}>
                 <svg className="icon" viewBox="0 0 24 24">
                   <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
                 </svg>
@@ -84,17 +91,7 @@ export function AccountPanel() {
       <KeyActivateBlock />
 
       {passwordOpen && (
-        <Modal title="Пароль" onClose={() => setPasswordOpen(false)}>
-          <p className="page-text">Смена пароля доступна через восстановление на email.</p>
-          <div className="shop-sub-actions">
-            <Link to="/forgot-password" className="btn-primary" onClick={() => setPasswordOpen(false)}>
-              Сбросить пароль
-            </Link>
-            <Button variant="ghost" onClick={() => setPasswordOpen(false)}>
-              Закрыть
-            </Button>
-          </div>
-        </Modal>
+        <ForgotPasswordModal defaultEmail={user.email ?? ''} onClose={() => setPasswordOpen(false)} />
       )}
     </div>
   )

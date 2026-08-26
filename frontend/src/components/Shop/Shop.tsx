@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { shopApi } from '../../api'
 import { cartItemFromProduct, cartItemFromSubscription, useCartStore } from '../../store/cartStore'
-import { useToastStore } from '../../store/toastStore'
 import { useAuth } from '../../hooks/useAuth'
 import type { ShopProduct, ShopSubscription } from '../../types'
 import { ProductCard } from './ProductCard'
 import { SubscriptionCard } from './SubscriptionCard'
+import { Modal } from '../Common/Modal'
+import { Button } from '../Common/Button'
 
 type Filter = 'all' | 'BASIC' | 'PREMIUM' | 'LIFETIME' | 'PRODUCTS'
 
@@ -33,8 +34,7 @@ function isLifetime(item: ShopSubscription) {
 export function Shop() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
-  const addItem = useCartStore((state) => state.addItem)
-  const showToast = useToastStore((state) => state.showToast)
+  const addItem = useCartStore((state) => state.setCheckoutItem)
   const [filter, setFilter] = useState<Filter>('all')
   const [confirmItem, setConfirmItem] = useState<ShopSubscription | ShopProduct | null>(null)
   const [confirmKind, setConfirmKind] = useState<'subscription' | 'product'>('subscription')
@@ -82,8 +82,8 @@ export function Shop() {
         ? cartItemFromSubscription(item as ShopSubscription)
         : cartItemFromProduct(item as ShopProduct),
     )
-    showToast('Добавлено в корзину', 'success')
     setConfirmItem(null)
+    navigate('/shop/checkout')
   }
 
   return (
@@ -177,22 +177,17 @@ export function Shop() {
       </div>
 
       {confirmItem && (
-        <div className="shop-modal-backdrop" role="presentation" onClick={() => setConfirmItem(null)}>
-          <div className="shop-modal" role="dialog" onClick={(event) => event.stopPropagation()}>
-            <h2>Добавить в корзину?</h2>
-            <p>
-              {confirmItem.name} — {confirmItem.price} ₽
-            </p>
-            <div className="shop-modal-actions">
-              <button type="button" className="auth-submit" style={{ marginTop: 0, width: 'auto', padding: '0 18px' }} onClick={() => add(confirmItem, confirmKind)}>
-                Купить
-              </button>
-              <button type="button" className="btn-ghost" onClick={() => setConfirmItem(null)}>
-                Отмена
-              </button>
-            </div>
+        <Modal title="Купить?" onClose={() => setConfirmItem(null)}>
+          <p className="page-text">
+            {confirmItem.name} — {confirmItem.price} ₽
+          </p>
+          <div className="shop-modal-actions">
+            <Button onClick={() => add(confirmItem, confirmKind)}>Купить</Button>
+            <Button variant="ghost" onClick={() => setConfirmItem(null)}>
+              Отмена
+            </Button>
           </div>
-        </div>
+        </Modal>
       )}
     </section>
   )

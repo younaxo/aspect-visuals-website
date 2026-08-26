@@ -23,6 +23,8 @@ export interface User {
   email?: string | null
   isEmailVerified?: boolean
   discordLinked?: boolean
+  telegramLinked?: boolean
+  telegramId?: string | null
   roles: Role[]
   balance?: number
   createdAt: string

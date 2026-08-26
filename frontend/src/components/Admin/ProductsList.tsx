@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import api from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 import { useToastStore } from '../../store/toastStore'
 
 const empty = { name: '', description: '', price: '99', type: 'BETA', isActive: true }
@@ -44,12 +45,16 @@ export function ProductsList() {
           <textarea className="profile-input" placeholder="Описание" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <div className="admin-form-row">
             <input className="profile-input" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-            <select className="profile-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-              <option value="BETA">BETA</option>
-              <option value="HWID_RESET">HWID_RESET</option>
-              <option value="SKIN">SKIN</option>
-              <option value="OTHER">OTHER</option>
-            </select>
+            <CustomSelect
+              value={form.type}
+              onChange={(type) => setForm({ ...form, type })}
+              options={[
+                { value: 'BETA', label: 'BETA' },
+                { value: 'HWID_RESET', label: 'HWID_RESET' },
+                { value: 'SKIN', label: 'SKIN' },
+                { value: 'OTHER', label: 'OTHER' },
+              ]}
+            />
           </div>
           <Button onClick={() => void save()}>{editingId ? 'Сохранить' : 'Создать'}</Button>
         </div>

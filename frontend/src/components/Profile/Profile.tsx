@@ -4,17 +4,14 @@ import { ru } from 'date-fns/locale'
 import { ImageUpload } from '../Common/ImageUpload'
 import { Button } from '../Common/Button'
 import { UserNameLine } from './UserNameLine'
+import { CustomSelect } from '../Common/CustomSelect'
+import { RoleHierarchy } from './RoleHierarchy'
 import { MySubscriptions } from './MySubscriptions'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { useToastStore } from '../../store/toastStore'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 import { renderMarkdown } from '../../utils/markdown'
-import {
-  DISCORD_ROLE_LABELS,
-  getRoleIconUrl,
-  getRoleKeyByDiscordId,
-} from '../../utils/discordRoles'
 import type { PresenceStatus, User } from '../../types'
 
 const STATUS_OPTIONS: Array<{ value: PresenceStatus; label: string }> = [
@@ -44,7 +41,7 @@ function toFormState(user: User): ProfileFormState {
   }
 }
 
-export function Profile() {
+export function Profile({ customizeOnly = false }: { customizeOnly?: boolean }) {
   const { user: authUser } = useAuth()
   const { profile, saveProfile, uploadAvatar, uploadBanner, removeAvatar, removeBanner, isSaving } =
     useProfile()
@@ -200,17 +197,11 @@ export function Profile() {
               </label>
               <label className="profile-field">
                 <span>Присутствие</span>
-                <select
-                  className="profile-input"
+                <CustomSelect
                   value={form.status}
-                  onChange={(event) => setForm({ ...form, status: event.target.value as PresenceStatus })}
-                >
-                  {STATUS_OPTIONS.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(status) => setForm({ ...form, status: status as PresenceStatus })}
+                  options={STATUS_OPTIONS}
+                />
               </label>
               <label className="profile-field">
                 <span>О себе</span>
@@ -283,24 +274,11 @@ export function Profile() {
           <section className="profile-section" aria-label="Роли">
             <h2>Роли</h2>
             <div className="role-list">
-              {user.roles.length ? (
-                user.roles.map((item) => {
-                  const key = getRoleKeyByDiscordId(item.discordId)
-                  const icon = getRoleIconUrl(key)
-                  return (
-                    <span key={item.id} className="role-chip">
-                      {icon && <img className="role-icon" src={icon} alt="" draggable={false} />}
-                      {key ? DISCORD_ROLE_LABELS[key] : item.name}
-                    </span>
-                  )
-                })
-              ) : (
-                <p className="page-text">Роли пока не синхронизированы.</p>
-              )}
+              <RoleHierarchy roles={user.roles} />
             </div>
           </section>
 
-          <MySubscriptions />
+          {!customizeOnly && <MySubscriptions />}
         </div>
       </article>
     </section>

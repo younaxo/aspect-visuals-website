@@ -17,6 +17,8 @@ export type PublicUser = {
   email: string | null
   isEmailVerified: boolean
   discordLinked: boolean
+  telegramLinked: boolean
+  telegramId: string | null
   roles: Role[]
   balance: number
   createdAt: Date
@@ -40,6 +42,8 @@ export function toPublicUser(user: User & { roles: Role[] }): PublicUser {
     email: user.email,
     isEmailVerified: user.isEmailVerified,
     discordLinked: user.discordLinked,
+    telegramLinked: user.telegramLinked,
+    telegramId: user.telegramId,
     roles: user.roles,
     balance: Number(user.balance ?? 0),
     createdAt: user.createdAt,

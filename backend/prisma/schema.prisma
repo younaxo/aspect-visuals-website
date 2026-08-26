@@ -23,6 +23,8 @@ model User {
   password               String?
   isEmailVerified        Boolean             @default(false)
   discordLinked          Boolean             @default(false)
+  telegramId             String?             @unique
+  telegramLinked         Boolean             @default(false)
   discordLinkToken       String?
   resetToken             String?
   resetTokenExpiry       DateTime?

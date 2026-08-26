@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import api, { shopApi } from '../../api'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 import { useToastStore } from '../../store/toastStore'
 import type { ShopProduct } from '../../types'
 import { FolderField } from './FolderField'
@@ -128,19 +129,15 @@ export function ActivationKeys() {
         <div className="admin-form">
           <label className="profile-field">
             <span>Товар</span>
-            <select className="profile-input" value={target} onChange={(event) => setTarget(event.target.value)}>
-              <optgroup label="Подписки">
-                <option value="s:BASIC">Базовая</option>
-                <option value="s:PREMIUM">Премиум</option>
-              </optgroup>
-              <optgroup label="Дополнительно">
-                {products.map((item) => (
-                  <option key={item.id} value={`p:${item.id}`}>
-                    {item.name}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+            <CustomSelect
+              value={target}
+              onChange={setTarget}
+              options={[
+                { value: 's:BASIC', label: 'Базовая', group: 'Подписки' },
+                { value: 's:PREMIUM', label: 'Премиум', group: 'Подписки' },
+                ...products.map((item) => ({ value: `p:${item.id}`, label: item.name, group: 'Дополнительно' })),
+              ]}
+            />
           </label>
           {selectedIsSub && (
             <label className="profile-field">
@@ -179,11 +176,15 @@ export function ActivationKeys() {
           <span>Свободно {stats.remaining}</span>
         </div>
         <input className="profile-input" placeholder="Поиск по ключу" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className="profile-input" value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="all">Все</option>
-          <option value="free">Свободные</option>
-          <option value="used">Использованные</option>
-        </select>
+        <CustomSelect
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'Все' },
+            { value: 'free', label: 'Свободные' },
+            { value: 'used', label: 'Использованные' },
+          ]}
+        />
         <Button variant="ghost" onClick={exportCsv}>
           Экспорт CSV
         </Button>

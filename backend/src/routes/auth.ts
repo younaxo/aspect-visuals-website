@@ -12,6 +12,8 @@ import {
   refresh,
   register,
   resetPassword,
+  telegramConfig,
+  telegramLogin,
   unlinkDiscord,
   verifyEmail,
 } from '../controllers/authController'
@@ -35,6 +37,9 @@ router.get('/discord', optionalAuth, discordAuthUrl)
 router.post('/discord', optionalAuth, discordAuthUrl)
 router.get('/discord/callback', discordCallbackRedirect)
 router.post('/discord/callback', discordCallback)
+
+router.get('/telegram/config', telegramConfig)
+router.post('/telegram', loginLimiter, telegramLogin)
 
 router.post('/link-discord', authMiddleware, linkDiscord)
 router.post('/unlink-discord', authMiddleware, unlinkDiscord)

@@ -6,7 +6,11 @@ import { OnlineUsers } from './OnlineUsers'
 import { setChatActive, useChatStore } from '../../store/chatStore'
 import { useAuthStore } from '../../store/authStore'
 
-export function Chat() {
+interface ChatProps {
+  embedded?: boolean
+}
+
+export function Chat({ embedded = false }: ChatProps) {
   const user = useAuthStore((state) => state.user)
   const settings = useAuthStore((state) => state.settings)
   const {
@@ -48,8 +52,8 @@ export function Chat() {
     .join(', ')
 
   return (
-    <section className="chat-page">
-      <div className="chat-shell liquid-glass">
+    <section className={embedded ? 'chat-page is-embedded' : 'chat-page'}>
+      <div className={`chat-shell ${embedded ? '' : 'liquid-glass'}`}>
         <ChannelSelector
           channels={channels}
           current={currentChannel}

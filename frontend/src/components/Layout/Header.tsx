@@ -108,6 +108,13 @@ export function Header() {
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
                 onClick={closeMenus}
               >
+                Аккаунт
+              </NavLink>
+              <NavLink
+                to="/profile/me"
+                className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenus}
+              >
                 Профиль
               </NavLink>
               <NavLink
