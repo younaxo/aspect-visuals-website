@@ -80,107 +80,114 @@ export function PromoCodes() {
   }
 
   return (
-    <section className="content-panel shop-cart">
-      <p className="eyebrow">Админ</p>
-      <h1 className="page-title">Промокоды</h1>
-
-      <div className="admin-form">
-        <label className="profile-field">
-          <span>Код</span>
-          <input
-            className="profile-input"
-            value={form.code}
-            disabled={Boolean(editingId)}
-            onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })}
-          />
-        </label>
-        <label className="profile-field">
-          <span>Тип</span>
-          <select
-            className="profile-input"
-            value={form.type}
-            onChange={(event) => setForm({ ...form, type: event.target.value })}
-          >
-            <option value="PERCENTAGE">Процент</option>
-            <option value="FIXED">Фиксированная сумма</option>
-          </select>
-        </label>
-        <label className="profile-field">
-          <span>Значение</span>
-          <input
-            className="profile-input"
-            type="number"
-            value={form.value}
-            onChange={(event) => setForm({ ...form, value: event.target.value })}
-          />
-        </label>
-        <label className="profile-field">
-          <span>Минимальная сумма</span>
-          <input
-            className="profile-input"
-            type="number"
-            value={form.minOrderAmount}
-            onChange={(event) => setForm({ ...form, minOrderAmount: event.target.value })}
-          />
-        </label>
-        <label className="profile-field">
-          <span>Дата окончания</span>
-          <input
-            className="profile-input"
-            type="date"
-            value={form.validUntil}
-            onChange={(event) => setForm({ ...form, validUntil: event.target.value })}
-          />
-        </label>
-        <label className="profile-field">
-          <span>Максимум использований</span>
-          <input
-            className="profile-input"
-            type="number"
-            value={form.maxUses}
-            onChange={(event) => setForm({ ...form, maxUses: event.target.value })}
-          />
-        </label>
-        <Button disabled={busy} onClick={() => void save()}>
-          {editingId ? 'Сохранить' : 'Создать'}
-        </Button>
-      </div>
-
-      <ul className="cart-list">
-        {items.map((item) => (
-          <li key={item.id} className="cart-item admin-row">
-            <div>
-              <strong>{item.code}</strong>
-              <p className="page-text">
-                {item.type === 'PERCENTAGE' ? `${item.value}%` : `${item.value} ₽`} · мин. {item.minOrderAmount} ₽ ·
-                использовано {item.usedCount}/{item.maxUses}
-                {!item.isActive ? ' · выключен' : ''}
-              </p>
-            </div>
-            <div className="shop-sub-actions">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setEditingId(item.id)
-                  setForm({
-                    code: item.code,
-                    type: item.type,
-                    value: String(item.value),
-                    minOrderAmount: String(item.minOrderAmount),
-                    validUntil: item.validUntil ? item.validUntil.slice(0, 10) : '',
-                    maxUses: String(item.maxUses),
-                  })
-                }}
+    <div className="admin-grid">
+      <article className="admin-card liquid-glass">
+        <h2 className="shop-section-title">{editingId ? 'Редактирование' : 'Новый промокод'}</h2>
+        <div className="admin-form">
+          <label className="profile-field">
+            <span>Код</span>
+            <input
+              className="profile-input"
+              value={form.code}
+              disabled={Boolean(editingId)}
+              onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })}
+            />
+          </label>
+          <div className="admin-form-row">
+            <label className="profile-field">
+              <span>Тип скидки</span>
+              <select
+                className="profile-input"
+                value={form.type}
+                onChange={(event) => setForm({ ...form, type: event.target.value })}
               >
-                Редактировать
-              </Button>
-              <Button variant="ghost" onClick={() => void remove(item.id)}>
-                Удалить
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
+                <option value="PERCENTAGE">Процент</option>
+                <option value="FIXED">Фиксированная сумма</option>
+              </select>
+            </label>
+            <label className="profile-field">
+              <span>Значение</span>
+              <input
+                className="profile-input"
+                type="number"
+                value={form.value}
+                onChange={(event) => setForm({ ...form, value: event.target.value })}
+              />
+            </label>
+          </div>
+          <div className="admin-form-row">
+            <label className="profile-field">
+              <span>Минимальная сумма, ₽</span>
+              <input
+                className="profile-input"
+                type="number"
+                value={form.minOrderAmount}
+                onChange={(event) => setForm({ ...form, minOrderAmount: event.target.value })}
+              />
+            </label>
+            <label className="profile-field">
+              <span>Максимум использований</span>
+              <input
+                className="profile-input"
+                type="number"
+                value={form.maxUses}
+                onChange={(event) => setForm({ ...form, maxUses: event.target.value })}
+              />
+            </label>
+          </div>
+          <label className="profile-field">
+            <span>Дата окончания</span>
+            <input
+              className="profile-input"
+              type="date"
+              value={form.validUntil}
+              onChange={(event) => setForm({ ...form, validUntil: event.target.value })}
+            />
+          </label>
+          <Button disabled={busy} onClick={() => void save()}>
+            {editingId ? 'Сохранить' : 'Создать промокод'}
+          </Button>
+        </div>
+      </article>
+
+      <article className="admin-card liquid-glass">
+        <h2 className="shop-section-title">Активные и архивные</h2>
+        <ul className="admin-list">
+          {items.map((item) => (
+            <li key={item.id} className={`admin-list-item ${item.isActive ? '' : 'is-off'}`}>
+              <div>
+                <strong className="admin-code">{item.code}</strong>
+                <p className="page-text">
+                  {item.type === 'PERCENTAGE' ? `${item.value}%` : `${item.value} ₽`} · мин. {item.minOrderAmount} ₽ ·{' '}
+                  {item.usedCount}/{item.maxUses}
+                  {!item.isActive ? ' · выключен' : ''}
+                </p>
+              </div>
+              <div className="shop-sub-actions">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setEditingId(item.id)
+                    setForm({
+                      code: item.code,
+                      type: item.type,
+                      value: String(item.value),
+                      minOrderAmount: String(item.minOrderAmount),
+                      validUntil: item.validUntil ? item.validUntil.slice(0, 10) : '',
+                      maxUses: String(item.maxUses),
+                    })
+                  }}
+                >
+                  Изменить
+                </Button>
+                <Button variant="ghost" onClick={() => void remove(item.id)}>
+                  Выключить
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </article>
+    </div>
   )
 }

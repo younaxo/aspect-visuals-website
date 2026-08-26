@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { Toast } from '../Common/Toast'
+import { ChatNotifier } from '../Chat/ChatNotifier'
 import { useAuthStore } from '../../store/authStore'
 import { applySettings } from '../../utils/settings'
 
@@ -29,6 +29,7 @@ export function MainLayout() {
       </main>
       <Footer />
       <Toast />
+      <ChatNotifier />
     </div>
   )
 }

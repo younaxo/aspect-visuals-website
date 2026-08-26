@@ -37,6 +37,10 @@ model User {
   userSubscriptions      UserSubscription[]
   promoUsed              PromoCodeUsed[]
   activationKeys         ActivationKey[]
+  bonusUsed              BonusCodeUsed[]
+  messages               Message[]
+  messageReactions       MessageReaction[]
+  chatPresence           ChatUser?
   lastTestSubscriptionAt DateTime?
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
@@ -93,6 +97,80 @@ model PromoCode {
   purchases      Purchase[]
 }
 
+model BonusCode {
+  id               String          @id @default(cuid())
+  code             String          @unique
+  days             Int
+  subscriptionType String
+  maxUses          Int             @default(1)
+  usedCount        Int             @default(0)
+  oncePerUser      Boolean         @default(true)
+  isActive         Boolean         @default(true)
+  validUntil       DateTime?
+  createdBy        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  usedBy           BonusCodeUsed[]
+}
+
+model BonusCodeUsed {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  bonusCodeId String
+  bonusCode   BonusCode @relation(fields: [bonusCodeId], references: [id])
+  usedAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([bonusCodeId])
+}
+
+model Message {
+  id        String            @id @default(cuid())
+  content   String
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  channel   String            @default("general")
+  parentId  String?
+  parent    Message?          @relation("MessageReplies", fields: [parentId], references: [id])
+  replies   Message[]         @relation("MessageReplies")
+  isPinned  Boolean           @default(false)
+  isEdited  Boolean           @default(false)
+  isDeleted Boolean           @default(false)
+  editedAt  DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  reactions MessageReaction[]
+
+  @@index([channel, createdAt])
+  @@index([parentId])
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+}
+
+model ChatUser {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  lastSeen      DateTime @default(now())
+  isOnline      Boolean  @default(false)
+  typing        Boolean  @default(false)
+  mutedChannels String[]
+  lastRead      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model PromoCodeUsed {
   id          String    @id @default(cuid())
   userId      String
@@ -118,6 +196,7 @@ model ActivationKey {
   activatedById  String?
   usedAt         DateTime?
   expiresAt      DateTime?
+  durationDays   Int?
   isUsed         Boolean           @default(false)
   batchId        String?
   batch          ActivationBatch?  @relation(fields: [batchId], references: [id])

@@ -21,6 +21,9 @@ import { Settings } from './components/Profile/Settings'
 import { AdminRoute } from './components/Auth/AdminRoute'
 import { PromoCodes } from './components/Admin/PromoCodes'
 import { ActivationKeys } from './components/Admin/ActivationKeys'
+import { BonusCodes } from './components/Admin/BonusCodes'
+import { AdminPage } from './components/Admin/AdminPage'
+import { Chat } from './components/Chat/Chat'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,10 +84,15 @@ function App() {
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
             <Route path="discord-auth" element={<DiscordCallback />} />
             <Route element={<AdminRoute />}>
-              <Route path="admin/promo" element={<PromoCodes />} />
-              <Route path="admin/keys" element={<ActivationKeys />} />
+              <Route path="admin" element={<AdminPage />}>
+                <Route index element={<Navigate to="/admin/promo" replace />} />
+                <Route path="promo" element={<PromoCodes />} />
+                <Route path="bonus" element={<BonusCodes />} />
+                <Route path="keys" element={<ActivationKeys />} />
+              </Route>
             </Route>
             <Route element={<ProtectedRoute />}>
+              <Route path="chat" element={<Chat />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
               <Route path="shop/cart" element={<Cart />} />

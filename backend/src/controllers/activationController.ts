@@ -26,6 +26,7 @@ function serializeKey(
     isUsed: boolean
     usedAt: Date | null
     expiresAt: Date | null
+    durationDays: number | null
     createdAt: Date
     product: { id: string; name: string } | null
     subscription: { id: string; name: string } | null
@@ -40,6 +41,7 @@ function serializeKey(
     isUsed: item.isUsed,
     usedAt: item.usedAt,
     expiresAt: item.expiresAt,
+    durationDays: item.durationDays,
     createdAt: item.createdAt,
     batchId: item.batchId,
     product: item.product,
@@ -54,9 +56,19 @@ export async function generateKeys(req: AuthRequest, res: Response) {
   const count = Math.min(200, Math.max(1, Number(req.body?.count) || 1))
   const name = asString(req.body?.name) || `Пачка ${new Date().toISOString().slice(0, 10)}`
   const expiresAt = asDate(req.body?.expiresAt)
+  const durationRaw = req.body?.durationDays
+  const durationDays =
+    durationRaw === '' || durationRaw === null || durationRaw === undefined
+      ? null
+      : Math.max(0, Number(durationRaw) || 0)
 
   if (!productId && !subscriptionId) {
-    res.status(400).json({ message: 'Выберите товар или подписку' })
+    res.status(400).json({ message: 'Выберите товар' })
+    return
+  }
+
+  if (subscriptionId && durationDays == null) {
+    res.status(400).json({ message: 'Укажите срок действия подписки в днях (0 — навсегда)' })
     return
   }
 
@@ -95,6 +107,7 @@ export async function generateKeys(req: AuthRequest, res: Response) {
         subscriptionId,
         generatedBy: req.userId,
         expiresAt,
+        durationDays,
         batchId: batch.id,
       },
       include: { product: true, subscription: true },
@@ -140,7 +153,7 @@ export async function activateKey(req: AuthRequest, res: Response) {
     }
 
     if (key.subscriptionId) {
-      await activateSubscription(req.userId, key.subscriptionId)
+      await activateSubscription(req.userId, key.subscriptionId, key.durationDays)
     }
 
     if (key.productId) {

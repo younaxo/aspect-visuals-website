@@ -98,7 +98,11 @@ async function testAvailability(userId: string) {
   }
 }
 
-export async function activateSubscription(userId: string, subscriptionId: string) {
+export async function activateSubscription(
+  userId: string,
+  subscriptionId: string,
+  durationDays?: number | null,
+) {
   const subscription = await prisma.subscription.findUnique({ where: { id: subscriptionId } })
   if (!subscription) return
 
@@ -108,7 +112,8 @@ export async function activateSubscription(userId: string, subscriptionId: strin
   })
 
   const startFrom = existing && existing.endDate > new Date() ? existing.endDate : new Date()
-  const endDate = addDays(startFrom, subscription.duration)
+  const days = durationDays == null ? subscription.duration : durationDays
+  const endDate = addDays(startFrom, days)
 
   if (existing) {
     await prisma.userSubscription.update({

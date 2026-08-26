@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import axios from 'axios'
+import api from '../../api'
 import { useActivationStore } from '../../store/activationStore'
 import { useToastStore } from '../../store/toastStore'
 import { Button } from '../Common/Button'
@@ -10,6 +12,7 @@ export function ActivationInput() {
   const lastActivated = useActivationStore((state) => state.lastActivated)
   const showToast = useToastStore((state) => state.showToast)
   const [value, setValue] = useState('')
+  const [bonus, setBonus] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -28,6 +31,23 @@ export function ActivationInput() {
     }
   }
 
+  const redeemBonus = async () => {
+    setBusy(true)
+    try {
+      const { data } = await api.post('/api/bonus/redeem', { code: bonus.trim().toUpperCase() })
+      const payload = data as { days: number; name: string }
+      showToast(`Начислено ${payload.days} дн.: ${payload.name}`, 'success', 'Бонус-код')
+      setBonus('')
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? (error.response?.data as { message?: string })?.message
+        : 'Не удалось применить бонус-код'
+      showToast(message || 'Неверный бонус-код', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <section className="profile-section" aria-label="Ключ активации">
       <h2>Ключ активации</h2>
@@ -42,6 +62,20 @@ export function ActivationInput() {
           />
           <Button disabled={busy || !value.trim()} onClick={() => void submit()}>
             Активировать
+          </Button>
+        </div>
+      </label>
+      <label className="profile-field">
+        <span>Бонус-код</span>
+        <div className="cart-promo">
+          <input
+            className="profile-input"
+            value={bonus}
+            onChange={(event) => setBonus(event.target.value.toUpperCase())}
+            placeholder="BONUS2026"
+          />
+          <Button disabled={busy || !bonus.trim()} onClick={() => void redeemBonus()}>
+            Применить
           </Button>
         </div>
       </label>
