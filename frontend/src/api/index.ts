@@ -96,4 +96,23 @@ export const authApi = {
   discordStatus: () => api.get('/api/auth/discord-status'),
 }
 
+export const shopApi = {
+  subscriptions: () => api.get('/api/shop/subscriptions'),
+  products: () => api.get('/api/shop/products'),
+  subscription: (id: string) => api.get(`/api/shop/subscriptions/${id}`),
+  applyPromo: (code: string, amount: number) => api.post('/api/shop/apply-promo', { code, amount }),
+  purchase: (payload: {
+    items: Array<{ kind: 'subscription' | 'product'; id: string }>
+    promoCode?: string
+    paymentMethod?: string
+    giftToUserId?: string
+  }) => api.post('/api/shop/purchase', payload),
+  mockComplete: (orderId: string) => api.post(`/api/shop/mock-complete/${orderId}`),
+  mySubscriptions: () => api.get('/api/shop/user/subscriptions'),
+  myPurchases: () => api.get('/api/shop/user/purchases'),
+  testStatus: () => api.get('/api/shop/subscription/test'),
+  activateTest: () => api.post('/api/shop/subscription/test'),
+  cancel: (id: string) => api.post(`/api/shop/subscription/cancel/${id}`),
+}
+
 export default api

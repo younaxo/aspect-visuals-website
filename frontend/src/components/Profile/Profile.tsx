@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { ImageUpload } from '../Common/ImageUpload'
 import { Button } from '../Common/Button'
 import { UserNameLine } from './UserNameLine'
+import { MySubscriptions } from './MySubscriptions'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { useToastStore } from '../../store/toastStore'
@@ -45,7 +46,7 @@ function toFormState(user: User): ProfileFormState {
 
 export function Profile() {
   const { user: authUser } = useAuth()
-  const { profile, subscriptions, saveProfile, uploadAvatar, uploadBanner, removeAvatar, removeBanner, isSaving } =
+  const { profile, saveProfile, uploadAvatar, uploadBanner, removeAvatar, removeBanner, isSaving } =
     useProfile()
   const showToast = useToastStore((state) => state.showToast)
   const user = profile?.user ?? authUser
@@ -299,25 +300,7 @@ export function Profile() {
             </div>
           </section>
 
-          <section className="profile-section" aria-label="Подписки">
-            <h2>Подписки</h2>
-            {subscriptions.length ? (
-              <ul className="subscription-list">
-                {subscriptions.map((item) => (
-                  <li key={item.id} className="subscription-item">
-                    <span>{item.name}</span>
-                    <span>
-                      {item.expiresAt
-                        ? formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true, locale: ru })
-                        : 'Навсегда'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="page-text">Нет активных подписок.</p>
-            )}
-          </section>
+          <MySubscriptions />
         </div>
       </article>
     </section>

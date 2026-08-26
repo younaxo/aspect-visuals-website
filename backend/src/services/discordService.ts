@@ -155,3 +155,63 @@ export async function syncUserRoles(userId: string, discordRoleIds: string[]) {
     },
   })
 }
+
+async function botRequest(method: 'put' | 'delete', path: string) {
+  const botToken = process.env.DISCORD_BOT_TOKEN
+  const guildId = process.env.DISCORD_GUILD_ID
+  if (!botToken || !guildId) return
+
+  await axios({
+    method,
+    url: `${DISCORD_API}/guilds/${guildId}${path}`,
+    headers: { Authorization: `Bot ${botToken}` },
+    validateStatus: (status) => status < 500,
+  })
+}
+
+export async function giveRole(discordId: string, roleId: string) {
+  await botRequest('put', `/members/${discordId}/roles/${roleId}`)
+}
+
+export async function removeRole(discordId: string, roleId: string) {
+  await botRequest('delete', `/members/${discordId}/roles/${roleId}`)
+}
+
+export async function syncSubscriptionRoles(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      userSubscriptions: {
+        where: { isActive: true },
+        include: { subscription: true },
+      },
+    },
+  })
+
+  if (!user?.discordId) return
+
+  const roleIds = user.userSubscriptions
+    .map((item) => item.subscription.discordRoleId)
+    .filter((id): id is string => Boolean(id))
+
+  const unique = [...new Set(roleIds)]
+  await Promise.all(unique.map((roleId) => giveRole(user.discordId as string, roleId)))
+
+  if (unique.length) {
+    const current = await getGuildMemberRoles(user.discordId)
+    await syncUserRoles(user.id, [...new Set([...current, ...unique])])
+  }
+}
+
+export async function notifyPurchase(payload: {
+  username: string
+  itemName: string
+  amount: number
+}) {
+  const webhook = process.env.DISCORD_PURCHASES_WEBHOOK_URL
+  if (!webhook) return
+
+  await axios.post(webhook, {
+    content: `Покупка: **${payload.username}** — ${payload.itemName} на ${payload.amount} ₽`,
+  })
+}

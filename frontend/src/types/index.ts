@@ -70,6 +70,55 @@ export interface ApiError {
   status?: number
 }
 
+export interface ShopSubscription {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  duration: number
+  type: string
+  popular?: boolean
+  badge?: string | null
+}
+
+export interface ShopProduct {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  type: string
+  giftable: boolean
+}
+
+export interface UserShopSubscription {
+  id: string
+  subscriptionId: string
+  name: string
+  type: string
+  startDate: string
+  endDate: string
+  isActive: boolean
+  status: 'active' | 'expiring' | 'expired'
+  lifetime: boolean
+}
+
+export interface TestSubscriptionInfo {
+  available: boolean
+  reason: string | null
+  lastActivatedAt: string | null
+  nextAvailableAt: string | null
+}
+
+export interface ShopPurchase {
+  id: string
+  amount: number
+  status: string
+  createdAt: string
+  completedAt: string | null
+  name: string
+  kind: 'subscription' | 'product'
+}
+
 export type RoleKey =
   | 'Owner'
   | 'Developer'

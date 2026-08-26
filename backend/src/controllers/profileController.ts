@@ -56,11 +56,16 @@ async function profilePayload(user: NonNullable<Awaited<ReturnType<typeof loadUs
   return {
     user: toPublicUser({ ...user, discriminator: String(uid) }),
     settings,
-    subscriptions: [] as Array<{
-      id: string
-      name: string
-      expiresAt: string | null
-    }>,
+    subscriptions: (
+      await prisma.userSubscription.findMany({
+        where: { userId: user.id, isActive: true, endDate: { gt: new Date() } },
+        include: { subscription: true },
+      })
+    ).map((item) => ({
+      id: item.id,
+      name: item.subscription.name,
+      expiresAt: item.subscription.duration <= 0 ? null : item.endDate.toISOString(),
+    })),
   }
 }
 

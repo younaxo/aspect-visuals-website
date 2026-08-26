@@ -12,6 +12,10 @@ import { DiscordCallback } from './pages/DiscordCallback'
 import { HomePage } from './pages/HomePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { Shop } from './components/Shop/Shop'
+import { Cart } from './components/Shop/Cart'
+import { Checkout } from './components/Shop/Checkout'
+import { MockPayPage } from './components/Shop/MockPayPage'
 import { Profile } from './components/Profile/Profile'
 import { Settings } from './components/Profile/Settings'
 
@@ -32,7 +36,7 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
             <Route path="news" element={<PlaceholderPage title="Новости" />} />
-            <Route path="shop" element={<PlaceholderPage title="Магазин" />} />
+            <Route path="shop" element={<Shop />} />
             <Route path="privacy" element={<PlaceholderPage title="Политика конфиденциальности" />} />
             <Route path="terms" element={<PlaceholderPage title="Пользовательское соглашение" />} />
             <Route path="legal" element={<PlaceholderPage title="Юридическая информация" />} />
@@ -76,6 +80,9 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="shop/cart" element={<Cart />} />
+              <Route path="shop/checkout" element={<Checkout />} />
+              <Route path="shop/pay/:orderId" element={<MockPayPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

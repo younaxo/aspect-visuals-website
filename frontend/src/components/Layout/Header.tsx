@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Logo } from '../Common/Logo'
 import { Sidebar } from './Sidebar'
 import { useAuth } from '../../hooks/useAuth'
+import { useCartStore } from '../../store/cartStore'
 
 const navItems = [
   { to: '/', label: 'Главная' },
@@ -12,6 +13,7 @@ const navItems = [
 
 export function Header() {
   const { user, isAuthenticated } = useAuth()
+  const cartCount = useCartStore((state) => state.items.length)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -68,7 +70,12 @@ export function Header() {
         </button>
 
         {isAuthenticated && user ? (
-          <Sidebar />
+          <>
+            <Link to="/shop/cart" className="btn-ghost header-login">
+              Корзина{cartCount ? ` (${cartCount})` : ''}
+            </Link>
+            <Sidebar />
+          </>
         ) : (
           <Link to="/login" className="btn-primary header-login">
             Войти
@@ -91,6 +98,13 @@ export function Header() {
           ))}
           {isAuthenticated ? (
             <>
+              <NavLink
+                to="/shop/cart"
+                className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenus}
+              >
+                Корзина
+              </NavLink>
               <NavLink
                 to="/profile"
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}

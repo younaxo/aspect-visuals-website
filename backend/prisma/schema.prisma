@@ -32,9 +32,92 @@ model User {
   sessions            Session[]
   settings            UserSettings?
   passwordResets      PasswordReset[]
-  emailVerifications  EmailVerification[]
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  emailVerifications     EmailVerification[]
+  purchases              Purchase[]
+  userSubscriptions      UserSubscription[]
+  lastTestSubscriptionAt DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  name          String
+  description   String?
+  price         Decimal
+  duration      Int
+  type          String
+  discordRoleId String?
+  isActive      Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  purchases     Purchase[]
+  userSubs      UserSubscription[]
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal
+  type        String
+  giftable    Boolean    @default(true)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  purchases   Purchase[]
+}
+
+model PromoCode {
+  id              String     @id @default(cuid())
+  code            String     @unique
+  discountPercent Int?
+  discountAmount  Decimal?
+  maxUses         Int?
+  usedCount       Int        @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  purchases       Purchase[]
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id])
+  subscriptionId String?
+  subscription   Subscription?  @relation(fields: [subscriptionId], references: [id])
+  productId      String?
+  product        Product?       @relation(fields: [productId], references: [id])
+  amount         Decimal
+  status         String
+  paymentId      String?
+  paymentMethod  String?
+  orderId        String?
+  giftToUserId   String?
+  promoCodeId    String?
+  promoCode      PromoCode?     @relation(fields: [promoCodeId], references: [id])
+  createdAt      DateTime       @default(now())
+  completedAt    DateTime?
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([paymentId])
+}
+
+model UserSubscription {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  startDate      DateTime     @default(now())
+  endDate        DateTime
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([userId])
 }
 
 model UserSettings {
