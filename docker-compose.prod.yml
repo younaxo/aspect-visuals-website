@@ -29,8 +29,8 @@ services:
     environment:
       PORT: 5000
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-aspect_prod_9898}@postgres:5432/aspect_visuals
-      FRONTEND_URL: http://2.26.85.78
-      BACKEND_URL: http://2.26.85.78
+      FRONTEND_URL: https://aspectvisuals.su
+      BACKEND_URL: https://aspectvisuals.su
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}
     depends_on:
