@@ -1,40 +1,170 @@
+import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Logo } from '../Common/Logo'
 
-const socials = [
-  { label: 'Telegram', href: 'https://t.me/aspectvisuals' },
-  { label: 'Discord', href: 'https://discord.gg/aspectvisuals' },
-  { label: 'YouTube', href: 'https://youtube.com/@aspectvisuals' },
-  { label: 'TikTok', href: 'https://www.tiktok.com/@aspectvisuals' },
+interface SocialItem {
+  label: string
+  href: string
+  icon: ReactNode
+}
+
+interface InternalLink {
+  to: string
+  label: string
+}
+
+interface ExternalLink {
+  href: string
+  label: string
+}
+
+const socials: SocialItem[] = [
+  {
+    label: 'Discord',
+    href: 'https://discord.gg/aspectvisuals',
+    icon: (
+      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+    ),
+  },
+  {
+    label: 'Telegram',
+    href: 'https://t.me/aspectvisuals',
+    icon: (
+      <path d="M21.8 4.3c.3-.1.6 0 .8.3.2.2.2.6.2.8l-2.6 13.6c-.1.5-.4.7-.8.9-.4.1-.7 0-1.1-.2l-4-2.7-2.2 2.1c-.2.2-.4.3-.7.3l.3-4.4 8.1-7.3c.2-.2.2-.5 0-.6-.2-.1-.4 0-.6.1L7.4 13.7l-4.1-1.3c-.6-.2-.6-.6.1-.9L21.8 4.3Z" />
+    ),
+  },
+  {
+    label: 'YouTube',
+    href: 'https://youtube.com/@aspectvisuals',
+    icon: (
+      <path
+        fillRule="evenodd"
+        d="M22.5 7.2a2.8 2.8 0 0 0-2-2C18.6 5 12 5 12 5s-6.6 0-8.5.2a2.8 2.8 0 0 0-2 2A29 29 0 0 0 1.2 12a29 29 0 0 0 .3 4.8 2.8 2.8 0 0 0 2 2C5.4 19 12 19 12 19s6.6 0 8.5-.2a2.8 2.8 0 0 0 2-2 29 29 0 0 0 .3-4.8 29 29 0 0 0-.3-4.8ZM10 8.5v7l6-3.5-6-3.5Z"
+      />
+    ),
+  },
+  {
+    label: 'TikTok',
+    href: 'https://www.tiktok.com/@aspectvisuals',
+    icon: (
+      <path d="M14.5 3h2.2c.2 1.9 1.3 3.4 3.3 3.7v2.3c-1.1 0-2.1-.3-3.1-.9v6.4c0 3.4-2.7 5.9-6.2 5.9S4.5 17.9 4.5 14.5 7.2 8.6 10.7 8.6c.4 0 .8 0 1.2.1v2.4c-.4-.2-.8-.3-1.2-.3-2 0-3.6 1.6-3.6 3.7s1.6 3.7 3.6 3.7 3.6-1.6 3.6-3.7V3Z" />
+    ),
+  },
 ]
+
+const userLinks: Array<InternalLink | ExternalLink> = [
+  { to: '/', label: 'Главная' },
+  { to: '/shop', label: 'Магазин' },
+  { to: '/news', label: 'Новости' },
+  { href: 'https://discord.gg/aspectvisuals', label: 'Discord' },
+]
+
+const legalLinks = [
+  { to: '/privacy', label: 'Политика конфиденциальности' },
+  { to: '/terms', label: 'Пользовательское соглашение' },
+  { to: '/legal', label: 'Юридическая информация' },
+  { to: '/refund', label: 'Политика возвратов' },
+]
+
+const payments = [
+  { src: '/payments/visa.svg', alt: 'Visa' },
+  { src: '/payments/mastercard.svg', alt: 'Mastercard' },
+  { src: '/payments/mir.svg', alt: 'Мир' },
+  { src: '/payments/sbp.svg', alt: 'СБП' },
+]
+
+function ExternalIcon() {
+  return (
+    <svg className="icon footer-external" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 16 16 8" />
+      <path d="M10 8h6v6" />
+    </svg>
+  )
+}
 
 export function Footer() {
   return (
-    <footer className="site-footer liquid-glass">
-      <div className="footer-grid">
-        <div className="footer-brand">
-          <div className="footer-logo-row">
-            <Logo className="h-8 w-8" />
-            <span>Aspect Visuals</span>
-          </div>
-          <p className="footer-legal">
-            Баранов Кирилл Алексеевич
-            <span>ИНН 230815487140</span>
-          </p>
-        </div>
-
-        <div className="footer-col">
-          <h2>Связь</h2>
-          <a href="mailto:support@aspectvisuals.su">Поддержка · support@aspectvisuals.su</a>
-          <a href="mailto:admin@aspectvisuals.su">Администрация · admin@aspectvisuals.su</a>
-        </div>
-
-        <div className="footer-col">
-          <h2>Соцсети</h2>
-          {socials.map((item) => (
-            <a key={item.label} href={item.href} target="_blank" rel="noreferrer">
-              {item.label}
+    <footer className="site-footer">
+      <div className="footer-inner">
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <Link to="/" className="footer-wordmark" aria-label="Aspect Visuals">
+              <Logo className="h-9 w-9" />
+              <span>Aspect Visuals</span>
+            </Link>
+            <p className="footer-legal">
+              Баранов Кирилл Алексеевич
+              <span>ИНН 230815487140</span>
+            </p>
+            <p className="footer-disclaimer">
+              Aspect Visuals не аффилирован с Mojang Studios, Microsoft и не поддерживается ими. Minecraft является
+              товарным знаком Mojang Synergies AB. Все торговые марки принадлежат их владельцам.
+            </p>
+            <div className="footer-socials">
+              {socials.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="footer-social"
+                  aria-label={item.label}
+                >
+                  <svg className="icon icon-fill" viewBox="0 0 24 24" aria-hidden="true">
+                    {item.icon}
+                  </svg>
+                </a>
+              ))}
+            </div>
+            <a
+              className="footer-status"
+              href="https://status.aspectvisuals.su"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span className="footer-status-dot" aria-hidden="true" />
+              Статус сервиса
             </a>
-          ))}
+          </div>
+
+          <nav className="footer-col" aria-label="Пользователям">
+            <h2>Пользователям</h2>
+            {userLinks.map((item) =>
+              'href' in item ? (
+                <a key={item.label} href={item.href} target="_blank" rel="noreferrer">
+                  {item.label}
+                  <ExternalIcon />
+                </a>
+              ) : (
+                <Link key={item.label} to={item.to}>
+                  {item.label}
+                </Link>
+              ),
+            )}
+          </nav>
+
+          <nav className="footer-col" aria-label="Правовая информация">
+            <h2>Правовая информация</h2>
+            {legalLinks.map((item) => (
+              <Link key={item.to} to={item.to}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <div className="footer-bottom">
+          <a className="footer-email" href="mailto:support@aspectvisuals.su">
+            support@aspectvisuals.su
+          </a>
+          <p className="footer-copy">© 2026 Aspect Visuals</p>
+          <ul className="footer-payments">
+            {payments.map((item) => (
+              <li key={item.alt}>
+                <img src={item.src} alt={item.alt} width={48} height={32} />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </footer>

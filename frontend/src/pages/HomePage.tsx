@@ -8,10 +8,10 @@ export function HomePage() {
   return (
     <div className="page-stack">
       <section className="hero-panel">
-        <p className="eyebrow">Visuals</p>
+        <p className="eyebrow">Minecraft</p>
         <h1 className="hero-title">Aspect Visuals</h1>
         <p className="hero-text">
-          Клиент визуалов с Discord-авторизацией, подписками и магазином. Тёмная тема, стекло и аккуратная типографика.
+          Клиент визуалов для Minecraft: Discord-авторизация, подписки и магазин. Тёмная тема, стекло и аккуратная типографика.
         </p>
         <div className="hero-actions">
           <Link to="/shop" className="btn-primary">
@@ -24,7 +24,7 @@ export function HomePage() {
       <section className="feature-grid" aria-label="Возможности">
         <article className="feature-card">
           <h2>Подписки</h2>
-          <p>Базовый и премиум доступ, ключи и тестовый день раз в три месяца.</p>
+          <p>Базовый и премиум доступ к визуалам Minecraft, ключи и тестовый день раз в три месяца.</p>
         </article>
         <article className="feature-card">
           <h2>Discord</h2>

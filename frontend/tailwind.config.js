@@ -15,8 +15,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Geologica", "Arial", "sans-serif"],
-        secondary: ["Arial", "Helvetica", "sans-serif"],
+        sans: ["Golos Text", "sans-serif"],
+        display: ["Geologica", "sans-serif"],
+        secondary: ["Golos Text", "sans-serif"],
       },
     },
   },

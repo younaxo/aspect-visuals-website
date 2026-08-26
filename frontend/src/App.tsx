@@ -24,6 +24,10 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="news" element={<PlaceholderPage title="Новости" />} />
             <Route path="shop" element={<PlaceholderPage title="Магазин" />} />
+            <Route path="privacy" element={<PlaceholderPage title="Политика конфиденциальности" />} />
+            <Route path="terms" element={<PlaceholderPage title="Пользовательское соглашение" />} />
+            <Route path="legal" element={<PlaceholderPage title="Юридическая информация" />} />
+            <Route path="refund" element={<PlaceholderPage title="Политика возвратов" />} />
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
             <Route element={<ProtectedRoute />}>
               <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
