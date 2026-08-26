@@ -8,6 +8,7 @@ import { ChatNotifier } from '../Chat/ChatNotifier'
 import { ChatModal } from '../Chat/ChatModal'
 import { useAuthStore } from '../../store/authStore'
 import { applySettings } from '../../utils/settings'
+import { SiteSounds } from './SiteSounds'
 
 export function MainLayout() {
   const settings = useAuthStore((state) => state.settings)
@@ -27,6 +28,7 @@ export function MainLayout() {
 
   return (
     <div className={`site ${isAuthenticated ? 'has-dock' : ''}`}>
+      <SiteSounds />
       <Header />
       <EdgeDock />
       <main className="site-main">

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com;" />
   <title>Aspect Visuals</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -431,6 +431,7 @@
             <label class="auth-label" for="authPasswordConfirm">Повтор пароля</label>
             <input class="auth-input" id="authPasswordConfirm" type="password" placeholder="повторите пароль" autocomplete="new-password" />
           </div>
+          <div id="authTurnstile" class="turnstile-wrap" style="margin:12px 0 4px;min-height:0;"></div>
           <button type="submit" class="auth-submit interactive" id="authSubmit">Войти</button>
           <div class="auth-login-only">
             <div class="auth-or"><span>ИЛИ</span></div>
@@ -741,61 +742,89 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // ─── Supabase (ключи в supabase-config.js) ───
       let ipcRenderer = null;
       let shell = null;
       try { ({ ipcRenderer, shell } = require("electron")); } catch (e) { console.warn(e); }
 
-      let createClientFn = null;
+      let SITE_API = "https://aspectvisuals.su";
+      let SITE_URL = "https://aspectvisuals.su";
+      let TURNSTILE_SITE_KEY = "";
       try {
-        createClientFn = require("@supabase/supabase-js").createClient;
-      } catch (_) {
-        if (window.supabase && typeof window.supabase.createClient === "function") {
-          createClientFn = window.supabase.createClient.bind(window.supabase);
-        }
-      }
-
-      let SUPABASE_URL = "";
-      let SUPABASE_KEY = "";
-      try {
-        const cfg = require("./supabase-config.js");
-        SUPABASE_URL = String((cfg && cfg.url) || "").trim();
-        SUPABASE_KEY = String((cfg && (cfg.anonKey || cfg.key)) || "").trim();
+        const site = require("./site-config.js");
+        SITE_API = String((site && site.apiUrl) || SITE_API).replace(/\/$/, "");
+        SITE_URL = String((site && site.siteUrl) || SITE_URL).replace(/\/$/, "");
+        TURNSTILE_SITE_KEY = String((site && site.turnstileSiteKey) || "");
       } catch (e) {
-        console.warn("[Auth] supabase-config.js:", e.message || e);
+        console.warn("[Auth] site-config.js:", e.message || e);
       }
 
-      function isValidSupabaseUrl(url) {
-        try {
-          const u = new URL(url);
-          return u.protocol === "https:" && u.hostname.includes("supabase");
-        } catch (_) {
-          return false;
-        }
-      }
-
-      const keysReady = isValidSupabaseUrl(SUPABASE_URL) && SUPABASE_KEY.length > 20;
+      const SESSION_KEY = "aspect-visuals-site-session";
+      let accessToken = null;
+      let refreshToken = null;
+      let turnstileToken = "";
       let supabase = null;
-      const useLocalAuth = !keysReady;
-      if (keysReady && createClientFn) {
+      const useLocalAuth = false;
+
+      function saveSession(payload) {
+        accessToken = payload.accessToken || null;
+        refreshToken = payload.refreshToken || null;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      }
+
+      function loadSession() {
         try {
-          supabase = createClientFn(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-              persistSession: true,
-              autoRefreshToken: true,
-              detectSessionInUrl: false,
-              storage: window.localStorage,
-              storageKey: "aspect-visuals-auth",
-            },
-          });
-        } catch (err) {
-          console.error("[Auth] createClient failed:", err);
-          supabase = null;
+          const raw = localStorage.getItem(SESSION_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          accessToken = parsed.accessToken || null;
+          refreshToken = parsed.refreshToken || null;
+          return parsed;
+        } catch (_) {
+          return null;
         }
       }
-      if (useLocalAuth) {
-        console.warn("[Auth] Локальный режим (ключи появятся позже с сайта)");
+
+      function clearSiteSession() {
+        accessToken = null;
+        refreshToken = null;
+        localStorage.removeItem(SESSION_KEY);
       }
+
+      async function apiFetch(path, opts) {
+        const headers = Object.assign({ "Content-Type": "application/json" }, (opts && opts.headers) || {});
+        if (accessToken) headers.Authorization = "Bearer " + accessToken;
+        const res = await fetch(SITE_API + path, Object.assign({}, opts, { headers }));
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || "Ошибка запроса");
+        return data;
+      }
+
+      function toLauncherUser(user) {
+        return {
+          id: user.id,
+          email: user.email,
+          user_metadata: { nickname: user.username, full_name: user.username },
+        };
+      }
+
+      function loadTurnstile() {
+        const host = document.getElementById("authTurnstile");
+        if (!TURNSTILE_SITE_KEY || !host) return;
+        const script = document.createElement("script");
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.onload = () => {
+          if (!window.turnstile) return;
+          window.turnstile.render(host, {
+            sitekey: TURNSTILE_SITE_KEY,
+            theme: "dark",
+            callback: (t) => { turnstileToken = t; },
+            "expired-callback": () => { turnstileToken = ""; },
+          });
+        };
+        document.head.appendChild(script);
+      }
+      loadTurnstile();
 
       // Локальная auth до появления ключей с сайта (не Supabase)
       const LOCAL_USERS_KEY = "aspect-visuals-local-users";
@@ -1019,50 +1048,33 @@
           return "Слишком много попыток. Подождите немного.";
         }
         if (low.includes("fetch") || low.includes("network") || low.includes("failed to fetch")) {
-          return "Нет связи с Supabase. Проверьте URL/KEY и интернет.";
+          return "Нет связи с сервером. Проверьте интернет.";
         }
         return msg;
       }
 
-      // Авто-вход при наличии сохранённой сессии
-      if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
-          console.log("[Auth]", event, session ? "session ok" : "no session");
-          if (session && session.user) {
-            enterLauncher(session.user);
-            return;
-          }
-          if (event === "SIGNED_OUT" || event === "USER_DELETED") {
-            currentUser = null;
-            showAuth();
-          }
-        });
-      }
-
+      // Авто-вход при наличии сохранённой сессии сайта
       async function bootstrapAuth() {
-        if (useLocalAuth || !supabase) {
-          const localUser = getLocalSessionUser();
-          if (localUser) {
-            enterLauncher(localUser);
-          } else {
-            showAuth();
-            authError.textContent = "";
+        const stored = loadSession();
+        if (stored && stored.accessToken) {
+          try {
+            const data = await apiFetch("/api/auth/me", { method: "GET" });
+            if (data && data.user) {
+              enterLauncher(toLauncherUser(data.user));
+              return;
+            }
+          } catch (err) {
+            console.warn("[Auth]", err.message || err);
+            clearSiteSession();
           }
+        }
+        const localUser = getLocalSessionUser();
+        if (localUser) {
+          enterLauncher(localUser);
           return;
         }
-        try {
-          const { data, error } = await supabase.auth.getSession();
-          if (error) throw error;
-          if (data.session && data.session.user) {
-            enterLauncher(data.session.user);
-          } else {
-            showAuth();
-          }
-        } catch (err) {
-          console.warn("[Auth]", err.message || err);
-          showAuth();
-          authError.textContent = mapAuthError(err);
-        }
+        showAuth();
+        authError.textContent = "";
       }
 
       authForm.addEventListener("submit", async (e) => {
@@ -1103,42 +1115,20 @@
             return;
           }
         }
+        if (TURNSTILE_SITE_KEY && !turnstileToken) {
+          authError.textContent = "Подтвердите капчу CloudFlare.";
+          authSubmit.disabled = false;
+          return;
+        }
 
         try {
-          if (useLocalAuth || !supabase) {
-            if (isSignUp) {
-              const user = localSignUp(email, password, nickname);
-              enterLauncher(user, { skipIntro: true });
-            } else {
-              const user = localSignIn(email, password);
-              enterLauncher(user);
-            }
-          } else if (!isSignUp) {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            if (data.user) enterLauncher(data.user);
-          } else {
-            const { data, error } = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                data: {
-                  nickname,
-                  full_name: nickname,
-                },
-              },
-            });
-            if (error) throw error;
-            if (data.session && data.user) {
-              enterLauncher(data.user, { skipIntro: true });
-            } else if (data.user) {
-              authError.style.color = "#a1a1aa";
-              authError.textContent = "Аккаунт создан. Подтвердите почту (если включено в Supabase), затем войдите.";
-              setAuthMode(false);
-            } else {
-              throw new Error("Не удалось создать аккаунт. Попробуйте снова.");
-            }
-          }
+          const path = isSignUp ? "/api/auth/register" : "/api/auth/login";
+          const body = isSignUp
+            ? { email, password, username: nickname, turnstileToken }
+            : { email, password, turnstileToken };
+          const data = await apiFetch(path, { method: "POST", body: JSON.stringify(body) });
+          saveSession(data);
+          enterLauncher(toLauncherUser(data.user), isSignUp ? { skipIntro: true } : undefined);
         } catch (err) {
           authError.style.color = "#f87171";
           authError.textContent = mapAuthError(err);
@@ -1150,23 +1140,14 @@
       authForgot.addEventListener("click", async () => {
         authError.textContent = "";
         authError.style.color = "#f87171";
-
-        if (useLocalAuth || !supabase) {
-          authError.style.color = "#a1a1aa";
-          authError.textContent = "Сброс пароля будет доступен после подключения аккаунтов сайта.";
-          return;
-        }
-
         const email = authEmail.value.trim();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           authError.textContent = "Введите email, чтобы сбросить пароль.";
           return;
         }
-
         authForgot.disabled = true;
         try {
-          const { error } = await supabase.auth.resetPasswordForEmail(email);
-          if (error) throw error;
+          await apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
           authError.style.color = "#a1a1aa";
           authError.textContent = "Письмо для сброса пароля отправлено на email.";
         } catch (err) {
@@ -1180,9 +1161,10 @@
       document.getElementById("btnLogout").addEventListener("click", async (e) => {
         e.stopPropagation();
         try { closePopout(); } catch (_) {}
-        if (supabase && !useLocalAuth) {
-          try { await supabase.auth.signOut(); } catch (_) {}
-        }
+        try {
+          await apiFetch("/api/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }) });
+        } catch (_) {}
+        clearSiteSession();
         clearLocalSession();
         currentUser = null;
         showAuth();
@@ -1205,16 +1187,14 @@
       const authTelegram = document.getElementById("authTelegram");
       if (authDiscord) {
         authDiscord.addEventListener("click", () => {
-          authError.style.color = "#a1a1aa";
-          authError.textContent = "Вход через Discord появится после связки с сайтом.";
-          if (shell) shell.openExternal("https://discord.com");
+          if (shell) shell.openExternal(SITE_URL + "/discord-login");
+          else window.open(SITE_URL + "/discord-login", "_blank");
         });
       }
       if (authTelegram) {
         authTelegram.addEventListener("click", () => {
           authError.style.color = "#a1a1aa";
-          authError.textContent = "Вход через Telegram появится после связки с сайтом.";
-          if (shell) shell.openExternal("https://t.me");
+          authError.textContent = "Вход через Telegram пока недоступен.";
         });
       }
 

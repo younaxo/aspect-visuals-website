@@ -21,7 +21,7 @@ export function applySettings(settings: UserSettings) {
   const root = document.documentElement
   root.dataset.theme = resolved
   root.dataset.themePreference = settings.theme
-  root.dataset.animations = settings.animations ? 'on' : 'off'
+  root.dataset.sound = settings.soundEnabled ? 'on' : 'off'
   root.dataset.compact = settings.compactSidebar ? 'true' : 'false'
   root.lang = settings.language === 'en' ? 'en' : 'ru'
 

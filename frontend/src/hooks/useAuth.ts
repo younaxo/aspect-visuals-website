@@ -46,13 +46,13 @@ export function useAuth() {
     },
   })
 
-  const loginWithEmail = useCallback(async (email: string, password: string) => {
-    await useAuthStore.getState().loginWithEmail(email, password)
+  const loginWithEmail = useCallback(async (email: string, password: string, turnstileToken?: string) => {
+    await useAuthStore.getState().loginWithEmail(email, password, turnstileToken)
     queryClient.setQueryData(['auth', 'me'], useAuthStore.getState().user)
   }, [queryClient])
 
-  const register = useCallback(async (email: string, password: string, username: string) => {
-    await useAuthStore.getState().register(email, password, username)
+  const register = useCallback(async (email: string, password: string, username: string, turnstileToken?: string) => {
+    await useAuthStore.getState().register(email, password, username, turnstileToken)
     queryClient.setQueryData(['auth', 'me'], useAuthStore.getState().user)
   }, [queryClient])
 

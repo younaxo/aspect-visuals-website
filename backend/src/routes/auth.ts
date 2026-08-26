@@ -14,6 +14,7 @@ import {
   resetPassword,
   telegramConfig,
   telegramLogin,
+  turnstileConfig,
   unlinkDiscord,
   verifyEmail,
 } from '../controllers/authController'
@@ -38,6 +39,7 @@ router.post('/discord', optionalAuth, discordAuthUrl)
 router.get('/discord/callback', discordCallbackRedirect)
 router.post('/discord/callback', discordCallback)
 
+router.get('/turnstile/config', turnstileConfig)
 router.get('/telegram/config', telegramConfig)
 router.post('/telegram', loginLimiter, telegramLogin)
 

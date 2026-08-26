@@ -104,21 +104,21 @@ export function Header() {
                 </NavLink>
               )}
               <NavLink
-                to="/profile"
+                to="/account"
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
                 onClick={closeMenus}
               >
                 Аккаунт
               </NavLink>
               <NavLink
-                to="/profile/me"
+                to="/account/me"
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
                 onClick={closeMenus}
               >
                 Профиль
               </NavLink>
               <NavLink
-                to="/settings"
+                to="/account/settings"
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
                 onClick={closeMenus}
               >

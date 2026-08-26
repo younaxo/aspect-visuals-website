@@ -2,7 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '../store/authStore'
 import type { AuthTokens } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -84,9 +84,10 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export const authApi = {
-  register: (payload: { email: string; password: string; username: string }) =>
+  register: (payload: { email: string; password: string; username: string; turnstileToken?: string }) =>
     api.post('/api/auth/register', payload),
-  login: (payload: { email: string; password: string }) => api.post('/api/auth/login', payload),
+  login: (payload: { email: string; password: string; turnstileToken?: string }) =>
+    api.post('/api/auth/login', payload),
   forgotPassword: (email: string) => api.post('/api/auth/forgot-password', { email }),
   resetPassword: (payload: { token: string; newPassword: string }) =>
     api.post('/api/auth/reset-password', payload),

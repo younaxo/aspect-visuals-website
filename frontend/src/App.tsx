@@ -122,9 +122,11 @@ function App() {
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="chat" element={<OpenChatRedirect />} />
-              <Route path="activate" element={<Navigate to="/profile" replace />} />
-              <Route path="settings" element={<Navigate to="/profile/settings" replace />} />
-              <Route path="profile" element={<ProfileHub />}>
+              <Route path="activate" element={<Navigate to="/account" replace />} />
+              <Route path="settings" element={<Navigate to="/account/settings" replace />} />
+              <Route path="profile" element={<Navigate to="/account" replace />} />
+              <Route path="profile/*" element={<Navigate to="/account" replace />} />
+              <Route path="account" element={<ProfileHub />}>
                 <Route index element={<AccountPanel />} />
                 <Route path="me" element={<Profile />} />
                 <Route path="bonus" element={<DailyBonus />} />

@@ -6,6 +6,7 @@ import { useDiscord } from '../../hooks/useDiscord'
 import { useToastStore } from '../../store/toastStore'
 import { ForgotPasswordModal } from './ForgotPasswordModal'
 import { TelegramLoginButton } from './TelegramLoginButton'
+import { Turnstile, turnstileEnabled } from './Turnstile'
 
 type AuthMode = 'login' | 'register'
 
@@ -27,6 +28,7 @@ export function AuthGate({ mode }: AuthGateProps) {
   const [error, setError] = useState('')
   const [errorTone, setErrorTone] = useState<'error' | 'muted'>('error')
   const [forgotOpen, setForgotOpen] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
   const onTelegramError = useCallback((message: string) => {
     setErrorTone('error')
     setError(message)
@@ -70,13 +72,18 @@ export function AuthGate({ mode }: AuthGateProps) {
       }
     }
 
+    if (turnstileEnabled() && !turnstileToken) {
+      setError('Подтвердите капчу CloudFlare.')
+      return
+    }
+
     setBusy(true)
     try {
       if (isSignUp) {
-        await register(email.trim(), password, nickname.trim())
+        await register(email.trim(), password, nickname.trim(), turnstileToken)
         showToast('Аккаунт создан', 'success')
       } else {
-        await loginWithEmail(email.trim(), password)
+        await loginWithEmail(email.trim(), password, turnstileToken)
         showToast('Вы вошли в аккаунт', 'success')
       }
       navigate('/', { replace: true })
@@ -179,6 +186,8 @@ export function AuthGate({ mode }: AuthGateProps) {
             </label>
           )}
 
+          <Turnstile onToken={setTurnstileToken} />
+
           <button type="submit" className="auth-submit" disabled={busy}>
             {busy ? 'Подождите…' : isSignUp ? 'Зарегистрироваться' : 'Войти'}
           </button>
@@ -200,7 +209,7 @@ export function AuthGate({ mode }: AuthGateProps) {
                   </svg>
                   {discordBusy ? 'Открываем Discord…' : 'Войти через Discord'}
                 </button>
-                <TelegramLoginButton onError={onTelegramError} />
+                <TelegramLoginButton onError={onTelegramError} turnstileToken={turnstileToken} />
               </div>
             </div>
           )}

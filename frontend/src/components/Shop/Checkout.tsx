@@ -19,7 +19,7 @@ export function Checkout() {
       <section className="content-panel">
         <h1 className="page-title">Оплата принята</h1>
         <p className="page-text">Подписка появится в профиле после подтверждения платежа.</p>
-        <Link to="/profile" className="btn-primary">
+        <Link to="/account" className="btn-primary">
           К подпискам
         </Link>
       </section>

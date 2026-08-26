@@ -25,8 +25,8 @@ interface AuthState {
   setUser: (user: User | null) => void
   updateUser: (data: Partial<User>) => void
   setSettings: (settings: UserSettings) => void
-  loginWithEmail: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, username: string) => Promise<void>
+  loginWithEmail: (email: string, password: string, turnstileToken?: string) => Promise<void>
+  register: (email: string, password: string, username: string, turnstileToken?: string) => Promise<void>
   logout: () => void
   linkDiscord: (code: string, state?: string) => Promise<void>
   unlinkDiscord: () => Promise<void>
@@ -71,17 +71,17 @@ export const useAuthStore = create<AuthState>()(
           user: state.user ? { ...state.user, ...data } : null,
         })),
       setSettings: (settings) => set({ settings }),
-      loginWithEmail: async (email, password) => {
+      loginWithEmail: async (email, password, turnstileToken) => {
         try {
-          const { data } = await authApi.login({ email, password })
+          const { data } = await authApi.login({ email, password, turnstileToken })
           applyAuth(set, data as AuthResponse)
         } catch (error: unknown) {
           throw new Error(getErrorMessage(error, 'Не удалось войти'))
         }
       },
-      register: async (email, password, username) => {
+      register: async (email, password, username, turnstileToken) => {
         try {
-          const { data } = await authApi.register({ email, password, username })
+          const { data } = await authApi.register({ email, password, username, turnstileToken })
           applyAuth(set, data as AuthResponse)
         } catch (error: unknown) {
           throw new Error(getErrorMessage(error, 'Не удалось зарегистрироваться'))

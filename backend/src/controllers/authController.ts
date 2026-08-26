@@ -200,6 +200,9 @@ export async function discordCallback(req: Request, res: Response) {
 
 export async function register(req: Request, res: Response) {
   try {
+    const { assertTurnstile } = await import('../services/turnstileService')
+    if (!(await assertTurnstile(req, res))) return
+
     const email = parseString(req.body?.email).toLowerCase()
     const password = typeof req.body?.password === 'string' ? req.body.password : ''
     const username = parseString(req.body?.username)
@@ -258,6 +261,9 @@ export async function register(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   try {
+    const { assertTurnstile } = await import('../services/turnstileService')
+    if (!(await assertTurnstile(req, res))) return
+
     const email = parseString(req.body?.email).toLowerCase()
     const password = typeof req.body?.password === 'string' ? req.body.password : ''
 
@@ -612,6 +618,11 @@ export async function logout(req: AuthRequest, res: Response) {
     console.error('Logout error:', error)
     res.status(500).json({ message: 'Не удалось выйти из аккаунта' })
   }
+}
+
+export async function turnstileConfig(_req: Request, res: Response) {
+  const siteKey = process.env.TURNSTILE_SITE_KEY?.trim() || ''
+  res.json({ enabled: Boolean(process.env.TURNSTILE_SECRET_KEY?.trim() && siteKey), siteKey })
 }
 
 export async function telegramConfig(_req: Request, res: Response) {

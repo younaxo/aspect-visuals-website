@@ -20,7 +20,7 @@ export function MockPayPage() {
       await shopApi.mockComplete(orderId)
       clearCart()
       showToast('Оплата подтверждена', 'success')
-      navigate('/profile')
+      navigate('/account')
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? (error.response?.data as { message?: string })?.message

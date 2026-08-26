@@ -91,10 +91,10 @@ export function Sidebar() {
                 </p>
               </div>
             </div>
-            <Link to="/profile" className="dropdown-link" onClick={close}>
+            <Link to="/account" className="dropdown-link" onClick={close}>
               Аккаунт
             </Link>
-            <Link to="/profile/me" className="dropdown-link" onClick={close}>
+            <Link to="/account/me" className="dropdown-link" onClick={close}>
               Профиль
             </Link>
             {isPanelAdmin(user) && (
@@ -102,7 +102,7 @@ export function Sidebar() {
                 Админ-панель
               </Link>
             )}
-            <Link to="/profile/settings" className="dropdown-link" onClick={close}>
+            <Link to="/account/settings" className="dropdown-link" onClick={close}>
               Настройки
             </Link>
             <Button
