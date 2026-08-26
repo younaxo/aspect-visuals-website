@@ -5,6 +5,8 @@ import path from 'path'
 import authRoutes from './routes/auth'
 import profileRoutes from './routes/profile'
 import shopRoutes from './routes/shop'
+import promoRoutes from './routes/promo'
+import activationRoutes from './routes/activation'
 import { ensureUploadDirs, UPLOADS_DIR } from './utils/media'
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
@@ -26,6 +28,8 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/shop', shopRoutes)
+app.use('/api', promoRoutes)
+app.use('/api', activationRoutes)
 app.use('/api', profileRoutes)
 
 app.get('/api/health', (_req, res) => {

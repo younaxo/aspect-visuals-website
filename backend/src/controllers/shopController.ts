@@ -9,6 +9,7 @@ import {
   removeRole,
   syncSubscriptionRoles,
 } from '../services/discordService'
+import { computeDiscount, inspectPromo } from '../services/promoService'
 
 const TEST_COOLDOWN_MS = 90 * 24 * 60 * 60 * 1000
 const NON_GIFTABLE = new Set(['BETA', 'HWID_RESET'])
@@ -67,20 +68,6 @@ function serializeProduct(item: {
   return { ...item, price: money(item.price) }
 }
 
-async function findPromo(code: string) {
-  const promo = await prisma.promoCode.findUnique({ where: { code: code.toUpperCase() } })
-  if (!promo || !promo.isActive) return null
-  if (promo.expiresAt && promo.expiresAt < new Date()) return null
-  if (promo.maxUses != null && promo.usedCount >= promo.maxUses) return null
-  return promo
-}
-
-function applyDiscount(amount: number, promo: { discountPercent: number | null; discountAmount: Prisma.Decimal | null }) {
-  let next = amount
-  if (promo.discountPercent) next -= (amount * promo.discountPercent) / 100
-  if (promo.discountAmount) next -= money(promo.discountAmount)
-  return Math.max(0, Math.round(next * 100) / 100)
-}
 
 async function testAvailability(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } })
@@ -111,7 +98,7 @@ async function testAvailability(userId: string) {
   }
 }
 
-async function activateSubscription(userId: string, subscriptionId: string) {
+export async function activateSubscription(userId: string, subscriptionId: string) {
   const subscription = await prisma.subscription.findUnique({ where: { id: subscriptionId } })
   if (!subscription) return
 
@@ -187,20 +174,20 @@ export async function applyPromo(req: AuthRequest, res: Response) {
     res.status(400).json({ message: 'Укажите промокод' })
     return
   }
-  const promo = await findPromo(code)
-  if (!promo) {
-    res.status(400).json({ message: 'Промокод недействителен' })
+  const result = await inspectPromo(code, req.userId, Number.isFinite(amount) ? amount : 0)
+  if (!result.ok) {
+    res.status(400).json({ message: result.message })
     return
   }
-  const total = Number.isFinite(amount) ? applyDiscount(amount, promo) : null
   res.json({
     promo: {
-      id: promo.id,
-      code: promo.code,
-      discountPercent: promo.discountPercent,
-      discountAmount: promo.discountAmount ? money(promo.discountAmount) : null,
+      id: result.promo.id,
+      code: result.promo.code,
+      type: result.promo.type,
+      value: Number(result.promo.value),
     },
-    total,
+    discount: result.discount,
+    total: result.total,
   })
 }
 
@@ -222,7 +209,12 @@ export async function createPurchase(req: AuthRequest, res: Response) {
     const paymentMethod = asString(req.body?.paymentMethod) || 'unitpay'
     const provider = (paymentMethod === 'stripe' ? 'stripe' : 'unitpay') as PaymentProvider
 
-    let promo = promoCode ? await findPromo(promoCode) : null
+    const promoCheck = promoCode ? await inspectPromo(promoCode, req.userId, 0) : null
+    if (promoCode && promoCheck && !promoCheck.ok) {
+      res.status(400).json({ message: promoCheck.message })
+      return
+    }
+    const promo = promoCheck?.ok ? promoCheck.promo : null
     const orderId = `ord_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
     const createdIds: string[] = []
     let total = 0
@@ -286,7 +278,13 @@ export async function createPurchase(req: AuthRequest, res: Response) {
     }
 
     if (promo) {
-      total = applyDiscount(total, promo)
+      const minAmount = Number(promo.minOrderAmount ?? 0)
+      if (minAmount > 0 && total < minAmount) {
+        res.status(400).json({ message: `Минимальная сумма заказа — ${minAmount} ₽` })
+        return
+      }
+      const discounted = Math.max(0, total - computeDiscount(total, promo))
+      total = discounted
       await prisma.purchase.updateMany({
         where: { id: { in: createdIds } },
         data: { amount: total / createdIds.length },
@@ -338,6 +336,13 @@ async function fulfillOrder(orderId: string) {
       await prisma.promoCode.update({
         where: { id: purchase.promoCodeId },
         data: { usedCount: { increment: 1 } },
+      })
+      await prisma.promoCodeUsed.create({
+        data: {
+          userId: purchase.userId,
+          promoCodeId: purchase.promoCodeId,
+          purchaseId: purchase.id,
+        },
       })
     }
 

@@ -6,7 +6,10 @@ import { Button } from '../Common/Button'
 
 export function Checkout() {
   const items = useCartStore((state) => state.items)
-  const total = useCartStore((state) => state.total())
+  const promoCode = useCartStore((state) => state.promoCode)
+  const promoDiscount = useCartStore((state) => state.promoDiscount)
+  const subtotal = useCartStore((state) => state.subtotal())
+  const total = useCartStore((state) => state.getTotalWithDiscount())
   const [open, setOpen] = useState(false)
   const [params] = useSearchParams()
   const paid = params.get('paid') === '1'
@@ -41,7 +44,12 @@ export function Checkout() {
               </li>
             ))}
           </ul>
-          <p className="shop-total">Итого: {total} ₽</p>
+          {promoCode && promoDiscount > 0 && (
+            <p className="page-text">
+              Промокод {promoCode}: −{promoDiscount} ₽ (с {subtotal} ₽)
+            </p>
+          )}
+          <p className="shop-total">Итого со скидкой: {total} ₽</p>
           <p className="page-text">UnitPay или Stripe. Если ключи не заданы, откроется тестовая оплата.</p>
           <Button onClick={() => setOpen(true)}>Оплатить</Button>
         </>

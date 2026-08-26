@@ -4,6 +4,7 @@ import { Logo } from '../Common/Logo'
 import { Sidebar } from './Sidebar'
 import { useAuth } from '../../hooks/useAuth'
 import { useCartStore } from '../../store/cartStore'
+import { isAdmin } from '../../utils/discordRoles'
 
 const navItems = [
   { to: '/', label: 'Главная' },
@@ -71,6 +72,16 @@ export function Header() {
 
         {isAuthenticated && user ? (
           <>
+            {isAdmin(user) && (
+              <>
+                <Link to="/admin/promo" className="btn-ghost header-login">
+                  Промо
+                </Link>
+                <Link to="/admin/keys" className="btn-ghost header-login">
+                  Ключи
+                </Link>
+              </>
+            )}
             <Link to="/shop/cart" className="btn-ghost header-login">
               Корзина{cartCount ? ` (${cartCount})` : ''}
             </Link>
@@ -98,6 +109,24 @@ export function Header() {
           ))}
           {isAuthenticated ? (
             <>
+              {user && isAdmin(user) && (
+                <>
+                  <NavLink
+                    to="/admin/promo"
+                    className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+                    onClick={closeMenus}
+                  >
+                    Промокоды
+                  </NavLink>
+                  <NavLink
+                    to="/admin/keys"
+                    className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+                    onClick={closeMenus}
+                  >
+                    Ключи
+                  </NavLink>
+                </>
+              )}
               <NavLink
                 to="/shop/cart"
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}

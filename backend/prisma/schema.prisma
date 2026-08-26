@@ -8,77 +8,136 @@ datasource db {
 }
 
 model User {
-  id                  String              @id @default(cuid())
-  discordId           String?             @unique
-  username            String
-  discriminator       String?
-  avatar              String?
-  banner              String?
-  bio                 String?
-  location            String?
-  website             String?
-  customStatus        String?
-  status              String             @default("online")
-  email               String?             @unique
-  password            String?
-  isEmailVerified     Boolean             @default(false)
-  discordLinked       Boolean             @default(false)
-  discordLinkToken    String?
-  resetToken          String?
-  resetTokenExpiry    DateTime?
-  discordAccessToken  String?
-  discordRefreshToken String?
-  roles               Role[]
-  sessions            Session[]
-  settings            UserSettings?
-  passwordResets      PasswordReset[]
+  id                     String              @id @default(cuid())
+  discordId              String?             @unique
+  username               String
+  discriminator          String?
+  avatar                 String?
+  banner                 String?
+  bio                    String?
+  location               String?
+  website                String?
+  customStatus           String?
+  status                 String              @default("online")
+  email                  String?             @unique
+  password               String?
+  isEmailVerified        Boolean             @default(false)
+  discordLinked          Boolean             @default(false)
+  discordLinkToken       String?
+  resetToken             String?
+  resetTokenExpiry       DateTime?
+  discordAccessToken     String?
+  discordRefreshToken    String?
+  roles                  Role[]
+  sessions               Session[]
+  settings               UserSettings?
+  passwordResets         PasswordReset[]
   emailVerifications     EmailVerification[]
   purchases              Purchase[]
   userSubscriptions      UserSubscription[]
+  promoUsed              PromoCodeUsed[]
+  activationKeys         ActivationKey[]
   lastTestSubscriptionAt DateTime?
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 }
 
 model Subscription {
-  id            String             @id @default(cuid())
-  name          String
-  description   String?
-  price         Decimal
-  duration      Int
-  type          String
-  discordRoleId String?
-  isActive      Boolean            @default(true)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  purchases     Purchase[]
-  userSubs      UserSubscription[]
+  id                String             @id @default(cuid())
+  name              String
+  description       String?
+  price             Decimal
+  duration          Int
+  type              String
+  discordRoleId     String?
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  purchases         Purchase[]
+  userSubs          UserSubscription[]
+  activationKeys    ActivationKey[]
+  activationBatches ActivationBatch[]
 }
 
 model Product {
-  id          String     @id @default(cuid())
-  name        String
-  description String?
-  price       Decimal
-  type        String
-  giftable    Boolean    @default(true)
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  purchases   Purchase[]
+  id                String            @id @default(cuid())
+  name              String
+  description       String?
+  price             Decimal
+  type              String
+  giftable          Boolean           @default(true)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  purchases         Purchase[]
+  activationKeys    ActivationKey[]
+  activationBatches ActivationBatch[]
 }
 
 model PromoCode {
-  id              String     @id @default(cuid())
-  code            String     @unique
-  discountPercent Int?
-  discountAmount  Decimal?
-  maxUses         Int?
-  usedCount       Int        @default(0)
-  expiresAt       DateTime?
-  isActive        Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  purchases       Purchase[]
+  id             String          @id @default(cuid())
+  code           String          @unique
+  type           String
+  value          Decimal
+  minOrderAmount Decimal?        @default(0)
+  validFrom      DateTime        @default(now())
+  validUntil     DateTime?
+  maxUses        Int             @default(1)
+  usedCount      Int             @default(0)
+  oncePerUser    Boolean         @default(true)
+  isActive       Boolean         @default(true)
+  createdBy      String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  usedBy         PromoCodeUsed[]
+  purchases      Purchase[]
+}
+
+model PromoCodeUsed {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  promoCodeId String
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  purchaseId  String?
+  usedAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([promoCodeId])
+}
+
+model ActivationKey {
+  id             String            @id @default(cuid())
+  key            String            @unique
+  productId      String?
+  product        Product?          @relation(fields: [productId], references: [id])
+  subscriptionId String?
+  subscription   Subscription?     @relation(fields: [subscriptionId], references: [id])
+  generatedBy    String?
+  activatedBy    User?             @relation(fields: [activatedById], references: [id])
+  activatedById  String?
+  usedAt         DateTime?
+  expiresAt      DateTime?
+  isUsed         Boolean           @default(false)
+  batchId        String?
+  batch          ActivationBatch?  @relation(fields: [batchId], references: [id])
+  createdAt      DateTime          @default(now())
+
+  @@index([batchId])
+  @@index([isUsed])
+}
+
+model ActivationBatch {
+  id             String         @id @default(cuid())
+  name           String
+  productId      String?
+  product        Product?       @relation(fields: [productId], references: [id])
+  subscriptionId String?
+  subscription   Subscription?  @relation(fields: [subscriptionId], references: [id])
+  count          Int
+  keys           ActivationKey[]
+  generatedBy    String?
+  createdAt      DateTime       @default(now())
 }
 
 model Purchase {

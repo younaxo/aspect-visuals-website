@@ -18,6 +18,9 @@ import { Checkout } from './components/Shop/Checkout'
 import { MockPayPage } from './components/Shop/MockPayPage'
 import { Profile } from './components/Profile/Profile'
 import { Settings } from './components/Profile/Settings'
+import { AdminRoute } from './components/Auth/AdminRoute'
+import { PromoCodes } from './components/Admin/PromoCodes'
+import { ActivationKeys } from './components/Admin/ActivationKeys'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +80,10 @@ function App() {
             <Route path="verify-email" element={<VerifyEmailPage />} />
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
             <Route path="discord-auth" element={<DiscordCallback />} />
+            <Route element={<AdminRoute />}>
+              <Route path="admin/promo" element={<PromoCodes />} />
+              <Route path="admin/keys" element={<ActivationKeys />} />
+            </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />

@@ -86,6 +86,15 @@ export function hasRole(user: User | null, roleKey: RoleKey): boolean {
   return user.roles.some((role) => role.discordId === DISCORD_ROLE_IDS[roleKey])
 }
 
+export function isAdmin(user: User | null): boolean {
+  return (
+    hasRole(user, 'Owner') ||
+    hasRole(user, 'Developer') ||
+    hasRole(user, 'TechnicalAdministrator') ||
+    hasRole(user, 'Administrator')
+  )
+}
+
 export function isStaff(user: User | null): boolean {
   return (
     hasRole(user, 'Owner') ||

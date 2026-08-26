@@ -2438,6 +2438,38 @@ html[data-theme='light'] .subscription-item {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.promo-ok {
+  margin-top: 8px;
+  color: #86efac;
+}
+
+.promo-err {
+  margin-top: 8px;
+  color: #fca5a5;
+}
+
+.admin-form {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.admin-row {
+  align-items: flex-start;
+}
+
+.keys-pre {
+  margin: 12px 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 .cart-promo {
   display: flex;
   gap: 8px;

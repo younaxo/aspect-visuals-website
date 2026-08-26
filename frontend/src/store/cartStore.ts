@@ -22,7 +22,8 @@ interface CartState {
   removeItem: (id: string, kind: CartKind) => void
   clearCart: () => void
   applyPromo: (code: string, discount: number) => void
-  clearPromo: () => void
+  removePromo: () => void
+  getTotalWithDiscount: () => number
   subtotal: () => number
   total: () => number
 }
@@ -69,9 +70,10 @@ export const useCartStore = create<CartState>()(
         })),
       clearCart: () => set({ items: [], promoCode: '', promoDiscount: 0 }),
       applyPromo: (code, discount) => set({ promoCode: code, promoDiscount: discount }),
-      clearPromo: () => set({ promoCode: '', promoDiscount: 0 }),
+      removePromo: () => set({ promoCode: '', promoDiscount: 0 }),
+      getTotalWithDiscount: () => Math.max(0, get().subtotal() - get().promoDiscount),
       subtotal: () => get().items.reduce((sum, item) => sum + item.price, 0),
-      total: () => Math.max(0, get().subtotal() - get().promoDiscount),
+      total: () => get().getTotalWithDiscount(),
     }),
     {
       name: 'aspect-cart',
