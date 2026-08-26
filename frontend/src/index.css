@@ -132,6 +132,11 @@ select,
   flex-direction: column;
 }
 
+.site.has-dock .site-main {
+  width: min(1180px, calc(100% - 96px));
+  padding-left: 8px;
+}
+
 .site-header {
   position: fixed;
   top: 14px;
@@ -146,6 +151,7 @@ select,
   min-height: var(--header-h);
   padding: 8px 10px 8px 16px;
   border-radius: var(--radius);
+  border: 1px solid rgba(139, 92, 246, 0.18);
 }
 
 .site-brand {
@@ -1711,7 +1717,7 @@ select.profile-input {
 }
 
 .settings-toggle:checked {
-  background: #22c55e;
+  background: var(--accent);
 }
 
 .settings-toggle:checked::after {
@@ -1897,7 +1903,7 @@ html[data-theme='light'] .subscription-item {
 }
 
 .auth-tab.active {
-  background: #27272a;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   color: #fafafa;
 }
 
@@ -1932,7 +1938,8 @@ html[data-theme='light'] .subscription-item {
 }
 
 .auth-input:focus {
-  border-color: #71717a;
+  border-color: rgba(139, 92, 246, 0.7);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
 .auth-forgot-wrap {
@@ -1963,17 +1970,18 @@ html[data-theme='light'] .subscription-item {
   margin-top: 8px;
   border: 0;
   border-radius: 12px;
-  background: #fafafa;
-  color: #09090b;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fafafa;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 8px 22px rgba(139, 92, 246, 0.35);
   transition: all 0.25s var(--ease-out);
 }
 
 .auth-submit:hover {
-  background: #fff;
+  filter: brightness(1.08);
   transform: scale(1.01);
 }
 
@@ -2226,9 +2234,9 @@ html[data-theme='light'] .subscription-item {
 .shop-panel {
   flex: 1;
   padding: 32px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(18, 18, 24, 0.86);
+  border: 1px solid rgba(139, 92, 246, 0.16);
 }
 
 .shop-panel-head {
@@ -2296,8 +2304,8 @@ html[data-theme='light'] .subscription-item {
   height: 36px;
   border: 0;
   border-radius: 10px;
-  background: #fafafa;
-  color: #09090b;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fafafa;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -2305,7 +2313,7 @@ html[data-theme='light'] .subscription-item {
 }
 
 .shop-lib-btn:hover {
-  background: #fff;
+  filter: brightness(1.08);
 }
 
 .shop-hero {
@@ -2413,19 +2421,20 @@ html[data-theme='light'] .subscription-item {
 .shop-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 80;
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.62);
 }
 
 .shop-modal {
   width: min(420px, 100%);
   padding: 24px;
-  border-radius: var(--radius);
-  background: #111113;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: #121218;
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
 .shop-modal-actions {
@@ -2568,7 +2577,7 @@ html[data-theme='light'] .auth-oauth-btn {
 
 html[data-theme='light'] .auth-submit,
 html[data-theme='light'] .shop-lib-btn {
-  background: #18181b;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   color: #fafafa;
 }
 
@@ -2750,22 +2759,38 @@ html[data-theme='light'] .shop-lib-btn {
 .activate-input {
   width: 100%;
   height: 48px;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   color: #fafafa;
-  font-size: 16px;
+  font-size: 15px;
   outline: none;
 }
 
+.activate-input:focus {
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
 .activate-btn {
-  margin-top: 22px;
+  margin-top: 18px;
   width: 100%;
   height: 48px;
   border-radius: 14px;
   background: linear-gradient(90deg, #7c3aed, #4f46e5);
   box-shadow: 0 0 24px rgba(124, 58, 237, 0.45);
   border: 0;
+  color: #fafafa;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 900px) {
@@ -2807,8 +2832,8 @@ html[data-theme='light'] .shop-lib-btn {
 
 .admin-tab.is-active,
 .admin-tab:hover {
-  background: #fafafa;
-  color: #09090b;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fafafa;
   border-color: transparent;
 }
 
@@ -3243,6 +3268,11 @@ html[data-theme='light'] .shop-lib-btn {
   align-items: start;
 }
 
+.profile-hub-side {
+  position: sticky;
+  top: 88px;
+}
+
 .profile-hub-side h1 {
   font-size: 22px;
   margin-bottom: 18px;
@@ -3350,7 +3380,51 @@ html[data-theme='light'] .shop-lib-btn {
 
 .account-activate {
   margin-top: 40px;
-  max-width: 420px;
+  max-width: 460px;
+}
+
+.activate-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.activate-kind {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a1a1aa;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.activate-kind.is-active {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fafafa;
+  border-color: transparent;
+}
+
+.profile-hub-main .settings-hero {
+  display: none;
+}
+
+.profile-hub-main .settings-page {
+  gap: 12px;
+}
+
+.edge-dock-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.toast-progress {
+  background: var(--accent);
 }
 
 .profile-dropdown {

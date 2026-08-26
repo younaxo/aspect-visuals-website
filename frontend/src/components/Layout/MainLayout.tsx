@@ -10,6 +10,7 @@ import { applySettings } from '../../utils/settings'
 
 export function MainLayout() {
   const settings = useAuthStore((state) => state.settings)
+  const isAuthenticated = useAuthStore((state) => Boolean(state.user && state.accessToken))
 
   useEffect(() => {
     applySettings(settings)
@@ -24,7 +25,7 @@ export function MainLayout() {
   }, [settings.theme])
 
   return (
-    <div className="site">
+    <div className={`site ${isAuthenticated ? 'has-dock' : ''}`}>
       <Header />
       <EdgeDock />
       <main className="site-main">
