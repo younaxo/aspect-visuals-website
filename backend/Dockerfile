@@ -1,22 +1,12 @@
-FROM node:20-alpine AS deps
+FROM node:20-bookworm-slim
 WORKDIR /app
+RUN apt-get update && apt-get install -y openssl ca-certificates python3 make g++ && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
-
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
-
-FROM node:20-alpine
-WORKDIR /app
 ENV NODE_ENV=production
-COPY package.json package-lock.json ./
-COPY prisma ./prisma
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
 EXPOSE 5000
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
