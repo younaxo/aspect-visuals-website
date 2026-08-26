@@ -1,0 +1,72 @@
+{
+  "name": "aspect-visuals",
+  "version": "2.4.1",
+  "description": "Aspect Visuals — premium desktop launcher",
+  "main": "main.js",
+  "author": "Aspect Visuals",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "obfuscate": "javascript-obfuscator main.js --output .obf/main.js --compact true --string-array true --string-array-threshold 0.75",
+    "dist": "node scripts/dist.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
+    "discord-rpc": "^4.0.1"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^24.9.0",
+    "javascript-obfuscator": "^4.1.0"
+  },
+  "build": {
+    "appId": "com.aspectvisuals.launcher",
+    "productName": "Aspect Visuals",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "discord-rpc-ipc.patch.js",
+      "index.html",
+      "supabase-config.js",
+      "icon.ico",
+      "icon.png",
+      "sounds/click.mp3",
+      "sounds/click.wav",
+      "sounds/intro.mp3",
+      "package.json",
+      "node_modules/@supabase/**/*",
+      "node_modules/discord-rpc/**/*",
+      "node_modules/ws/**/*",
+      "node_modules/node-fetch/**/*",
+      "node_modules/whatwg-url/**/*",
+      "node_modules/tr46/**/*",
+      "node_modules/webidl-conversions/**/*"
+    ],
+    "win": {
+      "icon": "icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    }
+  }
+}

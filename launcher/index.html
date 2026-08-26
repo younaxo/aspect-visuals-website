@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co;" />
+  <title>Aspect Visuals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Onest", "Segoe UI", "system-ui", "sans-serif"] },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --sidebar-w: 260px; --sidebar-w-collapsed: 72px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden; background: transparent;
+      font-family: "Onest", "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased; user-select: none;
+    }
+    .app {
+      position: relative; width: 1100px; height: 720px; border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column; background: #09090b;
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+    }
+    .drag { -webkit-app-region: drag; app-region: drag; }
+    .no-drag { -webkit-app-region: no-drag; app-region: no-drag; }
+
+    .auth-gate {
+      position: absolute; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center;
+      background: #09090b;
+    }
+    .auth-gate.open { display: flex; }
+    .auth-card {
+      width: 400px; max-width: calc(100% - 48px); max-height: calc(100% - 48px); overflow-y: auto;
+      background: #09090b; border: 1px solid #27272a;
+      border-radius: 16px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+      scrollbar-width: thin;
+    }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; background: #18181b; border-radius: 12px; margin-bottom: 20px; }
+    .auth-tab {
+      border: 0; border-radius: 10px; padding: 10px 12px; background: transparent; color: #a1a1aa;
+      font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.25s ease-out;
+    }
+    .auth-tab.active { background: #27272a; color: #fafafa; }
+    .auth-label { display: block; font-size: 12px; color: #a1a1aa; margin-bottom: 6px; }
+    .auth-input {
+      width: 100%; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid #27272a;
+      background: #18181b; color: #fff; font-family: inherit; font-size: 14px; outline: none;
+      transition: border-color 0.2s ease-out; user-select: text; -webkit-user-select: text;
+    }
+    .auth-input:focus { border-color: #71717a; }
+    .auth-submit {
+      width: 100%; height: 44px; margin-top: 8px; border: 0; border-radius: 12px; background: #fafafa;
+      color: #09090b; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.25s ease-out;
+    }
+    .auth-submit:hover { background: #fff; transform: scale(1.01); }
+    .auth-submit:active { transform: scale(0.98); }
+    .auth-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .auth-error { margin-top: 12px; font-size: 13px; color: #f87171; min-height: 18px; }
+    .auth-field-signup { display: none; }
+    .auth-gate.signup .auth-field-signup { display: block; }
+    .auth-forgot-wrap { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .auth-gate.signup .auth-forgot-wrap { display: none; }
+    .auth-forgot {
+      border: 0; background: transparent; padding: 0; color: #a1a1aa; font-family: inherit;
+      font-size: 12px; font-weight: 500; cursor: pointer; transition: color 0.2s ease-out;
+    }
+    .auth-forgot:hover { color: #fafafa; }
+    .auth-login-only { display: block; }
+    .auth-gate.signup .auth-login-only { display: none; }
+    .auth-or {
+      display: flex; align-items: center; gap: 12px; margin: 16px 0 12px;
+    }
+    .auth-or::before, .auth-or::after {
+      content: ""; flex: 1; height: 1px; background: #3f3f46;
+    }
+    .auth-or span {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #71717a; text-transform: uppercase;
+    }
+    .auth-oauth {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .auth-oauth-btn {
+      width: 100%; height: 42px; border: 1px solid #27272a; border-radius: 12px;
+      background: #18181b; color: #fafafa; font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all 0.25s ease-out;
+    }
+    .auth-oauth-btn:hover { background: #27272a; border-color: #3f3f46; }
+    .auth-oauth-btn:active { transform: scale(0.98); }
+    .auth-oauth-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .splash {
+      position: absolute; inset: 0; z-index: 90; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; background: #09090b;
+      transition: opacity 0.6s var(--ease-out), visibility 0.6s var(--ease-out);
+    }
+    .splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    .splash-logo { width: 64px; height: 64px; color: #fafafa; animation: splashPulse 1.8s var(--ease-out) infinite; }
+    .splash-title { margin-top: 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.28em; color: #fafafa; }
+    .splash-sub { margin-top: 8px; font-size: 12px; color: #71717a; }
+    .splash-bar { margin-top: 28px; width: 180px; height: 2px; border-radius: 999px; background: #27272a; overflow: hidden; }
+    .splash-bar > i { display: block; height: 100%; width: 0%; background: #fafafa; border-radius: 999px; transition: width 0.35s linear; }
+    @keyframes splashPulse {
+      0%, 100% { opacity: 0.55; transform: scale(0.96); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+
+    .win-btn {
+      width: 46px; height: 40px; border: 0; background: transparent; color: #a1a1aa;
+      display: grid; place-items: center; cursor: pointer; transition: all 0.3s ease-out;
+    }
+    .win-btn:hover { background: rgba(255,255,255,0.1); color: #fafafa; }
+    .win-btn:active { transform: scale(0.97); }
+    .win-btn.close:hover { background: rgba(239,68,68,0.9); color: #fff; }
+    .win-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0; display: flex; flex-direction: column;
+      border-right: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+      transition: width 0.3s var(--ease-out);
+    }
+    .app.sidebar-collapsed .sidebar { width: var(--sidebar-w-collapsed); overflow: hidden; }
+    .brand-text, .nav-label, .profile-meta {
+      transition: opacity 0.2s ease-out, max-width 0.2s ease-out; white-space: nowrap; overflow: hidden;
+    }
+    .brand-text { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: #fafafa; }
+    .app.sidebar-collapsed .brand-text,
+    .app.sidebar-collapsed .nav-label,
+    .app.sidebar-collapsed .profile-meta { opacity: 0; max-width: 0; pointer-events: none; display: none !important; }
+    .brand-logo {
+      width: 36px; height: 36px; padding: 0; border: 0; background: transparent; color: #fafafa;
+      cursor: pointer; display: grid; place-items: center; flex-shrink: 0; border-radius: 8px;
+      transition: all 0.3s ease-out;
+    }
+    .brand-logo:hover { background: rgba(255,255,255,0.08); }
+    .brand-logo:active { transform: scale(0.97); }
+    .brand-logo svg { width: 28px; height: 28px; display: block; }
+    .brand-row { display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; min-height: 56px; }
+    .app.sidebar-collapsed .brand-row { justify-content: center; padding: 16px 0 12px; gap: 0; }
+    .sidebar-nav {
+      display: flex; flex-direction: column; gap: 2px; padding: 0 8px; flex: 1; min-height: 0;
+      overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+    }
+    .sidebar-nav::-webkit-scrollbar { width: 0; height: 0; display: none; }
+    .app.sidebar-collapsed .sidebar-nav { overflow: hidden; }
+    .app.sidebar-collapsed .nav-item { justify-content: center; padding: 0; gap: 0; }
+    .app.sidebar-collapsed .socials { flex-direction: column; align-items: center; gap: 6px; }
+    .app.sidebar-collapsed .profile-card { justify-content: center; padding: 10px 8px; gap: 0; }
+    .app.sidebar-collapsed .nav-sep { margin-left: 12px; margin-right: 12px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 12px;
+      border: 0; border-radius: 8px; background: transparent; color: #a1a1aa;
+      font-family: inherit; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer;
+      transition: all 0.3s ease-out;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-item:active { transform: scale(0.97); }
+    .nav-item svg, .icon {
+      width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5;
+      stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+    }
+    .nav-sep { height: 1px; margin: 8px 12px; background: rgba(255,255,255,0.08); }
+    .socials { display: flex; align-items: center; gap: 6px; padding: 0 10px; margin-bottom: 10px; }
+    .social-btn {
+      width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: #71717a;
+      display: grid; place-items: center; cursor: pointer; transition: all 0.3s ease-out;
+    }
+    .social-btn:hover { background: rgba(255,255,255,0.1); color: #fafafa; }
+    .social-btn:active { transform: scale(0.97); }
+    .social-btn svg { width: 15px; height: 15px; }
+    .icon-fill { fill: currentColor; stroke: none; }
+    .profile-card {
+      display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; background: rgba(0,0,0,0.2);
+      cursor: pointer; text-align: left; font-family: inherit; transition: all 0.3s ease-out;
+    }
+    .profile-card:hover { background: rgba(255,255,255,0.05); }
+    .profile-card:active { transform: scale(0.97); }
+    .profile-card.open { background: rgba(255,255,255,0.06); }
+    .avatar-wrap { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 999px; object-fit: cover; background: #27272a;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .online-dot {
+      position: absolute; right: 0; bottom: 0; width: 10px; height: 10px; border-radius: 999px;
+      background: #a1a1aa; border: 2px solid #09090b;
+    }
+
+    .tip { position: relative; }
+    .tip::after {
+      content: attr(data-tip); position: absolute; left: calc(100% + 10px); top: 50%;
+      transform: translateY(-50%) translateX(-4px); padding: 6px 10px; border-radius: 8px;
+      background: #18181b; border: 1px solid #27272a; color: #fafafa; font-size: 12px; font-weight: 500;
+      white-space: nowrap; box-shadow: 0 12px 28px rgba(0,0,0,0.45); opacity: 0; pointer-events: none;
+      z-index: 80; transition: opacity 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+    }
+    .app:not(.sidebar-collapsed) .nav-item.tip::after { display: none; }
+    .tip:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+    .app:not(.sidebar-collapsed) .social-btn.tip::after {
+      left: 50%; top: auto; bottom: calc(100% + 8px); transform: translateX(-50%) translateY(4px);
+    }
+    .app:not(.sidebar-collapsed) .social-btn.tip:hover::after { transform: translateX(-50%) translateY(0); }
+
+    .view { display: none; }
+    .view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .panel {
+      border-radius: 12px; background: rgba(255,255,255,0.05); backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .lib-card {
+      border-radius: 10px; padding: 16px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08); transition: all 0.3s ease-out;
+    }
+    .lib-card:hover { background: rgba(255,255,255,0.06); }
+    .field {
+      display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+      border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px; color: #a1a1aa;
+    }
+    .toggle {
+      width: 34px; height: 20px; border-radius: 999px; background: #fafafa; position: relative;
+      cursor: pointer; border: 0; transition: all 0.3s ease-out;
+    }
+    .toggle::after {
+      content: ""; position: absolute; top: 2px; left: 16px; width: 16px; height: 16px;
+      border-radius: 50%; background: #09090b; transition: left 0.3s ease-out;
+    }
+    .toggle.off { background: rgba(255,255,255,0.12); }
+    .toggle.off::after { left: 2px; background: #a1a1aa; }
+    .news-item { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .news-item:last-child { border-bottom: 0; }
+
+    .profile-popout {
+      position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; z-index: 50; width: 100%;
+      background: #18181b; border: 1px solid #27272a; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.75); transform-origin: bottom center;
+      opacity: 0; transform: scale(0.95); pointer-events: none;
+      transition: opacity 0.22s var(--ease-out), transform 0.22s var(--ease-out);
+    }
+    .app.sidebar-collapsed .profile-popout { left: 0; right: auto; width: 260px; transform-origin: bottom left; }
+    .profile-popout.open { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .popout-banner {
+      height: 80px; background-color: #27272a; background-size: cover; background-position: center;
+      cursor: pointer; position: relative;
+    }
+    .popout-banner .banner-overlay {
+      position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.5);
+      color: #fafafa; opacity: 0; transition: opacity 0.3s ease-out;
+    }
+    .popout-banner:hover .banner-overlay { opacity: 1; }
+    .avatar-edit {
+      position: relative; width: 72px; height: 72px; margin-top: -40px; border-radius: 999px;
+      overflow: hidden; cursor: pointer; border: 4px solid #18181b; background: #3f3f46;
+    }
+    .avatar-edit img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar-edit .cam {
+      position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.5);
+      color: #fafafa; opacity: 0; transition: opacity 0.3s ease-out;
+    }
+    .avatar-edit:hover .cam { opacity: 1; }
+    .online-badge {
+      position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; border-radius: 999px;
+      background: #a1a1aa; border: 3px solid #18181b; pointer-events: none; z-index: 2;
+    }
+    .editable {
+      display: block; width: 100%; border-radius: 4px; padding: 2px 4px; cursor: text;
+      transition: background 0.3s ease-out; outline: none; user-select: text; -webkit-user-select: text;
+    }
+    .editable:hover { background: rgba(255,255,255,0.1); }
+    .editable:focus { outline: none; background: rgba(0,0,0,0.5); }
+    .logout-btn {
+      width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0;
+      border-radius: 8px; background: transparent; color: #a1a1aa; font-family: inherit; font-size: 13px;
+      font-weight: 500; cursor: pointer; text-align: left; transition: all 0.3s ease-out;
+    }
+    .logout-btn:hover { color: #f87171; background: rgba(239,68,68,0.1); }
+    .logout-btn:active { transform: scale(0.97); }
+
+    .hero-banner {
+      position: relative; width: 100%; flex: 1; min-height: 420px; max-height: 560px;
+      border-radius: 1.5rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08), transparent 50%),
+        linear-gradient(160deg, #18181b 0%, #09090b 55%, #0a0a0a 100%);
+    }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 10; pointer-events: none;
+      background: linear-gradient(to top, #09090b 0%, rgba(9,9,11,0.55) 45%, transparent 100%);
+    }
+    .hero-content { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 20; padding: 2rem; }
+    .version-btn {
+      display: flex; align-items: center; gap: 0.75rem; background: rgba(24,24,27,0.6);
+      backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem;
+      padding: 0.75rem 1.25rem; cursor: pointer; color: inherit; font-family: inherit;
+      transition: all 0.3s ease-out;
+    }
+    .version-btn:hover { background: rgba(255,255,255,0.1); }
+    .version-btn:active { transform: scale(0.97); }
+    .play-btn {
+      display: flex; align-items: center; gap: 0.75rem; background: #fafafa; color: #09090b;
+      padding: 1rem 2rem; border-radius: 1rem; border: 0; font-family: inherit; font-size: 0.95rem;
+      font-weight: 700; cursor: pointer; box-shadow: 0 0 40px rgba(255,255,255,0.1);
+      transition: all 0.3s ease-out;
+    }
+    .play-btn:hover { transform: scale(1.05); background: #fff; }
+    .play-btn:active { transform: scale(0.95); }
+    .hero-actions { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 1.5rem; flex-wrap: wrap; }
+    .hero-actions-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .icon-play-fill { fill: currentColor; stroke: none; width: 18px; height: 18px; }
+
+    .mode-modal {
+      position: absolute; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s var(--ease-out);
+    }
+    .mode-modal.open { display: flex; opacity: 1; }
+    .mode-card {
+      width: 800px; max-width: calc(100% - 48px); background: #09090b; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 1.5rem; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+    }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .mode-option {
+      position: relative; height: 16rem; border-radius: 1rem; overflow: hidden; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1); background: #18181b; text-align: left;
+      font-family: inherit; color: inherit; padding: 0; transition: all 0.3s ease-out;
+    }
+    .mode-option:hover { border-color: rgba(255,255,255,0.3); transform: scale(1.02); }
+    .mode-option:active { transform: scale(0.95); }
+    .mode-option img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .mode-option-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, #09090b 0%, rgba(9,9,11,0.55) 45%, transparent 100%);
+    }
+    .mode-option-text { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.25rem; z-index: 2; }
+    .mode-check {
+      display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #a1a1aa;
+      width: max-content; font-size: 13px; transition: color 0.3s ease-out; user-select: none;
+    }
+    .mode-check:hover { color: #fff; }
+    .mode-check input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .mode-check-box {
+      width: 18px; height: 18px; border-radius: 5px; border: 1px solid #3f3f46; background: #000;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .mode-check input:checked + .mode-check-box { background: #fafafa; border-color: #fafafa; }
+    .mode-check-box svg { width: 12px; height: 12px; stroke: #09090b; fill: none; stroke-width: 2.5; opacity: 0; }
+    .mode-check input:checked + .mode-check-box svg { opacity: 1; }
+
+    .loading-screen {
+      position: absolute; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center;
+      background: rgba(9,9,11,0.72); backdrop-filter: blur(40px); opacity: 0; transition: opacity 0.35s var(--ease-out);
+    }
+    .loading-screen.open { display: flex; opacity: 1; }
+    .loading-card {
+      width: min(420px, 90%); padding: 28px; border-radius: 16px; background: rgba(24,24,27,0.9);
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+    }
+    .loading-bar { margin-top: 20px; height: 2px; border-radius: 999px; background: #27272a; overflow: hidden; }
+    .loading-bar > i { display: block; height: 100%; width: 0%; background: #fafafa; transition: width 0.25s linear; }
+    .loading-log {
+      margin-top: 16px; max-height: 120px; overflow: hidden; font-family: ui-monospace, Consolas, monospace;
+      font-size: 11px; line-height: 1.7; color: #71717a;
+    }
+
+    .launcher-shell { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .launcher-shell.visible { display: flex; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- AUTH -->
+    <div class="auth-gate open no-drag" id="authGate" aria-hidden="false">
+      <div style="position:absolute;top:0;right:0;display:flex;z-index:2;">
+        <button type="button" class="win-btn interactive" id="auth-min" aria-label="Свернуть"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button type="button" class="win-btn close interactive" id="auth-close" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="auth-card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:28px;height:28px;color:#fafafa;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none" style="width:100%;height:100%;">
+              <g fill="currentColor">
+                <polygon points="238,50 60,420 145,420 238,225" />
+                <polygon points="262,50 262,225 355,420 440,420" />
+                <polygon points="250,380 180,240 320,240" />
+                <polygon points="175,445 325,445 345,465 155,465" />
+              </g>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#fafafa;">Aspect Visuals</div>
+            <div style="font-size:12px;color:#71717a;">Войдите, чтобы продолжить</div>
+          </div>
+        </div>
+
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active interactive" id="tabLogin" data-tab="login">Вход</button>
+          <button type="button" class="auth-tab interactive" id="tabRegister" data-tab="register">Регистрация</button>
+        </div>
+
+        <form id="authForm" autocomplete="on" novalidate>
+          <div class="auth-field-signup" style="margin-bottom:12px;">
+            <label class="auth-label" for="authNickname">Никнейм</label>
+            <input class="auth-input" id="authNickname" type="text" placeholder="Ваш ник" autocomplete="nickname" maxlength="24" />
+          </div>
+          <div style="margin-bottom:12px;">
+            <label class="auth-label" for="authEmail">Email</label>
+            <input class="auth-input" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div style="margin-bottom:12px;">
+            <label class="auth-label" for="authPassword">Пароль</label>
+            <input class="auth-input" id="authPassword" type="password" placeholder="минимум 6 символов" autocomplete="current-password" />
+            <div class="auth-forgot-wrap">
+              <button type="button" class="auth-forgot interactive" id="authForgot">Забыли пароль?</button>
+            </div>
+          </div>
+          <div class="auth-field-signup" style="margin-bottom:16px;">
+            <label class="auth-label" for="authPasswordConfirm">Повтор пароля</label>
+            <input class="auth-input" id="authPasswordConfirm" type="password" placeholder="повторите пароль" autocomplete="new-password" />
+          </div>
+          <button type="submit" class="auth-submit interactive" id="authSubmit">Войти</button>
+          <div class="auth-login-only">
+            <div class="auth-or"><span>ИЛИ</span></div>
+            <div class="auth-oauth">
+              <button type="button" class="auth-oauth-btn interactive" id="authDiscord">
+                <svg class="icon-fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                Войти через Discord
+              </button>
+              <button type="button" class="auth-oauth-btn interactive" id="authTelegram">
+                <svg class="icon-fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.63c-.684.276-1.14.85-1.14 1.5 0 .52.316.98.84 1.24l4.18 2.05 1.66 5.74c.18.63.75 1.04 1.38.95.4-.05.74-.28.95-.62l2.35-3.9 4.56 3.36c.55.4 1.3.3 1.68-.22.2-.28.26-.62.18-.95L21.9 4.02c.18-.76-.2-1.35-.7-1.59z"/></svg>
+                Войти через Telegram
+              </button>
+            </div>
+          </div>
+          <div class="auth-error" id="authError"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SPLASH -->
+    <div class="splash hide" id="splash">
+      <div class="splash-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none">
+          <g fill="currentColor">
+            <polygon points="238,50 60,420 145,420 238,225" />
+            <polygon points="262,50 262,225 355,420 440,420" />
+            <polygon points="250,380 180,240 320,240" />
+            <polygon points="175,445 325,445 345,465 155,465" />
+          </g>
+        </svg>
+      </div>
+      <div class="splash-title">ASPECT VISUALS</div>
+      <div class="splash-sub" id="splashStatus">Инициализация…</div>
+      <div class="splash-bar"><i id="splashProgress"></i></div>
+    </div>
+
+    <!-- LAUNCHER -->
+    <div class="launcher-shell" id="launcherShell">
+      <header class="drag" style="display:flex;height:40px;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-left:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:16px;height:16px;color:#a1a1aa;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none" style="width:100%;height:100%;">
+              <g fill="currentColor">
+                <polygon points="238,50 60,420 145,420 238,225" />
+                <polygon points="262,50 262,225 355,420 440,420" />
+                <polygon points="250,380 180,240 320,240" />
+                <polygon points="175,445 325,445 345,465 155,465" />
+              </g>
+            </svg>
+          </div>
+          <span style="font-size:12px;color:#71717a;">Aspect Visuals</span>
+        </div>
+        <div class="no-drag" style="display:flex;">
+          <button type="button" class="win-btn interactive" id="btn-min" aria-label="Свернуть"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+          <button type="button" class="win-btn interactive" id="btn-max" aria-label="Развернуть"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></button>
+          <button type="button" class="win-btn close interactive" id="btn-close" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      </header>
+
+      <div style="display:flex;flex:1;min-height:0;">
+        <aside class="sidebar no-drag">
+          <div class="brand-row">
+            <button type="button" class="brand-logo interactive" id="btnBrandLogo" aria-label="Переключить меню">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none">
+                <g fill="currentColor">
+                  <polygon points="238,50 60,420 145,420 238,225" />
+                  <polygon points="262,50 262,225 355,420 440,420" />
+                  <polygon points="250,380 180,240 320,240" />
+                  <polygon points="175,445 325,445 345,465 155,465" />
+                </g>
+              </svg>
+            </button>
+            <span class="brand-text">Aspect Visuals</span>
+          </div>
+
+          <nav class="sidebar-nav">
+            <button type="button" class="nav-item tip interactive active" data-view="home" data-tip="Главная">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              <span class="nav-label">Главная</span>
+            </button>
+            <button type="button" class="nav-item tip interactive" data-view="news" data-tip="Новости">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+              <span class="nav-label">Новости</span>
+            </button>
+            <button type="button" class="nav-item tip interactive" data-view="shop" data-tip="Магазин">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span class="nav-label">Магазин</span>
+            </button>
+            <div class="nav-sep"></div>
+            <button type="button" class="nav-item tip interactive" data-view="customization" data-tip="Кастомизация">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+              <span class="nav-label">Кастомизация</span>
+            </button>
+            <button type="button" class="nav-item tip interactive" data-view="skins" data-tip="Скины">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
+              <span class="nav-label">Скины</span>
+            </button>
+            <div class="nav-sep"></div>
+            <button type="button" class="nav-item tip interactive" data-view="settings" data-tip="Настройки">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span class="nav-label">Настройки</span>
+            </button>
+            <div class="nav-sep"></div>
+          </nav>
+
+          <div class="socials">
+            <button type="button" class="social-btn tip interactive" data-url="https://discord.com" data-tip="Discord" aria-label="Discord">
+              <svg class="icon-discord icon-fill" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+            </button>
+            <button type="button" class="social-btn tip interactive" data-url="https://t.me" data-tip="Telegram" aria-label="Telegram">
+              <svg class="icon" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            </button>
+            <button type="button" class="social-btn tip interactive" data-url="https://youtube.com" data-tip="YouTube" aria-label="YouTube">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+            </button>
+          </div>
+
+          <div style="padding:12px;padding-top:0;">
+            <div style="position:relative;width:100%;">
+              <div class="profile-popout" id="profilePopout" role="dialog" aria-hidden="true">
+                <div class="popout-banner interactive" id="bannerEdit" title="Сменить баннер">
+                  <div class="banner-overlay">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                  </div>
+                </div>
+                <div style="padding:0 12px 12px;">
+                  <div style="position:relative;display:inline-block;">
+                    <div class="avatar-edit interactive" id="avatarEdit" title="Сменить фото">
+                      <img id="popoutAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2327272a'/%3E%3Ccircle cx='32' cy='24' r='12' fill='%2352525b'/%3E%3Cpath d='M8 58c4-14 16-20 24-20s20 6 24 20' fill='%2352525b'/%3E%3C/svg%3E" alt="Avatar" />
+                      <div class="cam"><svg class="icon" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+                    </div>
+                    <span class="online-badge"></span>
+                  </div>
+                  <div style="margin-top:12px;margin-bottom:12px;">
+                    <div class="editable" style="font-size:16px;font-weight:700;color:#fafafa;" id="editName" contenteditable="true" spellcheck="false">User</div>
+                    <div id="profileEmail" style="font-size:12px;color:#71717a;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">email@example.com</div>
+                    <div class="editable" style="font-size:13px;color:#71717a;margin-top:4px;" id="editTag" contenteditable="true" spellcheck="false">#ASPECT</div>
+                  </div>
+                  <div style="border-top:1px solid #27272a;padding-top:8px;">
+                    <button type="button" class="logout-btn interactive" id="btnLogout">
+                      <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                      Выйти с аккаунта
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="profile-card tip interactive" id="profileCard" data-tip="Профиль">
+                <div class="avatar-wrap">
+                  <img class="avatar" id="sidebarAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2327272a'/%3E%3Ccircle cx='32' cy='24' r='12' fill='%2352525b'/%3E%3Cpath d='M8 58c4-14 16-20 24-20s20 6 24 20' fill='%2352525b'/%3E%3C/svg%3E" alt="Avatar" />
+                  <span class="online-dot"></span>
+                </div>
+                <div class="profile-meta" style="min-width:0;">
+                  <div id="sidebarName" style="font-size:13px;font-weight:500;color:#fafafa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">User</div>
+                  <div id="sidebarTag" style="font-size:12px;color:#71717a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">#ASPECT</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column;background:#09090b;">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:24px 32px 32px;">
+            <div class="view active" id="view-home">
+              <div style="display:flex;flex:1;min-height:0;flex-direction:column;">
+                <article class="hero-banner">
+                  <img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1600&q=80" alt="TwoMC" draggable="false" />
+                  <div class="hero-overlay"></div>
+                  <div class="hero-content">
+                    <h1 style="font-size:2.25rem;font-weight:700;color:#fff;letter-spacing:-0.025em;">Fabric 1.21.4</h1>
+                    <p style="margin-top:8px;color:#d4d4d8;font-size:14px;">Сыграй с лучшими визуалами на Minecraft. Будь лучше.</p>
+                    <div class="hero-actions">
+                      <button type="button" class="version-btn interactive" id="btnVersion">
+                        <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M12.586 2a2 2 0 0 0-1.414.586L3.707 9.05a1 1 0 0 0 0 1.414l8.485 8.485a1 1 0 0 0 1.414 0l6.465-6.464a2 2 0 0 0 .586-1.415V4a2 2 0 0 0-2-2z"/><path d="M15 2h2a2 2 0 0 1 2 2v2M3 15v2a2 2 0 0 0 2 2h2"/></svg>
+                        <span style="text-align:left;">
+                          <span style="display:block;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#71717a;">Версия</span>
+                          <span id="selectedVersion" style="display:block;font-size:13px;font-weight:700;color:#fafafa;">1.21.4</span>
+                        </span>
+                        <svg class="icon" viewBox="0 0 24 24" style="color:#a1a1aa;"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                      <div class="hero-actions-right">
+                        <button type="button" class="play-btn interactive" id="btnPlay">
+                          <svg class="icon-play-fill" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                          Запустить игру
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="view" id="view-news">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Новости</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Последние обновления проекта.</p>
+                <div style="margin-top:24px;">
+                  <div class="news-item"><p style="font-size:12px;color:#52525b;">26 Aug 2026</p><p style="margin-top:4px;font-size:14px;font-weight:500;color:#fafafa;">V2.4.1 — Auth & Build</p><p style="margin-top:4px;font-size:13px;color:#71717a;">Supabase auth и защищённая сборка.</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="view" id="view-shop">
+              <div class="panel" style="flex:1;padding:32px;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Магазин</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Пакеты и дополнения.</p>
+                <div style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Premier Pass</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Сезонный доступ</p></div>
+                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Asset Bundle</p><p style="margin-top:4px;font-size:12px;color:#71717a;">1.2 GB</p></div>
+                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Boost Pack</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Приоритет очереди</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="view" id="view-customization">
+              <div class="panel" style="flex:1;padding:32px;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Кастомизация</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Интерфейс и персональные настройки.</p>
+                <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;">
+                  <div class="field"><span>Компактный сайдбар</span><button type="button" class="toggle interactive" id="toggleCompact"></button></div>
+                  <div class="field"><span>Звуки интерфейса</span><button type="button" class="toggle interactive" id="toggleSound"></button></div>
+                  <div class="field"><span>Анимации</span><button type="button" class="toggle interactive" id="toggleAnim"></button></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="view" id="view-skins">
+              <div class="panel" style="flex:1;padding:32px;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Скины</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Визуальные пакеты клиента.</p>
+                <div style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Mono Default</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Активен</p></div>
+                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Carbon</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Locked</p></div>
+                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Ivory</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Locked</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="view" id="view-settings">
+              <div class="panel" style="flex:1;padding:32px;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Настройки</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Локальные параметры клиента.</p>
+                <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;">
+                  <div class="field"><span>Спрашивать куда зайти</span><button type="button" class="toggle interactive" id="toggleAskMode"></button></div>
+                  <div class="field"><span>Аппаратное ускорение</span><button type="button" class="toggle interactive" id="toggleHw"></button></div>
+                  <div class="field"><span>Автозапуск с Windows</span><button type="button" class="toggle off interactive" id="toggleAuto"></button></div>
+                  <div class="field"><span>Оверлей в сессии</span><button type="button" class="toggle interactive" id="toggleOverlay"></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="mode-modal" id="modeModal" aria-hidden="true">
+      <div class="mode-card" role="dialog">
+        <h2 style="font-size:1.5rem;font-weight:700;color:#fff;">Выберите режим игры</h2>
+        <div class="mode-grid">
+          <button type="button" class="mode-option interactive" id="modeTwomc" data-mode="twomc">
+            <img src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1200&q=80" alt="TwoMC" draggable="false" />
+            <div class="mode-option-overlay"></div>
+            <div class="mode-option-text">
+              <div style="font-size:1.25rem;font-weight:700;color:#fff;">Зайти на TwoMC</div>
+              <div style="margin-top:4px;font-size:13px;color:#a1a1aa;">Официальный сервер с лучшими визуалами</div>
+            </div>
+          </button>
+          <button type="button" class="mode-option interactive" id="modeSolo" data-mode="solo">
+            <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80" alt="Solo" draggable="false" />
+            <div class="mode-option-overlay"></div>
+            <div class="mode-option-text">
+              <div style="font-size:1.25rem;font-weight:700;color:#fff;">Одиночная игра</div>
+              <div style="margin-top:4px;font-size:13px;color:#a1a1aa;">Обычный Minecraft с нашими модами</div>
+            </div>
+          </button>
+        </div>
+        <label class="mode-check interactive">
+          <input type="checkbox" id="skipPlayModalCheck" />
+          <span class="mode-check-box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+          Больше не показывать
+        </label>
+      </div>
+    </div>
+
+    <div class="loading-screen" id="loadingScreen" aria-hidden="true">
+      <div class="loading-card">
+        <div class="splash-logo" style="width:40px;height:40px;margin:0 auto 16px;color:#fafafa;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none" style="width:100%;height:100%;">
+            <g fill="currentColor">
+              <polygon points="238,50 60,420 145,420 238,225" />
+              <polygon points="262,50 262,225 355,420 440,420" />
+              <polygon points="250,380 180,240 320,240" />
+              <polygon points="175,445 325,445 345,465 155,465" />
+            </g>
+          </svg>
+        </div>
+        <p style="font-size:11px;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:#71717a;text-align:center;">Launching</p>
+        <h3 id="loadingTitle" style="margin-top:8px;font-size:18px;font-weight:600;color:#fafafa;text-align:center;">Fabric 1.21.4</h3>
+        <p id="loadingStatus" style="margin-top:6px;font-size:13px;color:#a1a1aa;text-align:center;">Подготовка клиента…</p>
+        <div class="loading-bar"><i id="loadingProgress"></i></div>
+        <div class="loading-log" id="loadingLog"></div>
+      </div>
+    </div>
+
+    <input type="file" id="avatar-input" accept="image/*" style="display:none;" />
+    <input type="file" id="banner-input" accept="image/*" style="display:none;" />
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // ─── Supabase (ключи в supabase-config.js) ───
+      let ipcRenderer = null;
+      let shell = null;
+      try { ({ ipcRenderer, shell } = require("electron")); } catch (e) { console.warn(e); }
+
+      let createClientFn = null;
+      try {
+        createClientFn = require("@supabase/supabase-js").createClient;
+      } catch (_) {
+        if (window.supabase && typeof window.supabase.createClient === "function") {
+          createClientFn = window.supabase.createClient.bind(window.supabase);
+        }
+      }
+
+      let SUPABASE_URL = "";
+      let SUPABASE_KEY = "";
+      try {
+        const cfg = require("./supabase-config.js");
+        SUPABASE_URL = String((cfg && cfg.url) || "").trim();
+        SUPABASE_KEY = String((cfg && (cfg.anonKey || cfg.key)) || "").trim();
+      } catch (e) {
+        console.warn("[Auth] supabase-config.js:", e.message || e);
+      }
+
+      function isValidSupabaseUrl(url) {
+        try {
+          const u = new URL(url);
+          return u.protocol === "https:" && u.hostname.includes("supabase");
+        } catch (_) {
+          return false;
+        }
+      }
+
+      const keysReady = isValidSupabaseUrl(SUPABASE_URL) && SUPABASE_KEY.length > 20;
+      let supabase = null;
+      const useLocalAuth = !keysReady;
+      if (keysReady && createClientFn) {
+        try {
+          supabase = createClientFn(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: false,
+              storage: window.localStorage,
+              storageKey: "aspect-visuals-auth",
+            },
+          });
+        } catch (err) {
+          console.error("[Auth] createClient failed:", err);
+          supabase = null;
+        }
+      }
+      if (useLocalAuth) {
+        console.warn("[Auth] Локальный режим (ключи появятся позже с сайта)");
+      }
+
+      // Локальная auth до появления ключей с сайта (не Supabase)
+      const LOCAL_USERS_KEY = "aspect-visuals-local-users";
+      const LOCAL_SESSION_KEY = "aspect-visuals-local-session";
+
+      function readLocalUsers() {
+        try {
+          const raw = localStorage.getItem(LOCAL_USERS_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function writeLocalUsers(users) {
+        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      }
+
+      function makeLocalUser(email, nickname) {
+        return {
+          id: "local-" + Date.now().toString(36),
+          email,
+          user_metadata: { nickname, full_name: nickname },
+        };
+      }
+
+      function getLocalSessionUser() {
+        try {
+          const raw = localStorage.getItem(LOCAL_SESSION_KEY);
+          if (!raw) return null;
+          const session = JSON.parse(raw);
+          return session && session.user ? session.user : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function setLocalSession(user) {
+        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user }));
+      }
+
+      function clearLocalSession() {
+        localStorage.removeItem(LOCAL_SESSION_KEY);
+      }
+
+      function localSignUp(email, password, nickname) {
+        const users = readLocalUsers();
+        const low = email.toLowerCase();
+        if (users.some((u) => u.email === low)) {
+          throw new Error("Этот email уже зарегистрирован. Войдите во вкладке «Вход».");
+        }
+        const user = makeLocalUser(low, nickname);
+        users.push({ email: low, password, user });
+        writeLocalUsers(users);
+        setLocalSession(user);
+        return user;
+      }
+
+      function localSignIn(email, password) {
+        const users = readLocalUsers();
+        const low = email.toLowerCase();
+        const found = users.find((u) => u.email === low);
+        if (!found || found.password !== password) {
+          throw new Error("Неверный email или пароль.");
+        }
+        setLocalSession(found.user);
+        return found.user;
+      }
+
+      let soundEnabled = true;
+      let isSignUp = false;
+      let currentUser = null;
+      let launcherReady = false;
+      let splashRunning = false;
+
+      const clickAudio = new Audio("sounds/click.mp3?v=2");
+      clickAudio.preload = "auto";
+      clickAudio.volume = 0.2;
+      const introAudio = new Audio("sounds/intro.mp3");
+      introAudio.preload = "auto";
+      introAudio.volume = 0.35;
+
+      let clickLockUntil = 0;
+      function playClick() {
+        if (!soundEnabled) return;
+        const now = Date.now();
+        if (now < clickLockUntil) return;
+        clickLockUntil = now + 80;
+        try {
+          const a = clickAudio.cloneNode();
+          a.volume = 0.2;
+          a.currentTime = 0;
+          a.play().catch(() => {});
+        } catch (_) {}
+      }
+
+      function playIntro() {
+        if (!soundEnabled) return;
+        try {
+          introAudio.pause();
+          introAudio.currentTime = 0;
+          introAudio.play().catch((err) => console.warn("[Audio] intro:", err && err.message));
+        } catch (_) {}
+      }
+
+      const authGate = document.getElementById("authGate");
+      const launcherShell = document.getElementById("launcherShell");
+      const splash = document.getElementById("splash");
+      const splashProgress = document.getElementById("splashProgress");
+      const splashStatus = document.getElementById("splashStatus");
+      const authForm = document.getElementById("authForm");
+      const authEmail = document.getElementById("authEmail");
+      const authPassword = document.getElementById("authPassword");
+      const authPasswordConfirm = document.getElementById("authPasswordConfirm");
+      const authNickname = document.getElementById("authNickname");
+      const authForgot = document.getElementById("authForgot");
+      const authSubmit = document.getElementById("authSubmit");
+      const authError = document.getElementById("authError");
+      const tabLogin = document.getElementById("tabLogin");
+      const tabRegister = document.getElementById("tabRegister");
+      const profileEmail = document.getElementById("profileEmail");
+
+      function setAuthMode(signUp) {
+        isSignUp = !!signUp;
+        authGate.classList.toggle("signup", isSignUp);
+        tabLogin.classList.toggle("active", !isSignUp);
+        tabRegister.classList.toggle("active", isSignUp);
+        authSubmit.textContent = isSignUp ? "Зарегистрироваться" : "Войти";
+        authPassword.setAttribute("autocomplete", isSignUp ? "new-password" : "current-password");
+        authError.textContent = "";
+        authError.style.color = "#f87171";
+      }
+      tabLogin.addEventListener("click", () => { setAuthMode(false); });
+      tabRegister.addEventListener("click", () => { setAuthMode(true); });
+      setAuthMode(false);
+
+      function applyUserToProfile(user) {
+        currentUser = user;
+        const email = (user && user.email) || "email@example.com";
+        const meta = (user && user.user_metadata) || {};
+        const nick = String(meta.nickname || meta.full_name || email.split("@")[0] || "User").trim() || "User";
+        profileEmail.textContent = email;
+        const editName = document.getElementById("editName");
+        const sidebarName = document.getElementById("sidebarName");
+        if (editName && (!editName.dataset.custom || editName.dataset.custom === "0")) {
+          editName.textContent = nick;
+          sidebarName.textContent = nick;
+        }
+      }
+
+      function showAuth() {
+        authGate.classList.add("open");
+        authGate.setAttribute("aria-hidden", "false");
+        launcherShell.classList.remove("visible");
+        splash.classList.add("hide");
+        launcherReady = false;
+        splashRunning = false;
+      }
+
+      function hideAuth() {
+        authGate.classList.remove("open");
+        authGate.setAttribute("aria-hidden", "true");
+      }
+
+      function runSplashThenLauncher(opts) {
+        const shouldPlayIntro = !(opts && opts.skipIntro);
+        splash.classList.remove("hide");
+        splashRunning = true;
+        if (splashProgress) splashProgress.style.width = "0%";
+        const LOAD_MS = 7000;
+        [
+          { t: 0, p: 8, text: "Инициализация…" },
+          { t: 1200, p: 28, text: "Проверка клиента…" },
+          { t: 2600, p: 48, text: "Синхронизация ассетов…" },
+          { t: 4200, p: 72, text: "Подготовка сессии…" },
+          { t: 5800, p: 92, text: "Почти готово…" },
+          { t: LOAD_MS, p: 100, text: "Готово" },
+        ].forEach((s) => {
+          setTimeout(() => {
+            if (splashProgress) splashProgress.style.width = s.p + "%";
+            if (splashStatus) splashStatus.textContent = s.text;
+          }, s.t);
+        });
+        if (shouldPlayIntro) {
+          setTimeout(() => { playIntro(); }, Math.max(0, LOAD_MS - 1000));
+        }
+        setTimeout(() => {
+          splash.classList.add("hide");
+          splashRunning = false;
+          launcherReady = true;
+          launcherShell.classList.add("visible");
+        }, LOAD_MS + 200);
+      }
+
+      function enterLauncher(user, opts) {
+        if (!user) return;
+        applyUserToProfile(user);
+        hideAuth();
+        if (launcherReady) {
+          launcherShell.classList.add("visible");
+          return;
+        }
+        if (splashRunning) return;
+        runSplashThenLauncher(opts);
+      }
+
+      function mapAuthError(err) {
+        const msg = (err && err.message) || "Ошибка авторизации";
+        const low = msg.toLowerCase();
+        if (low.includes("password") && (low.includes("6") || low.includes("least") || low.includes("short"))) {
+          return "Пароль слишком короткий (минимум 6 символов).";
+        }
+        if (low.includes("invalid login") || low.includes("invalid credentials")) {
+          return "Неверный email или пароль.";
+        }
+        if (low.includes("already registered") || low.includes("already been registered") || low.includes("user already")) {
+          return "Этот email уже зарегистрирован. Войдите во вкладке «Вход».";
+        }
+        if (low.includes("rate limit") || low.includes("too many")) {
+          return "Слишком много попыток. Подождите немного.";
+        }
+        if (low.includes("fetch") || low.includes("network") || low.includes("failed to fetch")) {
+          return "Нет связи с Supabase. Проверьте URL/KEY и интернет.";
+        }
+        return msg;
+      }
+
+      // Авто-вход при наличии сохранённой сессии
+      if (supabase) {
+        supabase.auth.onAuthStateChange((event, session) => {
+          console.log("[Auth]", event, session ? "session ok" : "no session");
+          if (session && session.user) {
+            enterLauncher(session.user);
+            return;
+          }
+          if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+            currentUser = null;
+            showAuth();
+          }
+        });
+      }
+
+      async function bootstrapAuth() {
+        if (useLocalAuth || !supabase) {
+          const localUser = getLocalSessionUser();
+          if (localUser) {
+            enterLauncher(localUser);
+          } else {
+            showAuth();
+            authError.textContent = "";
+          }
+          return;
+        }
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          if (data.session && data.session.user) {
+            enterLauncher(data.session.user);
+          } else {
+            showAuth();
+          }
+        } catch (err) {
+          console.warn("[Auth]", err.message || err);
+          showAuth();
+          authError.textContent = mapAuthError(err);
+        }
+      }
+
+      authForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        authError.textContent = "";
+        authError.style.color = "#f87171";
+        authSubmit.disabled = true;
+
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        const passwordConfirm = authPasswordConfirm.value;
+        const nickname = authNickname.value.trim();
+
+        if (!email || !password) {
+          authError.textContent = "Заполните email и пароль.";
+          authSubmit.disabled = false;
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          authError.textContent = "Введите корректный email.";
+          authSubmit.disabled = false;
+          return;
+        }
+        if (password.length < 6) {
+          authError.textContent = "Пароль слишком короткий (минимум 6 символов).";
+          authSubmit.disabled = false;
+          return;
+        }
+        if (isSignUp) {
+          if (!nickname || nickname.length < 2) {
+            authError.textContent = "Укажите никнейм (минимум 2 символа).";
+            authSubmit.disabled = false;
+            return;
+          }
+          if (password !== passwordConfirm) {
+            authError.textContent = "Пароли не совпадают.";
+            authSubmit.disabled = false;
+            return;
+          }
+        }
+
+        try {
+          if (useLocalAuth || !supabase) {
+            if (isSignUp) {
+              const user = localSignUp(email, password, nickname);
+              enterLauncher(user, { skipIntro: true });
+            } else {
+              const user = localSignIn(email, password);
+              enterLauncher(user);
+            }
+          } else if (!isSignUp) {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            if (data.user) enterLauncher(data.user);
+          } else {
+            const { data, error } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                data: {
+                  nickname,
+                  full_name: nickname,
+                },
+              },
+            });
+            if (error) throw error;
+            if (data.session && data.user) {
+              enterLauncher(data.user, { skipIntro: true });
+            } else if (data.user) {
+              authError.style.color = "#a1a1aa";
+              authError.textContent = "Аккаунт создан. Подтвердите почту (если включено в Supabase), затем войдите.";
+              setAuthMode(false);
+            } else {
+              throw new Error("Не удалось создать аккаунт. Попробуйте снова.");
+            }
+          }
+        } catch (err) {
+          authError.style.color = "#f87171";
+          authError.textContent = mapAuthError(err);
+        } finally {
+          authSubmit.disabled = false;
+        }
+      });
+
+      authForgot.addEventListener("click", async () => {
+        authError.textContent = "";
+        authError.style.color = "#f87171";
+
+        if (useLocalAuth || !supabase) {
+          authError.style.color = "#a1a1aa";
+          authError.textContent = "Сброс пароля будет доступен после подключения аккаунтов сайта.";
+          return;
+        }
+
+        const email = authEmail.value.trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          authError.textContent = "Введите email, чтобы сбросить пароль.";
+          return;
+        }
+
+        authForgot.disabled = true;
+        try {
+          const { error } = await supabase.auth.resetPasswordForEmail(email);
+          if (error) throw error;
+          authError.style.color = "#a1a1aa";
+          authError.textContent = "Письмо для сброса пароля отправлено на email.";
+        } catch (err) {
+          authError.style.color = "#f87171";
+          authError.textContent = mapAuthError(err);
+        } finally {
+          authForgot.disabled = false;
+        }
+      });
+
+      document.getElementById("btnLogout").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try { closePopout(); } catch (_) {}
+        if (supabase && !useLocalAuth) {
+          try { await supabase.auth.signOut(); } catch (_) {}
+        }
+        clearLocalSession();
+        currentUser = null;
+        showAuth();
+      });
+
+      // Window controls
+      document.getElementById("btn-min").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-min"); });
+      document.getElementById("btn-max").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-max"); });
+      document.getElementById("btn-close").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-close"); });
+      document.getElementById("auth-min").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-min"); });
+      document.getElementById("auth-close").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-close"); });
+
+      // Один клик = один звук (capture — работает даже при stopPropagation)
+      document.getElementById("app").addEventListener("click", (e) => {
+        if (!e.target.closest(".interactive")) return;
+        playClick();
+      }, true);
+
+      const authDiscord = document.getElementById("authDiscord");
+      const authTelegram = document.getElementById("authTelegram");
+      if (authDiscord) {
+        authDiscord.addEventListener("click", () => {
+          authError.style.color = "#a1a1aa";
+          authError.textContent = "Вход через Discord появится после связки с сайтом.";
+          if (shell) shell.openExternal("https://discord.com");
+        });
+      }
+      if (authTelegram) {
+        authTelegram.addEventListener("click", () => {
+          authError.style.color = "#a1a1aa";
+          authError.textContent = "Вход через Telegram появится после связки с сайтом.";
+          if (shell) shell.openExternal("https://t.me");
+        });
+      }
+
+      const appEl = document.getElementById("app");
+      const toggleCompact = document.getElementById("toggleCompact");
+      function setCollapsed(collapsed) {
+        appEl.classList.toggle("sidebar-collapsed", collapsed);
+        if (toggleCompact) toggleCompact.classList.toggle("off", !collapsed);
+      }
+      document.getElementById("btnBrandLogo").addEventListener("click", () => {
+        setCollapsed(!appEl.classList.contains("sidebar-collapsed"));
+      });
+      if (toggleCompact) toggleCompact.addEventListener("click", () => {
+        setCollapsed(!appEl.classList.contains("sidebar-collapsed"));
+      });
+
+      const navItems = document.querySelectorAll(".nav-item");
+      navItems.forEach((item) => {
+        item.addEventListener("click", () => {
+          closePopout();
+          navItems.forEach((n) => n.classList.remove("active"));
+          item.classList.add("active");
+          document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+          const panel = document.getElementById("view-" + item.dataset.view);
+          if (panel) panel.classList.add("active");
+        });
+      });
+
+      document.querySelectorAll(".social-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (btn.dataset.url && shell) shell.openExternal(btn.dataset.url);
+        });
+      });
+
+      document.querySelectorAll(".toggle").forEach((btn) => {
+        if (btn.id === "toggleCompact" || btn.id === "toggleAskMode") return;
+        btn.addEventListener("click", () => {
+          btn.classList.toggle("off");
+          if (btn.id === "toggleSound") {
+            soundEnabled = !btn.classList.contains("off");
+          }
+        });
+      });
+
+      const profileCard = document.getElementById("profileCard");
+      const profilePopout = document.getElementById("profilePopout");
+      const avatarInput = document.getElementById("avatar-input");
+      const bannerInput = document.getElementById("banner-input");
+      const popoutAvatar = document.getElementById("popoutAvatar");
+      const sidebarAvatar = document.getElementById("sidebarAvatar");
+      const sidebarName = document.getElementById("sidebarName");
+      const sidebarTag = document.getElementById("sidebarTag");
+      const editName = document.getElementById("editName");
+      const editTag = document.getElementById("editTag");
+
+      function syncSidebarText() {
+        const name = (editName.textContent || "").trim() || "User";
+        let tag = (editTag.textContent || "").trim() || "#ASPECT";
+        if (!tag.startsWith("#")) tag = "#" + tag;
+        editName.textContent = name;
+        editTag.textContent = tag;
+        editName.dataset.custom = "1";
+        sidebarName.textContent = name;
+        sidebarTag.textContent = tag;
+      }
+      function openPopout() {
+        profilePopout.classList.add("open");
+        profilePopout.setAttribute("aria-hidden", "false");
+        profileCard.classList.add("open");
+      }
+      function closePopout() {
+        if (!profilePopout.classList.contains("open")) return;
+        if (document.activeElement === editName || document.activeElement === editTag) document.activeElement.blur();
+        syncSidebarText();
+        profilePopout.classList.remove("open");
+        profilePopout.setAttribute("aria-hidden", "true");
+        profileCard.classList.remove("open");
+      }
+
+      profileCard.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (profilePopout.classList.contains("open")) closePopout();
+        else openPopout();
+      });
+      profilePopout.addEventListener("click", (e) => e.stopPropagation());
+      document.addEventListener("click", () => { if (profilePopout.classList.contains("open")) closePopout(); });
+
+      document.getElementById("avatarEdit").addEventListener("click", (e) => { e.stopPropagation(); avatarInput.click(); });
+      document.getElementById("bannerEdit").addEventListener("click", (e) => { e.stopPropagation(); bannerInput.click(); });
+      avatarInput.addEventListener("change", () => {
+        const file = avatarInput.files && avatarInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => { popoutAvatar.src = reader.result; sidebarAvatar.src = reader.result; };
+        reader.readAsDataURL(file);
+      });
+      bannerInput.addEventListener("change", () => {
+        const file = bannerInput.files && bannerInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => { document.getElementById("bannerEdit").style.backgroundImage = "url('" + reader.result + "')"; };
+        reader.readAsDataURL(file);
+      });
+      [editName, editTag].forEach((el) => {
+        el.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); el.blur(); } e.stopPropagation(); });
+        el.addEventListener("blur", syncSidebarText);
+        el.addEventListener("mousedown", (e) => e.stopPropagation());
+        el.addEventListener("click", (e) => e.stopPropagation());
+      });
+
+      const modeModal = document.getElementById("modeModal");
+      const skipPlayModalCheck = document.getElementById("skipPlayModalCheck");
+      const toggleAskMode = document.getElementById("toggleAskMode");
+      const loadingScreen = document.getElementById("loadingScreen");
+      const loadingProgress = document.getElementById("loadingProgress");
+      const loadingStatus = document.getElementById("loadingStatus");
+      const loadingLog = document.getElementById("loadingLog");
+      const loadingTitle = document.getElementById("loadingTitle");
+      let launchTimers = [];
+
+      function isSkipPlayModal() { return localStorage.getItem("skipPlayModal") === "true"; }
+      function syncAskModeToggle() {
+        if (toggleAskMode) toggleAskMode.classList.toggle("off", isSkipPlayModal());
+      }
+      function setSkipPlayModal(skip) {
+        if (skip) localStorage.setItem("skipPlayModal", "true");
+        else localStorage.removeItem("skipPlayModal");
+        syncAskModeToggle();
+        if (skipPlayModalCheck) skipPlayModalCheck.checked = skip;
+      }
+      syncAskModeToggle();
+      if (toggleAskMode) {
+        toggleAskMode.addEventListener("click", () => {
+          setSkipPlayModal(!isSkipPlayModal());
+        });
+      }
+
+      function openModeModal() {
+        modeModal.classList.add("open");
+        modeModal.setAttribute("aria-hidden", "false");
+        if (skipPlayModalCheck) skipPlayModalCheck.checked = false;
+      }
+      function closeModeModal() {
+        modeModal.classList.remove("open");
+        modeModal.setAttribute("aria-hidden", "true");
+      }
+      function startLaunch(mode) {
+        launchTimers.forEach(clearTimeout);
+        launchTimers = [];
+        closeModeModal();
+        loadingTitle.textContent = mode === "solo" ? "Одиночная игра" : "Зайти на TwoMC";
+        loadingStatus.textContent = "Подготовка клиента…";
+        loadingProgress.style.width = "0%";
+        loadingLog.innerHTML = "";
+        loadingScreen.classList.add("open");
+        loadingScreen.setAttribute("aria-hidden", "false");
+        const logs = [
+          { t: 200, p: 8, status: "Resolving client…", line: "> Resolving Aspect Visuals client" },
+          { t: 900, p: 22, status: "Syncing mods…", line: "> Syncing mods..." },
+          { t: 1700, p: 41, status: "Checking assets…", line: "> Checking assets..." },
+          { t: 2600, p: 63, status: "Verifying Fabric…", line: "> Verifying Fabric 1.21.4" },
+          { t: 3500, p: 82, status: "Preparing session…", line: "> Preparing session handshake" },
+          { t: 4300, p: 100, status: "Ready", line: "> Launch sequence complete" },
+        ];
+        logs.forEach((step) => {
+          launchTimers.push(setTimeout(() => {
+            loadingProgress.style.width = step.p + "%";
+            loadingStatus.textContent = step.status;
+            const row = document.createElement("div");
+            row.textContent = step.line;
+            loadingLog.appendChild(row);
+            loadingLog.scrollTop = loadingLog.scrollHeight;
+          }, step.t));
+        });
+        launchTimers.push(setTimeout(() => {
+          loadingScreen.classList.remove("open");
+          loadingScreen.setAttribute("aria-hidden", "true");
+        }, 5000));
+      }
+
+      document.getElementById("btnPlay").addEventListener("click", () => {
+        if (isSkipPlayModal()) startLaunch(localStorage.getItem("lastPlayMode") || "twomc");
+        else openModeModal();
+      });
+      document.getElementById("modeTwomc").addEventListener("click", () => {
+        if (skipPlayModalCheck.checked) setSkipPlayModal(true);
+        localStorage.setItem("lastPlayMode", "twomc");
+        startLaunch("twomc");
+      });
+      document.getElementById("modeSolo").addEventListener("click", () => {
+        if (skipPlayModalCheck.checked) setSkipPlayModal(true);
+        localStorage.setItem("lastPlayMode", "solo");
+        startLaunch("solo");
+      });
+      modeModal.addEventListener("click", (e) => { if (e.target === modeModal) closeModeModal(); });
+
+      bootstrapAuth();
+    });
+  </script>
+</body>
+</html>
