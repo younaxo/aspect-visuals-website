@@ -18,6 +18,7 @@ import {
 import { toPublicUser } from '../utils/user'
 import { isCustomMedia } from '../utils/media'
 import { ensureUserSettings } from '../utils/settings'
+import { ensureUserUid } from '../utils/uid'
 import type { AuthRequest } from '../middleware/auth'
 
 export function discordAuthUrl(_req: Request, res: Response) {
@@ -91,6 +92,10 @@ export async function discordCallback(req: Request, res: Response) {
     })
 
     await ensureUserSettings(user.id)
+    await ensureUserUid(user.id, {
+      username: user.username,
+      discordUsername: discordUser.username,
+    })
 
     await syncUserRoles(user.id, discordRoles)
 
@@ -133,8 +138,9 @@ export async function getMe(req: AuthRequest, res: Response) {
     }
 
     const settings = user.settings ?? (await ensureUserSettings(user.id))
+    const uid = await ensureUserUid(user.id, { username: user.username })
 
-    res.json({ user: toPublicUser(user), settings })
+    res.json({ user: toPublicUser({ ...user, discriminator: String(uid) }), settings })
   } catch (error) {
     console.error('Get me error:', error)
     res.status(500).json({ message: 'Не удалось получить данные пользователя' })

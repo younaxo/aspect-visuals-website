@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma'
 import { toPublicUser } from '../utils/user'
 import { deleteLocalUpload, toPublicUploadUrl } from '../utils/media'
 import { ensureUserSettings } from '../utils/settings'
+import { ensureUserUid } from '../utils/uid'
 import type { AuthRequest } from '../middleware/auth'
 
 const STATUS_VALUES = new Set(['online', 'idle', 'dnd', 'offline'])
@@ -50,9 +51,10 @@ async function loadUser(userId: string) {
   })
 }
 
-function profilePayload(user: NonNullable<Awaited<ReturnType<typeof loadUser>>>, settings: UserSettings) {
+async function profilePayload(user: NonNullable<Awaited<ReturnType<typeof loadUser>>>, settings: UserSettings) {
+  const uid = await ensureUserUid(user.id, { username: user.username })
   return {
-    user: toPublicUser(user),
+    user: toPublicUser({ ...user, discriminator: String(uid) }),
     settings,
     subscriptions: [] as Array<{
       id: string
@@ -76,7 +78,7 @@ export async function getProfile(req: AuthRequest, res: Response) {
     }
 
     const settings = user.settings ?? (await ensureUserSettings(user.id))
-    res.json(profilePayload(user, settings))
+    res.json(await profilePayload(user, settings))
   } catch (error) {
     console.error('Get profile error:', error)
     res.status(500).json({ message: 'Не удалось получить профиль' })
@@ -91,7 +93,6 @@ export async function updateProfile(req: AuthRequest, res: Response) {
     }
 
     const username = asOptionalString(req.body?.username, 'Имя пользователя', 32)
-    const discriminator = asOptionalString(req.body?.discriminator, 'Тег', 5)
     const bio = asOptionalString(req.body?.bio, 'Описание', 190)
     const location = asOptionalString(req.body?.location, 'Местоположение', 80)
     const website = asOptionalString(req.body?.website, 'Сайт', 200)
@@ -115,7 +116,6 @@ export async function updateProfile(req: AuthRequest, res: Response) {
 
     const data: Record<string, string | null> = {}
     if (username !== undefined && username !== null) data.username = username
-    if (discriminator !== undefined) data.discriminator = discriminator
     if (bio !== undefined) data.bio = bio
     if (location !== undefined) data.location = location
     if (website !== undefined) data.website = website
@@ -129,7 +129,7 @@ export async function updateProfile(req: AuthRequest, res: Response) {
     })
 
     const settings = user.settings ?? (await ensureUserSettings(user.id))
-    res.json(profilePayload(user, settings))
+    res.json(await profilePayload(user, settings))
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Не удалось обновить профиль'
     const status = message.includes('должно') || message.includes('длинное') ? 400 : 500
@@ -163,7 +163,7 @@ export async function updateAvatar(req: AuthRequest, res: Response) {
     })
 
     const settings = user.settings ?? (await ensureUserSettings(user.id))
-    res.json(profilePayload(user, settings))
+    res.json(await profilePayload(user, settings))
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Не удалось обновить аватар'
     const status = message.includes('должно') || message.includes('длинное') ? 400 : 500
@@ -197,7 +197,7 @@ export async function updateBanner(req: AuthRequest, res: Response) {
     })
 
     const settings = user.settings ?? (await ensureUserSettings(user.id))
-    res.json(profilePayload(user, settings))
+    res.json(await profilePayload(user, settings))
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Не удалось обновить баннер'
     const status = message.includes('должно') || message.includes('длинное') ? 400 : 500

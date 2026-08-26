@@ -1,7 +1,9 @@
 import type { Role, User } from '@prisma/client'
+import { parseUid } from './uid'
 
 export type PublicUser = Omit<User, 'discordAccessToken' | 'discordRefreshToken'> & {
   roles: Role[]
+  uid: number | null
 }
 
 export function toPublicUser(user: User & { roles: Role[] }): PublicUser {
@@ -9,6 +11,7 @@ export function toPublicUser(user: User & { roles: Role[] }): PublicUser {
     id: user.id,
     discordId: user.discordId,
     username: user.username,
+    uid: parseUid(user.discriminator),
     discriminator: user.discriminator,
     avatar: user.avatar,
     banner: user.banner,

@@ -45,6 +45,31 @@ export function getRoleKeyByDiscordId(discordId: string): RoleKey | undefined {
   )
 }
 
+export function getHighestRoleKey(user: User | null): RoleKey | undefined {
+  const role = getHighestRole(user)
+  return role ? getRoleKeyByDiscordId(role.discordId) : undefined
+}
+
+export const ROLE_ICON_FILES: Partial<Record<RoleKey, string>> = {
+  Owner: 'owner.png',
+  Developer: 'developer.png',
+  TechnicalAdministrator: 'technical_administrator.png',
+  Administrator: 'administrator.png',
+  ChiefModerator: 'chief_moderator.png',
+  Moderator: 'moderator.png',
+  Support: 'support.png',
+  SubscriberPlus: 'subcriber_plus.png',
+  Subscriber: 'subcriber.png',
+}
+
+const ROLE_ICON_BASE = 'https://cdn-files.aspectvisuals.su/assets/images/profile-assets/roles_icon'
+
+export function getRoleIconUrl(roleKey?: RoleKey): string | null {
+  if (!roleKey) return null
+  const file = ROLE_ICON_FILES[roleKey]
+  return file ? `${ROLE_ICON_BASE}/${file}` : null
+}
+
 export function getHighestRole(user: User | null): Role | null {
   if (!user?.roles?.length) return null
 

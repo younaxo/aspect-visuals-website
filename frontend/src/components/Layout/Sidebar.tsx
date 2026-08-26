@@ -1,7 +1,10 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 import { Button } from '../Common/Button'
 import { ImageUpload } from '../Common/ImageUpload'
+import { UserNameLine } from '../Profile/UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { getHighestRole } from '../../utils/discordRoles'
@@ -10,12 +13,18 @@ import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 const fallbackAvatar =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2327272a'/%3E%3Ccircle cx='32' cy='24' r='12' fill='%2352525b'/%3E%3Cpath d='M8 58c4-14 16-20 24-20s20 6 24 20' fill='%2352525b'/%3E%3C/svg%3E"
 
+const STATUS_LABELS: Record<string, string> = {
+  online: 'В сети',
+  idle: 'Отошёл',
+  dnd: 'Не беспокоить',
+  offline: 'Не в сети',
+}
+
 export function Sidebar() {
   const { user, logout } = useAuth()
   const { saveProfile, uploadAvatar, uploadBanner, isSaving } = useProfile()
   const [open, setOpen] = useState(false)
   const [username, setUsername] = useState(user?.username ?? '')
-  const [tag, setTag] = useState(user?.discriminator ?? '')
   const [error, setError] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const role = getHighestRole(user)
@@ -24,8 +33,7 @@ export function Sidebar() {
 
   useEffect(() => {
     setUsername(user?.username ?? '')
-    setTag(user?.discriminator ?? '')
-  }, [user?.username, user?.discriminator])
+  }, [user?.username])
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
@@ -42,36 +50,30 @@ export function Sidebar() {
 
   const close = () => setOpen(false)
 
-  const persistIdentity = async () => {
+  const persistUsername = async () => {
     const nextName = username.trim()
-    const nextTag = tag.trim()
     if (!nextName || nextName.length < 2) {
       setUsername(user.username)
       return
     }
-    if (nextName === user.username && nextTag === (user.discriminator ?? '')) return
+    if (nextName === user.username) return
 
     setError(null)
     try {
-      await saveProfile({
-        username: nextName,
-        discriminator: nextTag || null,
-      })
+      await saveProfile({ username: nextName })
     } catch (err: unknown) {
       setUsername(user.username)
-      setTag(user.discriminator ?? '')
       setError(err instanceof Error ? err.message : 'Не удалось сохранить имя')
     }
   }
 
-  const onIdentityKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onUsernameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       event.preventDefault()
       event.currentTarget.blur()
     }
     if (event.key === 'Escape') {
       setUsername(user.username)
-      setTag(user.discriminator ?? '')
       event.currentTarget.blur()
     }
   }
@@ -106,39 +108,35 @@ export function Sidebar() {
           </div>
           <div className="profile-dropdown-body">
             <div className="profile-dropdown-user">
-              <ImageUpload
-                variant="avatar"
-                size="medium"
-                currentImage={avatar}
-                onUpload={uploadAvatar}
-                label="Загрузить аватар"
-              />
-              <div className="profile-inline-fields">
-                <input
-                  className="profile-input profile-input-compact"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  onBlur={() => void persistIdentity()}
-                  onKeyDown={onIdentityKeyDown}
-                  maxLength={32}
-                  disabled={isSaving}
-                  aria-label="Имя пользователя"
+              <div className={`avatar-upload-slot status-${user.status ?? 'online'}`}>
+                <ImageUpload
+                  variant="avatar"
+                  size="medium"
+                  currentImage={avatar}
+                  onUpload={uploadAvatar}
+                  label="Загрузить аватар"
                 />
-                <input
-                  className="profile-input profile-input-tag profile-input-compact"
-                  value={tag}
-                  onChange={(event) => setTag(event.target.value)}
-                  onBlur={() => void persistIdentity()}
-                  onKeyDown={onIdentityKeyDown}
-                  maxLength={5}
-                  placeholder="тег"
+                <span className="online-dot" aria-hidden="true" />
+              </div>
+              <div className="profile-dropdown-meta">
+                <UserNameLine
+                  user={user}
+                  editing
+                  compact
+                  username={username}
                   disabled={isSaving}
-                  aria-label="Тег"
+                  onUsernameChange={setUsername}
+                  onUsernameBlur={() => void persistUsername()}
+                  onUsernameKeyDown={onUsernameKeyDown}
                 />
+                <p className="profile-status-line">
+                  {user.customStatus || STATUS_LABELS[user.status ?? 'online']}
+                </p>
+                <p className="profile-joined">
+                  На сайте с {format(new Date(user.createdAt), 'd MMMM yyyy', { locale: ru })}
+                </p>
               </div>
             </div>
-            {user.customStatus && <p className="profile-status-line">{user.customStatus}</p>}
-            {role && <p className="profile-role">{role.name}</p>}
             {error && <p className="error-text">{error}</p>}
             <Link to="/profile" className="dropdown-link" onClick={close}>
               Профиль

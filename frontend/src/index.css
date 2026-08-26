@@ -340,7 +340,7 @@ select,
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  width: 320px;
+  width: 340px;
   border-radius: var(--radius);
   transform-origin: top right;
   animation: popGlass 0.28s var(--ease-out);
@@ -362,11 +362,12 @@ select,
 }
 
 .profile-dropdown-user {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  margin-top: -22px;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px 12px;
+  margin-top: -32px;
   margin-bottom: 8px;
+  align-items: start;
 }
 
 @keyframes popGlass {
@@ -929,7 +930,7 @@ select,
 }
 
 .profile-dropdown-banner-slot {
-  height: 88px;
+  height: 96px;
   overflow: hidden;
 }
 
@@ -937,8 +938,68 @@ select,
   height: 100%;
 }
 
-.profile-dropdown-user {
-  align-items: flex-end;
+.profile-dropdown-meta {
+  min-width: 0;
+  padding-top: 40px;
+}
+
+.avatar-upload-slot {
+  position: relative;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-upload-slot .online-dot {
+  z-index: 2;
+}
+
+.avatar-upload-slot.avatar-xl {
+  width: 96px;
+  height: 96px;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.profile-name-row .profile-name,
+.profile-name-row .profile-display-name {
+  min-width: 0;
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-name-row .profile-input {
+  width: auto;
+  flex: 1 1 120px;
+  min-width: 0;
+  max-width: 180px;
+}
+
+.profile-name-row.compact .profile-input {
+  max-width: 148px;
+}
+
+.role-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  pointer-events: auto;
+}
+
+.profile-uid {
+  flex-shrink: 0;
+  font-family: var(--font-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  color: #71717a;
 }
 
 .profile-inline-fields {
@@ -1019,21 +1080,23 @@ select,
 .profile-identity {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 16px;
-  margin-top: -36px;
+  margin-top: -48px;
   margin-bottom: 20px;
 }
 
 .profile-identity-meta {
-  flex: 1;
-  min-width: 180px;
+  flex: 1 1 200px;
+  min-width: 0;
+  padding-top: 56px;
 }
 
 .profile-identity-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  padding-top: 56px;
 }
 
 .profile-display-name {
@@ -1041,6 +1104,7 @@ select,
   font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .profile-tag {
@@ -1048,6 +1112,15 @@ select,
   color: #71717a;
   font-size: 18px;
   font-weight: 500;
+}
+
+.profile-identity-meta .role-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.profile-identity-meta .profile-uid {
+  font-size: 18px;
 }
 
 .profile-status-line,
@@ -1121,14 +1194,20 @@ select,
 
 .role-chip {
   height: 28px;
-  padding: 0 10px;
+  padding: 0 10px 0 8px;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 12px;
   color: #e4e4e7;
+}
+
+.role-chip .role-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .subscription-list {
@@ -1247,10 +1326,19 @@ select,
   white-space: nowrap;
 }
 
+.image-upload.avatar {
+  flex-shrink: 0;
+}
+
 .image-upload-error {
-  margin-top: 6px;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 3;
+  margin-top: 0;
   font-size: 12px;
   color: #f87171;
+  white-space: nowrap;
 }
 
 .settings-hero {
@@ -1387,6 +1475,7 @@ html[data-theme='light'] .footer-col h2 {
 }
 
 html[data-theme='light'] .header-link,
+html[data-theme='light'] .profile-uid,
 html[data-theme='light'] .profile-role,
 html[data-theme='light'] .page-text,
 html[data-theme='light'] .hero-text,

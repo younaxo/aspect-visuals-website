@@ -1,12 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { format, formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { ImageUpload } from '../Common/ImageUpload'
 import { Button } from '../Common/Button'
+import { UserNameLine } from './UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
-import { DISCORD_ROLE_LABELS, getRoleKeyByDiscordId } from '../../utils/discordRoles'
+import {
+  DISCORD_ROLE_LABELS,
+  getRoleIconUrl,
+  getRoleKeyByDiscordId,
+} from '../../utils/discordRoles'
 import type { PresenceStatus, User } from '../../types'
 
 const STATUS_OPTIONS: Array<{ value: PresenceStatus; label: string }> = [
@@ -18,7 +23,6 @@ const STATUS_OPTIONS: Array<{ value: PresenceStatus; label: string }> = [
 
 interface ProfileFormState {
   username: string
-  discriminator: string
   customStatus: string
   bio: string
   location: string
@@ -29,7 +33,6 @@ interface ProfileFormState {
 function toFormState(user: User): ProfileFormState {
   return {
     username: user.username,
-    discriminator: user.discriminator ?? '',
     customStatus: user.customStatus ?? '',
     bio: user.bio ?? '',
     location: user.location ?? '',
@@ -57,10 +60,6 @@ export function Profile() {
 
   const avatar = user ? getUserAvatarUrl(user) : null
   const banner = user ? getUserBannerUrl(user.banner) : null
-  const joined = useMemo(() => {
-    if (!user?.createdAt) return null
-    return formatDistanceToNow(new Date(user.createdAt), { addSuffix: true, locale: ru })
-  }, [user?.createdAt])
 
   if (!user || !form) {
     return (
@@ -88,7 +87,6 @@ export function Profile() {
     try {
       await saveProfile({
         username: form.username.trim(),
-        discriminator: form.discriminator.trim() || null,
         customStatus: form.customStatus.trim() || null,
         bio: form.bio.trim() || null,
         location: form.location.trim() || null,
@@ -96,7 +94,7 @@ export function Profile() {
         status: form.status,
       })
       setEditing(false)
-      setNotice('Профиль сохранён. Имя на сайте не меняет Discord.')
+      setNotice('Профиль сохранён. Ник на сайте не меняет Discord.')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Не удалось сохранить профиль')
     }
@@ -125,14 +123,17 @@ export function Profile() {
         <div className="profile-card-body">
           <div className="profile-identity">
             {editing ? (
-              <ImageUpload
-                variant="avatar"
-                size="large"
-                currentImage={avatar}
-                onUpload={uploadAvatar}
-                onRemove={user.avatar?.startsWith('/uploads/') ? () => removeAvatar() : undefined}
-                label="Загрузить аватар"
-              />
+              <div className={`avatar-upload-slot avatar-xl status-${user.status ?? 'online'}`}>
+                <ImageUpload
+                  variant="avatar"
+                  size="large"
+                  currentImage={avatar}
+                  onUpload={uploadAvatar}
+                  onRemove={user.avatar?.startsWith('/uploads/') ? () => removeAvatar() : undefined}
+                  label="Загрузить аватар"
+                />
+                <span className="online-dot" aria-hidden="true" />
+              </div>
             ) : (
               <span className={`avatar-wrap avatar-xl status-${user.status ?? 'online'}`}>
                 <img className="avatar" src={avatar ?? undefined} alt="" draggable={false} />
@@ -141,34 +142,18 @@ export function Profile() {
             )}
 
             <div className="profile-identity-meta">
-              {editing ? (
-                <div className="profile-inline-fields">
-                  <input
-                    className="profile-input"
-                    value={form.username}
-                    onChange={(event) => setForm({ ...form, username: event.target.value })}
-                    maxLength={32}
-                    aria-label="Имя пользователя"
-                  />
-                  <input
-                    className="profile-input profile-input-tag"
-                    value={form.discriminator}
-                    onChange={(event) => setForm({ ...form, discriminator: event.target.value })}
-                    maxLength={5}
-                    placeholder="тег"
-                    aria-label="Тег"
-                  />
-                </div>
-              ) : (
-                <h1 className="profile-display-name">
-                  {user.username}
-                  {user.discriminator ? <span className="profile-tag">#{user.discriminator}</span> : null}
-                </h1>
-              )}
+              <UserNameLine
+                user={user}
+                editing={editing}
+                username={form.username}
+                onUsernameChange={(value) => setForm({ ...form, username: value })}
+              />
               <p className="profile-status-line">
                 {user.customStatus || STATUS_OPTIONS.find((item) => item.value === (user.status ?? 'online'))?.label}
               </p>
-              {joined && <p className="profile-joined">На сайте {joined}</p>}
+              <p className="profile-joined">
+                На сайте с {format(new Date(user.createdAt), 'd MMMM yyyy', { locale: ru })}
+              </p>
             </div>
 
             <div className="profile-identity-actions">
@@ -258,9 +243,7 @@ export function Profile() {
             </form>
           ) : (
             <div className="profile-details">
-              {user.bio && (
-                <p className="profile-bio">{user.bio}</p>
-              )}
+              {user.bio && <p className="profile-bio">{user.bio}</p>}
               <ul className="profile-facts">
                 {user.location && <li>{user.location}</li>}
                 {user.website && (
@@ -278,11 +261,13 @@ export function Profile() {
             <h2>Роли</h2>
             <div className="role-list">
               {user.roles.length ? (
-                user.roles.map((role) => {
-                  const key = getRoleKeyByDiscordId(role.discordId)
+                user.roles.map((item) => {
+                  const key = getRoleKeyByDiscordId(item.discordId)
+                  const icon = getRoleIconUrl(key)
                   return (
-                    <span key={role.id} className="role-chip">
-                      {key ? DISCORD_ROLE_LABELS[key] : role.name}
+                    <span key={item.id} className="role-chip">
+                      {icon && <img className="role-icon" src={icon} alt="" draggable={false} />}
+                      {key ? DISCORD_ROLE_LABELS[key] : item.name}
                     </span>
                   )
                 })
