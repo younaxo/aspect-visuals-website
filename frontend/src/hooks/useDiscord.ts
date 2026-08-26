@@ -1,19 +1,7 @@
-const DISCORD_AUTHORIZE_URL = 'https://discord.com/oauth2/authorize'
-
-export function getDiscordLoginUrl(): string {
-  const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID
-  const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI
-
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: 'identify email guilds.members.read',
-    prompt: 'consent',
-  })
-
-  return `${DISCORD_AUTHORIZE_URL}?${params.toString()}`
-}
+import { useState } from 'react'
+import axios from 'axios'
+import api from '../api'
+import type { DiscordAuthUrl } from '../types'
 
 export function getDiscordAvatarUrl(discordId: string, avatar?: string | null): string {
   if (!avatar) {
@@ -24,14 +12,34 @@ export function getDiscordAvatarUrl(discordId: string, avatar?: string | null): 
   return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.${format}`
 }
 
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: string } | undefined)?.message
+    if (message) return message
+  }
+  return 'Не удалось начать вход через Discord'
+}
+
 export function useDiscord() {
-  const login = () => {
-    window.location.href = getDiscordLoginUrl()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const login = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const { data } = await api.get<DiscordAuthUrl>('/api/auth/discord')
+      window.location.href = data.url
+    } catch (err: unknown) {
+      setIsLoading(false)
+      setError(getErrorMessage(err))
+    }
   }
 
   return {
     login,
-    getLoginUrl: getDiscordLoginUrl,
+    isLoading,
+    error,
     getAvatarUrl: getDiscordAvatarUrl,
   }
 }

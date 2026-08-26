@@ -1,11 +1,22 @@
 import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
 import api from '../api'
 import { useAuthStore } from '../store/authStore'
 import type { AuthResponse, User } from '../types'
 
 interface DiscordLoginPayload {
   code: string
+  state?: string
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: string } | undefined)?.message
+    if (message) return message
+  }
+  if (error instanceof Error && error.message) return error.message
+  return fallback
 }
 
 export function useAuth() {
@@ -24,8 +35,8 @@ export function useAuth() {
   })
 
   const discordLogin = useMutation({
-    mutationFn: async ({ code }: DiscordLoginPayload) => {
-      const { data } = await api.post<AuthResponse>('/api/auth/discord', { code })
+    mutationFn: async ({ code, state }: DiscordLoginPayload) => {
+      const { data } = await api.post<AuthResponse>('/api/auth/discord/callback', { code, state })
       return data
     },
     onSuccess: (data) => {
@@ -36,7 +47,9 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await api.post('/api/auth/logout')
+      await api.post('/api/auth/logout', {
+        refreshToken: useAuthStore.getState().refreshToken,
+      })
     } catch {
       // Даже если сервер недоступен, очищаем локальную сессию
     } finally {
@@ -45,12 +58,24 @@ export function useAuth() {
     }
   }, [clearAuth, queryClient])
 
+  const loginWithDiscord = useCallback(
+    async (payload: DiscordLoginPayload) => {
+      try {
+        return await discordLogin.mutateAsync(payload)
+      } catch (error: unknown) {
+        throw new Error(getErrorMessage(error, 'Не удалось войти через Discord'))
+      }
+    },
+    [discordLogin.mutateAsync],
+  )
+
   return {
     user: meQuery.data ?? user,
+    accessToken,
     isAuthenticated,
-    isLoading: meQuery.isLoading || discordLogin.isPending,
+    isLoading: (Boolean(accessToken) && meQuery.isLoading) || discordLogin.isPending,
     error: meQuery.error ?? discordLogin.error,
-    loginWithDiscord: discordLogin.mutateAsync,
+    loginWithDiscord,
     logout,
   }
 }

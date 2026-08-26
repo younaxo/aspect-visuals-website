@@ -1,12 +1,22 @@
 import { Router } from 'express'
-import { discordAuth, getMe, logout, refresh } from '../controllers/authController'
-import { authMiddleware } from '../middleware/auth'
+import {
+  discordAuthUrl,
+  discordCallback,
+  discordCallbackRedirect,
+  getMe,
+  logout,
+  refresh,
+} from '../controllers/authController'
+import { authMiddleware, optionalAuth } from '../middleware/auth'
 
 const router = Router()
 
-router.post('/discord', discordAuth)
+router.get('/discord', discordAuthUrl)
+router.post('/discord', discordAuthUrl)
+router.get('/discord/callback', discordCallbackRedirect)
+router.post('/discord/callback', discordCallback)
 router.get('/me', authMiddleware, getMe)
 router.post('/refresh', refresh)
-router.post('/logout', logout)
+router.post('/logout', optionalAuth, logout)
 
 export default router

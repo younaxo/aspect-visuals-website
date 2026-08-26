@@ -25,6 +25,10 @@ export interface AuthResponse extends AuthTokens {
   user: User
 }
 
+export interface DiscordAuthUrl {
+  url: string
+}
+
 export interface ApiError {
   message: string
   status?: number

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { verifyToken } from '../utils/jwt'
+import { verifyAccessToken } from '../services/jwtService'
 import { prisma } from '../utils/prisma'
 
 export interface AuthRequest extends Request {
@@ -17,7 +17,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
       return
     }
 
-    const payload = verifyToken(token)
+    const payload = verifyAccessToken(token)
     const user = await prisma.user.findUnique({ where: { id: payload.userId } })
 
     if (!user) {
@@ -31,4 +31,19 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
   } catch {
     res.status(401).json({ message: 'Недействительный токен' })
   }
+}
+
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction) {
+  try {
+    const header = req.headers.authorization
+    const token = header?.startsWith('Bearer ') ? header.slice(7) : null
+    if (token) {
+      const payload = verifyAccessToken(token)
+      req.userId = payload.userId
+      req.discordId = payload.discordId
+    }
+  } catch {
+    // На logout просроченный access-токен не должен мешать выходу
+  }
+  next()
 }

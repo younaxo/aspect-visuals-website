@@ -2,8 +2,10 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '../store/authStore'
 import type { AuthTokens } from '../types'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -11,6 +13,15 @@ const api = axios.create({
 })
 
 let refreshPromise: Promise<string | null> | null = null
+
+function shouldSkipRefresh(url?: string): boolean {
+  if (!url) return false
+  return (
+    url.includes('/api/auth/refresh') ||
+    url.includes('/api/auth/discord') ||
+    url.includes('/api/auth/logout')
+  )
+}
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken
@@ -23,9 +34,9 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined
 
-    if (error.response?.status !== 401 || original._retry) {
+    if (!original || error.response?.status !== 401 || original._retry || shouldSkipRefresh(original.url)) {
       return Promise.reject(error)
     }
 
@@ -53,10 +64,7 @@ async function refreshAccessToken(): Promise<string | null> {
       const refreshToken = useAuthStore.getState().refreshToken
       if (!refreshToken) return null
 
-      const { data } = await axios.post<AuthTokens>(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/refresh`,
-        { refreshToken },
-      )
+      const { data } = await axios.post<AuthTokens>(`${API_BASE_URL}/api/auth/refresh`, { refreshToken })
 
       useAuthStore.getState().setTokens(data.accessToken, data.refreshToken)
       return data.accessToken

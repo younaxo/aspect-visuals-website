@@ -2,6 +2,22 @@ import axios from 'axios'
 import { prisma } from '../utils/prisma'
 
 const DISCORD_API = 'https://discord.com/api/v10'
+const DISCORD_AUTHORIZE_URL = 'https://discord.com/oauth2/authorize'
+
+export const ROLE_MAPPING: Record<string, string> = {
+  '1541875062208995328': 'Owner',
+  '1541784961986596874': 'Developer',
+  '1541875599331561604': 'Technical Administrator',
+  '1541785126856429568': 'Administrator',
+  '1541785097374793799': 'Chief Moderator',
+  '1541785042706235472': 'Moderator',
+  '1541785160297480243': 'Support',
+  '1541875642524766290': 'Subscriber_Plus',
+  '1541790489399791716': 'Subscriber',
+  '1541869586004058264': 'Default',
+}
+
+export const DEFAULT_DISCORD_ROLE_ID = '1541869586004058264'
 
 interface DiscordTokenResponse {
   access_token: string
@@ -24,15 +40,38 @@ interface DiscordGuildMember {
   user?: DiscordUser
 }
 
+export function getOAuthRedirectUri(): string {
+  return (
+    process.env.DISCORD_REDIRECT_URI ||
+    `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/discord/callback`
+  )
+}
+
+export function getOAuthUrl(state: string): string {
+  const clientId = process.env.DISCORD_CLIENT_ID
+  if (!clientId) {
+    throw new Error('DISCORD_CLIENT_ID не задан')
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: getOAuthRedirectUri(),
+    response_type: 'code',
+    scope: 'identify email guilds.members.read',
+    state,
+    prompt: 'consent',
+  })
+
+  return `${DISCORD_AUTHORIZE_URL}?${params.toString()}`
+}
+
 export async function exchangeCode(code: string): Promise<DiscordTokenResponse> {
   const body = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID || '',
     client_secret: process.env.DISCORD_CLIENT_SECRET || '',
     grant_type: 'authorization_code',
     code,
-    redirect_uri: process.env.FRONTEND_URL
-      ? `${process.env.FRONTEND_URL}/auth/discord/callback`
-      : 'http://localhost:5173/auth/discord/callback',
+    redirect_uri: getOAuthRedirectUri(),
   })
 
   const { data } = await axios.post<DiscordTokenResponse>(`${DISCORD_API}/oauth2/token`, body, {
@@ -50,11 +89,30 @@ export async function getDiscordUser(accessToken: string): Promise<DiscordUser> 
   return data
 }
 
-export async function getGuildMemberRoles(discordId: string): Promise<string[]> {
+export async function getGuildMemberRoles(
+  discordId: string,
+  userAccessToken?: string,
+): Promise<string[]> {
   const guildId = process.env.DISCORD_GUILD_ID
-  const botToken = process.env.DISCORD_BOT_TOKEN
+  if (!guildId) {
+    return []
+  }
 
-  if (!guildId || !botToken) {
+  // Сначала пробуем OAuth-токен пользователя (scope guilds.members.read)
+  if (userAccessToken) {
+    try {
+      const { data } = await axios.get<DiscordGuildMember>(
+        `${DISCORD_API}/users/@me/guilds/${guildId}/member`,
+        { headers: { Authorization: `Bearer ${userAccessToken}` } },
+      )
+      return data.roles
+    } catch {
+      // Пользователь не на сервере или scope недоступен — fallback на бота
+    }
+  }
+
+  const botToken = process.env.DISCORD_BOT_TOKEN
+  if (!botToken) {
     return []
   }
 
@@ -70,10 +128,22 @@ export async function getGuildMemberRoles(discordId: string): Promise<string[]> 
 }
 
 export async function syncUserRoles(userId: string, discordRoleIds: string[]) {
+  // Сопоставляем Discord ID с ROLE_MAPPING; если совпадений нет — выдаём Default
+  const matchedIds = discordRoleIds.filter((id) => id in ROLE_MAPPING)
+  const idsToSet = matchedIds.length > 0 ? matchedIds : [DEFAULT_DISCORD_ROLE_ID]
+
+  await Promise.all(
+    idsToSet.map((discordId) =>
+      prisma.role.upsert({
+        where: { discordId },
+        update: { name: ROLE_MAPPING[discordId] },
+        create: { discordId, name: ROLE_MAPPING[discordId] },
+      }),
+    ),
+  )
+
   const roles = await prisma.role.findMany({
-    where: {
-      discordId: { in: discordRoleIds },
-    },
+    where: { discordId: { in: idsToSet } },
   })
 
   await prisma.user.update({

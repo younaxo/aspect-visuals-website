@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ProtectedRoute } from './components/Auth/ProtectedRoute'
 import { MainLayout } from './components/Layout/MainLayout'
 import { DiscordCallback } from './pages/DiscordCallback'
 import { HomePage } from './pages/HomePage'
@@ -23,8 +24,10 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="news" element={<PlaceholderPage title="Новости" />} />
             <Route path="shop" element={<PlaceholderPage title="Магазин" />} />
-            <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+            </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
