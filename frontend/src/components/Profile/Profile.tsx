@@ -6,6 +6,7 @@ import { Button } from '../Common/Button'
 import { UserNameLine } from './UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
+import { useToastStore } from '../../store/toastStore'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 import { renderMarkdown } from '../../utils/markdown'
 import {
@@ -46,12 +47,12 @@ export function Profile() {
   const { user: authUser } = useAuth()
   const { profile, subscriptions, saveProfile, uploadAvatar, uploadBanner, removeAvatar, removeBanner, isSaving } =
     useProfile()
+  const showToast = useToastStore((state) => state.showToast)
   const user = profile?.user ?? authUser
 
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<ProfileFormState | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     if (user && !editing) {
@@ -74,7 +75,6 @@ export function Profile() {
     setForm(toFormState(user))
     setEditing(true)
     setError(null)
-    setNotice(null)
   }
 
   const cancelEdit = () => {
@@ -95,9 +95,11 @@ export function Profile() {
         status: form.status,
       })
       setEditing(false)
-      setNotice('Профиль сохранён. Ник на сайте не меняет Discord.')
+      showToast('Профиль сохранён. Ник на сайте не меняет Discord.', 'success')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Не удалось сохранить профиль')
+      const message = err instanceof Error ? err.message : 'Не удалось сохранить профиль'
+      setError(message)
+      showToast(message, 'error')
     }
   }
 
@@ -176,7 +178,6 @@ export function Profile() {
           </div>
 
           {error && <p className="error-text">{error}</p>}
-          {notice && <p className="profile-notice">{notice}</p>}
 
           {editing ? (
             <form

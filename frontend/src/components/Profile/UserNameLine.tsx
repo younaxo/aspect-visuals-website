@@ -45,12 +45,12 @@ export function UserNameLine({
         <span className={compact ? 'profile-name' : 'profile-display-name'}>{user.username}</span>
       )}
       {icon && (
-        <Tooltip content={role?.name ?? 'Роль'} side="top">
+        <Tooltip content={role?.name ?? 'Роль'}>
           <img className="role-icon" src={icon} alt={role?.name ?? ''} draggable={false} />
         </Tooltip>
       )}
       {uid !== null && (
-        <Tooltip content="Уникальный номер профиля" side="top">
+        <Tooltip content="Уникальный номер профиля">
           <span className="profile-uid">#{uid}</span>
         </Tooltip>
       )}

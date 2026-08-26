@@ -25,5 +25,5 @@ export function DiscordLogin({ label = 'Войти' }: DiscordLoginProps) {
 
   if (!error) return button
 
-  return <Tooltip content={error} side="bottom">{button}</Tooltip>
+  return <Tooltip content={error}>{button}</Tooltip>
 }

@@ -1,65 +1,38 @@
-import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FocusEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 
 interface TooltipProps {
   content: ReactNode
   children: ReactNode
-  side?: 'top' | 'bottom' | 'left' | 'right'
   delayMs?: number
 }
 
-const GAP = 10
+const OFFSET = 14
 const EDGE = 8
 
-function placeTooltip(
-  anchor: DOMRect,
-  tip: DOMRect,
-  preferred: 'top' | 'bottom' | 'left' | 'right',
-): { top: number; left: number } {
+function clampToViewport(x: number, y: number, width: number, height: number) {
   const vw = window.innerWidth
   const vh = window.innerHeight
-  const candidates: Array<'top' | 'bottom' | 'left' | 'right'> = [
-    preferred,
-    ...(['top', 'bottom', 'left', 'right'] as const).filter((s) => s !== preferred),
-  ]
-
-  for (const side of candidates) {
-    let top = 0
-    let left = 0
-
-    if (side === 'top') {
-      top = anchor.top - tip.height - GAP
-      left = anchor.left + anchor.width / 2 - tip.width / 2
-    } else if (side === 'bottom') {
-      top = anchor.bottom + GAP
-      left = anchor.left + anchor.width / 2 - tip.width / 2
-    } else if (side === 'left') {
-      top = anchor.top + anchor.height / 2 - tip.height / 2
-      left = anchor.left - tip.width - GAP
-    } else {
-      top = anchor.top + anchor.height / 2 - tip.height / 2
-      left = anchor.right + GAP
-    }
-
-    left = Math.min(Math.max(EDGE, left), vw - tip.width - EDGE)
-    top = Math.min(Math.max(EDGE, top), vh - tip.height - EDGE)
-
-    if (left >= EDGE - 0.5 && left + tip.width <= vw - EDGE + 0.5 && top >= EDGE - 0.5 && top + tip.height <= vh - EDGE + 0.5) {
-      return { top, left }
-    }
-  }
-
   return {
-    top: Math.min(Math.max(EDGE, preferred === 'bottom' ? anchor.bottom + GAP : anchor.top - tip.height - GAP), vh - tip.height - EDGE),
-    left: Math.min(Math.max(EDGE, anchor.left + anchor.width / 2 - tip.width / 2), vw - tip.width - EDGE),
+    left: Math.min(Math.max(EDGE, x), vw - width - EDGE),
+    top: Math.min(Math.max(EDGE, y), vh - height - EDGE),
   }
 }
 
-export function Tooltip({ content, children, side = 'top', delayMs = 280 }: TooltipProps) {
+export function Tooltip({ content, children, delayMs = 180 }: TooltipProps) {
   const tipId = useId()
-  const anchorRef = useRef<HTMLSpanElement | null>(null)
   const tipRef = useRef<HTMLDivElement | null>(null)
   const timerRef = useRef<number | null>(null)
+  const cursorRef = useRef({ x: 0, y: 0 })
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState<CSSProperties>({ opacity: 0 })
 
@@ -70,21 +43,19 @@ export function Tooltip({ content, children, side = 'top', delayMs = 280 }: Tool
     }
   }
 
-  const show = () => {
-    clearTimer()
-    timerRef.current = window.setTimeout(() => setOpen(true), delayMs)
-  }
-
-  const hide = () => {
-    clearTimer()
-    setOpen(false)
-  }
-
-  const updatePosition = useCallback(() => {
-    const anchor = anchorRef.current
+  const placeAtCursor = () => {
     const tip = tipRef.current
-    if (!anchor || !tip) return
-    const placed = placeTooltip(anchor.getBoundingClientRect(), tip.getBoundingClientRect(), side)
+    if (!tip) return
+    const rect = tip.getBoundingClientRect()
+    let left = cursorRef.current.x + OFFSET
+    let top = cursorRef.current.y + OFFSET
+    if (left + rect.width > window.innerWidth - EDGE) {
+      left = cursorRef.current.x - rect.width - OFFSET
+    }
+    if (top + rect.height > window.innerHeight - EDGE) {
+      top = cursorRef.current.y - rect.height - OFFSET
+    }
+    const placed = clampToViewport(left, top, rect.width, rect.height)
     setCoords({
       position: 'fixed',
       top: placed.top,
@@ -93,19 +64,35 @@ export function Tooltip({ content, children, side = 'top', delayMs = 280 }: Tool
       zIndex: 10000,
       pointerEvents: 'none',
     })
-  }, [side])
+  }
+
+  const show = (event: MouseEvent | FocusEvent) => {
+    if ('clientX' in event && event.clientX) {
+      cursorRef.current = { x: event.clientX, y: event.clientY }
+    } else {
+      const target = event.currentTarget as HTMLElement
+      const box = target.getBoundingClientRect()
+      cursorRef.current = { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+    }
+    clearTimer()
+    timerRef.current = window.setTimeout(() => setOpen(true), delayMs)
+  }
+
+  const hide = () => {
+    clearTimer()
+    setOpen(false)
+    setCoords({ opacity: 0 })
+  }
+
+  const onMove = (event: MouseEvent) => {
+    cursorRef.current = { x: event.clientX, y: event.clientY }
+    if (open) placeAtCursor()
+  }
 
   useEffect(() => {
     if (!open) return
-    updatePosition()
-    const onScroll = () => updatePosition()
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll, true)
-      window.removeEventListener('resize', onScroll)
-    }
-  }, [open, updatePosition, content])
+    placeAtCursor()
+  }, [open, content])
 
   useEffect(() => () => clearTimer(), [])
 
@@ -114,12 +101,12 @@ export function Tooltip({ content, children, side = 'top', delayMs = 280 }: Tool
   return (
     <>
       <span
-        ref={anchorRef}
         className="tooltip-anchor"
         tabIndex={0}
         aria-describedby={open ? tipId : undefined}
         onMouseEnter={show}
         onMouseLeave={hide}
+        onMouseMove={onMove}
         onFocus={show}
         onBlur={hide}
       >
