@@ -1,0 +1,101 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
+import { useAuth } from '../../hooks/useAuth'
+import { useProfile } from '../../hooks/useProfile'
+import { DISCORD_ROLE_LABELS, getHighestRoleKey } from '../../utils/discordRoles'
+import { KeyActivateBlock } from './KeyActivateBlock'
+import { Modal } from '../Common/Modal'
+import { Button } from '../Common/Button'
+
+export function AccountPanel() {
+  const { user: authUser } = useAuth()
+  const { profile } = useProfile()
+  const user = profile?.user ?? authUser
+  const [passwordOpen, setPasswordOpen] = useState(false)
+
+  if (!user) {
+    return <p className="page-text">Загружаем профиль…</p>
+  }
+
+  const roleKey = getHighestRoleKey(user)
+  const roleLabel = roleKey ? DISCORD_ROLE_LABELS[roleKey] : 'Пользователь'
+  const uid = user.uid ?? user.discriminator ?? user.id.slice(-6)
+  const balance = user.balance ?? 0
+
+  return (
+    <div className="account-panel">
+      <p className="activate-crumb">Главная / Мой профиль / Аккаунт</p>
+      <h1 className="activate-hello">
+        Привет, <span>{user.username}</span>
+      </h1>
+
+      <section className="account-info">
+        <h2>Информация о профиле</h2>
+        <dl className="account-rows">
+          <div>
+            <dt>Дата регистрации</dt>
+            <dd>{format(new Date(user.createdAt), 'dd.MM.yyyy', { locale: ru })}</dd>
+          </div>
+          <div>
+            <dt>ID</dt>
+            <dd>{uid}</dd>
+          </div>
+          <div>
+            <dt>Ваша роль</dt>
+            <dd className="account-role">
+              <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+              </svg>
+              {roleLabel}
+            </dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{user.email || 'Не указан'}</dd>
+          </div>
+          <div>
+            <dt>Пароль</dt>
+            <dd className="account-password">
+              <span>••••••••••</span>
+              <button type="button" className="icon-btn" aria-label="Изменить пароль" onClick={() => setPasswordOpen(true)}>
+                <svg className="icon" viewBox="0 0 24 24">
+                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+                </svg>
+              </button>
+            </dd>
+          </div>
+          <div>
+            <dt>Баланс</dt>
+            <dd>{balance} ₽</dd>
+          </div>
+          <div>
+            <dt>HWID</dt>
+            <dd>Не привязан</dd>
+          </div>
+          <div>
+            <dt>Discord</dt>
+            <dd className={user.discordLinked ? 'is-ok' : ''}>{user.discordLinked ? 'Привязан' : 'Не привязан'}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <KeyActivateBlock />
+
+      {passwordOpen && (
+        <Modal title="Пароль" onClose={() => setPasswordOpen(false)}>
+          <p className="page-text">Смена пароля доступна через восстановление на email.</p>
+          <div className="shop-sub-actions">
+            <Link to="/forgot-password" className="btn-primary" onClick={() => setPasswordOpen(false)}>
+              Сбросить пароль
+            </Link>
+            <Button variant="ghost" onClick={() => setPasswordOpen(false)}>
+              Закрыть
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}

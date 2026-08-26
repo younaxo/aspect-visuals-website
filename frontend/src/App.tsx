@@ -16,8 +16,11 @@ import { Shop } from './components/Shop/Shop'
 import { Cart } from './components/Shop/Cart'
 import { Checkout } from './components/Shop/Checkout'
 import { MockPayPage } from './components/Shop/MockPayPage'
-import { Profile } from './components/Profile/Profile'
+import { ProfileHub } from './components/Profile/ProfileHub'
+import { AccountPanel } from './components/Profile/AccountPanel'
+import { ProfilePlaceholder } from './components/Profile/ProfilePlaceholder'
 import { Settings } from './components/Profile/Settings'
+import { MySubscriptions } from './components/Profile/MySubscriptions'
 import { AdminRoute } from './components/Auth/AdminRoute'
 import { PromoCodes } from './components/Admin/PromoCodes'
 import { ActivationKeys } from './components/Admin/ActivationKeys'
@@ -31,7 +34,6 @@ import { PurchasesList } from './components/Admin/PurchasesList'
 import { AdminLogs } from './components/Admin/AdminLogs'
 import { AdminSettings } from './components/Admin/Settings'
 import { Chat } from './components/Chat/Chat'
-import { ActivatePage } from './components/Shop/ActivatePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -107,9 +109,16 @@ function App() {
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="chat" element={<Chat />} />
-              <Route path="activate" element={<ActivatePage />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Settings />} />
+              <Route path="activate" element={<Navigate to="/profile" replace />} />
+              <Route path="settings" element={<Navigate to="/profile/settings" replace />} />
+              <Route path="profile" element={<ProfileHub />}>
+                <Route index element={<AccountPanel />} />
+                <Route path="balance" element={<ProfilePlaceholder title="Баланс" text="Здесь будет история операций и пополнение." />} />
+                <Route path="subscriptions" element={<MySubscriptions />} />
+                <Route path="download" element={<ProfilePlaceholder title="Скачать клиент" text="Ссылки на клиент Aspect Visuals появятся здесь." />} />
+                <Route path="support" element={<ProfilePlaceholder title="Поддержка" text="Напишите в чат или на support@aspectvisuals.su." />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
               <Route path="shop/cart" element={<Cart />} />
               <Route path="shop/checkout" element={<Checkout />} />
               <Route path="shop/pay/:orderId" element={<MockPayPage />} />

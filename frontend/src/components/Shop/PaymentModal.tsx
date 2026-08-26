@@ -4,6 +4,7 @@ import { shopApi } from '../../api'
 import { useCartStore } from '../../store/cartStore'
 import { useToastStore } from '../../store/toastStore'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 
 interface PaymentModalProps {
   amount: number
@@ -43,14 +44,14 @@ export function PaymentModal({ amount, onClose }: PaymentModalProps) {
         <p>К оплате {amount} ₽</p>
         <label className="profile-field">
           <span>Способ</span>
-          <select
-            className="profile-input"
+          <CustomSelect
             value={method}
-            onChange={(event) => setMethod(event.target.value as 'unitpay' | 'stripe')}
-          >
-            <option value="unitpay">UnitPay</option>
-            <option value="stripe">Stripe</option>
-          </select>
+            onChange={(value) => setMethod(value as 'unitpay' | 'stripe')}
+            options={[
+              { value: 'unitpay', label: 'UnitPay' },
+              { value: 'stripe', label: 'Stripe' },
+            ]}
+          />
         </label>
         <div className="shop-modal-actions">
           <Button disabled={busy} onClick={() => void pay()}>

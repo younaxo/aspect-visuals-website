@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
+import { EdgeDock } from './EdgeDock'
 import { Toast } from '../Common/Toast'
 import { ChatNotifier } from '../Chat/ChatNotifier'
 import { useAuthStore } from '../../store/authStore'
@@ -25,6 +26,7 @@ export function MainLayout() {
   return (
     <div className="site">
       <Header />
+      <EdgeDock />
       <main className="site-main">
         <Outlet />
       </main>

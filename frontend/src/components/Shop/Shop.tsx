@@ -34,7 +34,6 @@ export function Shop() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const addItem = useCartStore((state) => state.addItem)
-  const cartCount = useCartStore((state) => state.items.length)
   const showToast = useToastStore((state) => state.showToast)
   const [filter, setFilter] = useState<Filter>('all')
   const [confirmItem, setConfirmItem] = useState<ShopSubscription | ShopProduct | null>(null)
@@ -96,8 +95,8 @@ export function Shop() {
             <h1 className="shop-panel-title">Пакеты и дополнения</h1>
             <p className="shop-panel-text">Цены в рублях. После оплаты роль в Discord выдаётся, если она задана у тарифа.</p>
           </div>
-          <Link to="/shop/cart" className="btn-ghost">
-            Корзина{cartCount ? ` (${cartCount})` : ''}
+          <Link to="/shop" className="btn-ghost">
+            В магазин
           </Link>
         </div>
 

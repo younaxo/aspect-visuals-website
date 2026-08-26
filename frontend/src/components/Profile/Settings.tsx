@@ -6,6 +6,7 @@ import { useProfile } from '../../hooks/useProfile'
 import { useToastStore } from '../../store/toastStore'
 import { getUserAvatarUrl } from '../../utils/media'
 import { Button } from '../Common/Button'
+import { CustomSelect } from '../Common/CustomSelect'
 import type { ThemePreference } from '../../types'
 
 interface ToggleRowProps {
@@ -109,16 +110,17 @@ export function Settings() {
             <span className="settings-label">Тема</span>
             <span className="settings-desc">Тёмная, светлая или как в системе</span>
           </span>
-          <select
-            className="profile-input settings-select"
+          <CustomSelect
+            className="settings-select"
             value={settings.theme}
             disabled={isSaving}
-            onChange={(event) => void patch({ theme: event.target.value as ThemePreference })}
-          >
-            <option value="dark">Тёмная</option>
-            <option value="light">Светлая</option>
-            <option value="system">Системная</option>
-          </select>
+            onChange={(theme) => void patch({ theme: theme as ThemePreference })}
+            options={[
+              { value: 'dark', label: 'Тёмная' },
+              { value: 'light', label: 'Светлая' },
+              { value: 'system', label: 'Системная' },
+            ]}
+          />
         </label>
 
         {error && <p className="error-text">{error}</p>}

@@ -92,15 +92,12 @@ export function Sidebar() {
             <Link to="/profile" className="dropdown-link" onClick={close}>
               Профиль
             </Link>
-            <Link to="/activate" className="dropdown-link" onClick={close}>
-              Активация ключа
-            </Link>
             {isPanelAdmin(user) && (
               <Link to="/admin" className="dropdown-link" onClick={close}>
                 Админ-панель
               </Link>
             )}
-            <Link to="/settings" className="dropdown-link" onClick={close}>
+            <Link to="/profile/settings" className="dropdown-link" onClick={close}>
               Настройки
             </Link>
             <Button

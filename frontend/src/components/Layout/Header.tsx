@@ -3,22 +3,16 @@ import { Link, NavLink } from 'react-router-dom'
 import { Logo } from '../Common/Logo'
 import { Sidebar } from './Sidebar'
 import { useAuth } from '../../hooks/useAuth'
-import { useCartStore } from '../../store/cartStore'
 import { isPanelAdmin } from '../../utils/discordRoles'
-import { useChatStore } from '../../store/chatStore'
 
 const navItems = [
   { to: '/', label: 'Главная' },
   { to: '/news', label: 'Новости' },
   { to: '/shop', label: 'Магазин' },
-  { to: '/chat', label: 'Чат' },
 ]
 
 export function Header() {
   const { user, isAuthenticated } = useAuth()
-  const cartCount = useCartStore((state) => state.items.length)
-  const unread = useChatStore((state) => state.unreadCount)
-  const unreadTotal = Object.values(unread).reduce((sum, value) => sum + value, 0)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -49,7 +43,6 @@ export function Header() {
             className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
           >
             {item.label}
-            {item.to === '/chat' && unreadTotal > 0 ? ` (${unreadTotal})` : ''}
           </NavLink>
         ))}
       </nav>
@@ -77,9 +70,6 @@ export function Header() {
 
         {isAuthenticated && user ? (
           <>
-            <Link to="/shop/cart" className="btn-ghost header-login">
-              Корзина{cartCount ? ` (${cartCount})` : ''}
-            </Link>
             <Sidebar />
           </>
         ) : (
@@ -113,13 +103,6 @@ export function Header() {
                   Админ
                 </NavLink>
               )}
-              <NavLink
-                to="/shop/cart"
-                className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
-                onClick={closeMenus}
-              >
-                Корзина
-              </NavLink>
               <NavLink
                 to="/profile"
                 className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}

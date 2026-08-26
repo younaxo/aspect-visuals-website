@@ -10,7 +10,7 @@ export function HomePage() {
         <p className="eyebrow">Minecraft</p>
         <h1 className="hero-title">Aspect Visuals</h1>
         <p className="hero-text">
-          Клиент визуалов для Minecraft: вход по email, привязка Discord, подписки и магазин. Тёмная тема, стекло и аккуратная типографика.
+          Клиент визуалов для Minecraft: вход по email, Discord, подписки и магазин. Тёмная тема с фиолетовым акцентом Aspect.
         </p>
         <div className="hero-actions">
           <Link to="/shop" className="btn-primary">
