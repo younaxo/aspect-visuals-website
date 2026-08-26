@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { DiscordLogin } from '../components/Auth/DiscordLogin'
 
 export function HomePage() {
   const { isAuthenticated } = useAuth()
@@ -11,13 +10,17 @@ export function HomePage() {
         <p className="eyebrow">Minecraft</p>
         <h1 className="hero-title">Aspect Visuals</h1>
         <p className="hero-text">
-          Клиент визуалов для Minecraft: Discord-авторизация, подписки и магазин. Тёмная тема, стекло и аккуратная типографика.
+          Клиент визуалов для Minecraft: вход по email, привязка Discord, подписки и магазин. Тёмная тема, стекло и аккуратная типографика.
         </p>
         <div className="hero-actions">
           <Link to="/shop" className="btn-primary">
             Магазин
           </Link>
-          {!isAuthenticated && <DiscordLogin label="Войти через Discord" />}
+          {!isAuthenticated && (
+            <Link to="/login" className="btn-ghost">
+              Войти
+            </Link>
+          )}
         </div>
       </section>
 

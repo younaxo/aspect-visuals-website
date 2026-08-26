@@ -19,7 +19,11 @@ function shouldSkipRefresh(url?: string): boolean {
   return (
     url.includes('/api/auth/refresh') ||
     url.includes('/api/auth/discord') ||
-    url.includes('/api/auth/logout')
+    url.includes('/api/auth/logout') ||
+    url.includes('/api/auth/login') ||
+    url.includes('/api/auth/register') ||
+    url.includes('/api/auth/forgot-password') ||
+    url.includes('/api/auth/reset-password')
   )
 }
 
@@ -77,6 +81,19 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 
   return refreshPromise
+}
+
+export const authApi = {
+  register: (payload: { email: string; password: string; username: string }) =>
+    api.post('/api/auth/register', payload),
+  login: (payload: { email: string; password: string }) => api.post('/api/auth/login', payload),
+  forgotPassword: (email: string) => api.post('/api/auth/forgot-password', { email }),
+  resetPassword: (payload: { token: string; newPassword: string }) =>
+    api.post('/api/auth/reset-password', payload),
+  verifyEmail: (token: string) => api.get('/api/auth/verify-email', { params: { token } }),
+  linkDiscord: (payload: { code: string; state?: string }) => api.post('/api/auth/link-discord', payload),
+  unlinkDiscord: () => api.post('/api/auth/unlink-discord'),
+  discordStatus: () => api.get('/api/auth/discord-status'),
 }
 
 export default api

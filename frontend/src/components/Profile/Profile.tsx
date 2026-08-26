@@ -6,6 +6,8 @@ import { Button } from '../Common/Button'
 import { UserNameLine } from './UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
+import { useDiscord } from '../../hooks/useDiscord'
+import { useToastStore } from '../../store/toastStore'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 import {
   DISCORD_ROLE_LABELS,
@@ -42,9 +44,11 @@ function toFormState(user: User): ProfileFormState {
 }
 
 export function Profile() {
-  const { user: authUser } = useAuth()
+  const { user: authUser, unlinkDiscord } = useAuth()
   const { profile, subscriptions, saveProfile, uploadAvatar, uploadBanner, removeAvatar, removeBanner, isSaving } =
     useProfile()
+  const { link, isLoading: discordBusy, error: discordError } = useDiscord()
+  const showToast = useToastStore((state) => state.showToast)
   const user = profile?.user ?? authUser
 
   const [editing, setEditing] = useState(false)
@@ -256,6 +260,47 @@ export function Profile() {
               </ul>
             </div>
           )}
+
+          <section className="profile-section" aria-label="Привязка Discord">
+            <h2>Привязка Discord</h2>
+            <p className="page-text">
+              {user.discordLinked
+                ? `Discord привязан${user.discordId ? ` (${user.discordId})` : ''}. Можно входить через Discord.`
+                : 'Discord не привязан. После привязки появится вход через Discord.'}
+            </p>
+            {discordError && <p className="error-text">{discordError}</p>}
+            <div className="hero-actions" style={{ marginTop: 12 }}>
+              {user.discordLinked ? (
+                <Button
+                  variant="ghost"
+                  disabled={discordBusy}
+                  onClick={() => {
+                    void unlinkDiscord()
+                      .then(() => showToast('Discord отвязан', 'success'))
+                      .catch((err: unknown) => {
+                        const message = err instanceof Error ? err.message : 'Не удалось отвязать Discord'
+                        showToast(message, 'error')
+                      })
+                  }}
+                >
+                  Отвязать Discord
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  disabled={discordBusy}
+                  onClick={() => {
+                    void link().catch((err: unknown) => {
+                      const message = err instanceof Error ? err.message : 'Не удалось начать привязку Discord'
+                      showToast(message, 'error')
+                    })
+                  }}
+                >
+                  {discordBusy ? 'Открываем Discord…' : 'Привязать Discord'}
+                </Button>
+              )}
+            </div>
+          </section>
 
           <section className="profile-section" aria-label="Роли">
             <h2>Роли</h2>

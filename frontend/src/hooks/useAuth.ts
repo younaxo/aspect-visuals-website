@@ -46,6 +46,26 @@ export function useAuth() {
     },
   })
 
+  const loginWithEmail = useCallback(async (email: string, password: string) => {
+    await useAuthStore.getState().loginWithEmail(email, password)
+    queryClient.setQueryData(['auth', 'me'], useAuthStore.getState().user)
+  }, [queryClient])
+
+  const register = useCallback(async (email: string, password: string, username: string) => {
+    await useAuthStore.getState().register(email, password, username)
+    queryClient.setQueryData(['auth', 'me'], useAuthStore.getState().user)
+  }, [queryClient])
+
+  const linkDiscord = useCallback(async (code: string, state?: string) => {
+    await useAuthStore.getState().linkDiscord(code, state)
+    queryClient.setQueryData(['auth', 'me'], useAuthStore.getState().user)
+  }, [queryClient])
+
+  const unlinkDiscord = useCallback(async () => {
+    await useAuthStore.getState().unlinkDiscord()
+    queryClient.setQueryData(['auth', 'me'], useAuthStore.getState().user)
+  }, [queryClient])
+
   const logout = useCallback(async () => {
     try {
       await api.post('/api/auth/logout', {
@@ -79,6 +99,10 @@ export function useAuth() {
     isLoading: (Boolean(accessToken) && meQuery.isLoading) || discordLogin.isPending,
     error: meQuery.error ?? discordLogin.error,
     loginWithDiscord,
+    loginWithEmail,
+    register,
+    linkDiscord,
+    unlinkDiscord,
     logout,
   }
 }

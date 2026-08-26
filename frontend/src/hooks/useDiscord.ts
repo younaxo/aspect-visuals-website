@@ -18,20 +18,26 @@ export function useDiscord() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const login = async () => {
+  const startOAuth = async (intent: 'login' | 'link') => {
     try {
       setIsLoading(true)
       setError(null)
-      const { data } = await api.get<DiscordAuthUrl>('/api/auth/discord')
+      sessionStorage.setItem('discord_oauth_intent', intent)
+      const { data } = await api.get<DiscordAuthUrl>('/api/auth/discord', {
+        params: intent === 'link' ? { intent: 'link' } : undefined,
+      })
       window.location.href = data.url
     } catch (err: unknown) {
       setIsLoading(false)
+      sessionStorage.removeItem('discord_oauth_intent')
       setError(getErrorMessage(err))
+      throw err
     }
   }
 
   return {
-    login,
+    login: () => startOAuth('login'),
+    link: () => startOAuth('link'),
     isLoading,
     error,
     getAvatarUrl: getDiscordAvatarUrl,

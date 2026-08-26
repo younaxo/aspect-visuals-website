@@ -20,10 +20,11 @@ export function resolveMediaUrl(value?: string | null): string | null {
   return null
 }
 
-export function getUserAvatarUrl(user: { discordId: string; avatar?: string | null }): string {
+export function getUserAvatarUrl(user: { discordId?: string | null; avatar?: string | null }): string {
   const custom = resolveMediaUrl(user.avatar)
   if (custom) return custom
-  return getDiscordAvatarUrl(user.discordId, user.avatar)
+  if (user.discordId) return getDiscordAvatarUrl(user.discordId, user.avatar)
+  return 'https://cdn.discordapp.com/embed/avatars/0.png'
 }
 
 export function getUserBannerUrl(banner?: string | null): string | null {

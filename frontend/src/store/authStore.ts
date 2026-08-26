@@ -1,7 +1,18 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import type { User, UserSettings } from '../types'
+import axios from 'axios'
+import { authApi } from '../api'
+import type { AuthResponse, User, UserSettings } from '../types'
 import { DEFAULT_SETTINGS } from '../utils/settings'
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: string } | undefined)?.message
+    if (message) return message
+  }
+  if (error instanceof Error && error.message) return error.message
+  return fallback
+}
 
 interface AuthState {
   user: User | null
@@ -14,12 +25,27 @@ interface AuthState {
   setUser: (user: User | null) => void
   updateUser: (data: Partial<User>) => void
   setSettings: (settings: UserSettings) => void
+  loginWithEmail: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, username: string) => Promise<void>
   logout: () => void
+  linkDiscord: (code: string, state?: string) => Promise<void>
+  unlinkDiscord: () => Promise<void>
+  checkDiscordStatus: () => Promise<boolean>
+}
+
+function applyAuth(set: (partial: Partial<AuthState>) => void, data: AuthResponse) {
+  set({
+    user: data.user,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    isAuthenticated: true,
+    ...(data.settings ? { settings: data.settings } : {}),
+  })
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       settings: DEFAULT_SETTINGS,
       accessToken: null,
@@ -45,6 +71,22 @@ export const useAuthStore = create<AuthState>()(
           user: state.user ? { ...state.user, ...data } : null,
         })),
       setSettings: (settings) => set({ settings }),
+      loginWithEmail: async (email, password) => {
+        try {
+          const { data } = await authApi.login({ email, password })
+          applyAuth(set, data as AuthResponse)
+        } catch (error: unknown) {
+          throw new Error(getErrorMessage(error, 'Не удалось войти'))
+        }
+      },
+      register: async (email, password, username) => {
+        try {
+          const { data } = await authApi.register({ email, password, username })
+          applyAuth(set, data as AuthResponse)
+        } catch (error: unknown) {
+          throw new Error(getErrorMessage(error, 'Не удалось зарегистрироваться'))
+        }
+      },
       logout: () =>
         set({
           user: null,
@@ -53,6 +95,34 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
         }),
+      linkDiscord: async (code, state) => {
+        try {
+          const { data } = await authApi.linkDiscord({ code, state })
+          const user = (data as { user: User }).user
+          get().setUser(user)
+        } catch (error: unknown) {
+          throw new Error(getErrorMessage(error, 'Не удалось привязать Discord'))
+        }
+      },
+      unlinkDiscord: async () => {
+        try {
+          const { data } = await authApi.unlinkDiscord()
+          const user = (data as { user: User }).user
+          get().setUser(user)
+        } catch (error: unknown) {
+          throw new Error(getErrorMessage(error, 'Не удалось отвязать Discord'))
+        }
+      },
+      checkDiscordStatus: async () => {
+        try {
+          const { data } = await authApi.discordStatus()
+          const linked = Boolean((data as { discordLinked?: boolean }).discordLinked)
+          get().updateUser({ discordLinked: linked })
+          return linked
+        } catch (error: unknown) {
+          throw new Error(getErrorMessage(error, 'Не удалось проверить привязку Discord'))
+        }
+      },
     }),
     {
       name: 'aspect-auth',

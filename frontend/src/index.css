@@ -1530,6 +1530,78 @@ html[data-theme='light'] .subscription-item {
   color: #3f3f46;
 }
 
+.auth-page {
+  max-width: 440px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-top: 20px;
+  font-size: 13px;
+}
+
+.auth-links a {
+  color: #d4d4d8;
+}
+
+.auth-links a:hover {
+  color: #fafafa;
+}
+
+.toast-stack {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 80;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.toast {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(24, 24, 27, 0.92);
+  color: #fafafa;
+  cursor: pointer;
+}
+
+.toast-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.toast-success {
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.toast-error {
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.toast-warning {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.toast-info {
+  border-color: rgba(147, 197, 253, 0.35);
+}
+
 @media (min-width: 768px) {
   .profile-card-body {
     padding: 0 32px 32px;

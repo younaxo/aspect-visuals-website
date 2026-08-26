@@ -7,9 +7,15 @@ const OAUTH_STATE_EXPIRES_SECONDS = 10 * 60
 
 export interface TokenPayload {
   userId: string
-  discordId: string
+  discordId?: string
   type: 'access' | 'refresh'
   jti?: string
+}
+
+export interface OAuthStatePayload {
+  type: 'oauth_state'
+  purpose: 'login' | 'link'
+  userId?: string
 }
 
 function getSecret(): string {
@@ -49,18 +55,30 @@ export function verifyRefreshToken(token: string): TokenPayload {
   return payload
 }
 
-export function signOAuthState(): string {
-  return signToken({ type: 'oauth_state' }, OAUTH_STATE_EXPIRES_SECONDS)
+export function signOAuthState(extra?: { purpose?: 'login' | 'link'; userId?: string }): string {
+  return signToken(
+    {
+      type: 'oauth_state',
+      purpose: extra?.purpose ?? 'login',
+      userId: extra?.userId,
+    },
+    OAUTH_STATE_EXPIRES_SECONDS,
+  )
 }
 
-export function verifyOAuthState(state: string): void {
-  const payload = jwt.verify(state, getSecret()) as JwtPayload & { type?: string }
+export function verifyOAuthState(state: string): OAuthStatePayload {
+  const payload = jwt.verify(state, getSecret()) as JwtPayload & OAuthStatePayload
   if (payload.type !== 'oauth_state') {
     throw new Error('Недействительный OAuth state')
   }
+  return {
+    type: 'oauth_state',
+    purpose: payload.purpose === 'link' ? 'link' : 'login',
+    userId: payload.userId,
+  }
 }
 
-export async function issueTokens(user: { id: string; discordId: string }) {
+export async function issueTokens(user: { id: string; discordId?: string | null }) {
   const session = await prisma.session.create({
     data: {
       userId: user.id,
@@ -68,9 +86,11 @@ export async function issueTokens(user: { id: string; discordId: string }) {
     },
   })
 
+  const discordId = user.discordId ?? undefined
+
   return {
-    accessToken: signAccessToken({ userId: user.id, discordId: user.discordId }),
-    refreshToken: signRefreshToken({ userId: user.id, discordId: user.discordId }, session.id),
+    accessToken: signAccessToken({ userId: user.id, discordId }),
+    refreshToken: signRefreshToken({ userId: user.id, discordId }, session.id),
   }
 }
 

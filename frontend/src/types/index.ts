@@ -9,7 +9,7 @@ export type ThemePreference = 'dark' | 'light' | 'system'
 
 export interface User {
   id: string
-  discordId: string
+  discordId?: string | null
   username: string
   uid?: number | null
   discriminator?: string | null
@@ -21,6 +21,8 @@ export interface User {
   customStatus?: string | null
   status?: PresenceStatus
   email?: string | null
+  isEmailVerified?: boolean
+  discordLinked?: boolean
   roles: Role[]
   createdAt: string
   updatedAt: string

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { DiscordLogin } from '../Auth/DiscordLogin'
 import { Logo } from '../Common/Logo'
 import { Sidebar } from './Sidebar'
 import { useAuth } from '../../hooks/useAuth'
@@ -68,7 +67,13 @@ export function Header() {
           </svg>
         </button>
 
-        {isAuthenticated && user ? <Sidebar /> : <DiscordLogin />}
+        {isAuthenticated && user ? (
+          <Sidebar />
+        ) : (
+          <Link to="/login" className="btn-primary header-login">
+            Войти
+          </Link>
+        )}
       </div>
 
       {menuOpen && (
@@ -84,7 +89,7 @@ export function Header() {
               {item.label}
             </NavLink>
           ))}
-          {isAuthenticated && (
+          {isAuthenticated ? (
             <>
               <NavLink
                 to="/profile"
@@ -101,6 +106,14 @@ export function Header() {
                 Настройки
               </NavLink>
             </>
+          ) : (
+            <NavLink
+              to="/login"
+              className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+              onClick={closeMenus}
+            >
+              Войти
+            </NavLink>
           )}
         </nav>
       )}

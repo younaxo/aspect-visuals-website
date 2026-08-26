@@ -26,7 +26,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     }
 
     req.userId = user.id
-    req.discordId = user.discordId
+    req.discordId = user.discordId ?? undefined
     next()
   } catch {
     res.status(401).json({ message: 'Недействительный токен' })
