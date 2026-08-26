@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com https://cdn.discordapp.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com https://aspectvisuals.su http://2.26.85.78 https://cdn.discordapp.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com;" />
   <title>Aspect Visuals</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -568,7 +568,7 @@
                   <div style="margin-top:12px;margin-bottom:12px;">
                     <div class="editable" style="font-size:16px;font-weight:700;color:#fafafa;" id="editName" contenteditable="true" spellcheck="false">User</div>
                     <div id="profileEmail" style="font-size:12px;color:#71717a;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">email@example.com</div>
-                    <div class="editable" style="font-size:13px;color:#71717a;margin-top:4px;" id="editTag" contenteditable="true" spellcheck="false">#ASPECT</div>
+                    <div style="font-size:13px;color:#71717a;margin-top:4px;" id="editTag">#ASPECT</div>
                   </div>
                   <div style="border-top:1px solid #27272a;padding-top:8px;">
                     <button type="button" class="logout-btn interactive" id="btnLogout">
@@ -637,23 +637,20 @@
             <div class="view" id="view-shop">
               <div class="panel" style="flex:1;padding:32px;">
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Магазин</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Пакеты и дополнения.</p>
-                <div style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Premier Pass</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Сезонный доступ</p></div>
-                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Asset Bundle</p><p style="margin-top:4px;font-size:12px;color:#71717a;">1.2 GB</p></div>
-                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Boost Pack</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Приоритет очереди</p></div>
-                </div>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Пакеты с сайта Aspect Visuals.</p>
+                <div id="shopGrid" style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
               </div>
             </div>
 
             <div class="view" id="view-customization">
               <div class="panel" style="flex:1;padding:32px;">
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Кастомизация</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Интерфейс и персональные настройки.</p>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Синхронизируется с сайтом.</p>
                 <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;">
                   <div class="field"><span>Компактный сайдбар</span><button type="button" class="toggle interactive" id="toggleCompact"></button></div>
                   <div class="field"><span>Звуки интерфейса</span><button type="button" class="toggle interactive" id="toggleSound"></button></div>
                   <div class="field"><span>Анимации</span><button type="button" class="toggle interactive" id="toggleAnim"></button></div>
+                  <div class="field"><span>Уведомления</span><button type="button" class="toggle interactive" id="toggleNotif"></button></div>
                 </div>
               </div>
             </div>
@@ -673,8 +670,15 @@
             <div class="view" id="view-settings">
               <div class="panel" style="flex:1;padding:32px;">
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Настройки</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Локальные параметры клиента.</p>
-                <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;">
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Аккаунт с сайта и параметры клиента.</p>
+                <div style="margin-top:24px;display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid #27272a;border-radius:12px;background:#111113;">
+                  <p style="font-size:12px;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">Аккаунт</p>
+                  <p id="accountEmailLine" style="font-size:14px;color:#fafafa;">—</p>
+                  <p id="accountUidLine" style="font-size:13px;color:#a1a1aa;">UID —</p>
+                  <p id="accountDiscordLine" style="font-size:13px;color:#a1a1aa;">Discord —</p>
+                  <div id="accountSubs" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+                </div>
+                <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
                   <div class="field"><span>Спрашивать куда зайти</span><button type="button" class="toggle interactive" id="toggleAskMode"></button></div>
                   <div class="field"><span>Аппаратное ускорение</span><button type="button" class="toggle interactive" id="toggleHw"></button></div>
                   <div class="field"><span>Автозапуск с Windows</span><button type="button" class="toggle off interactive" id="toggleAuto"></button></div>
@@ -791,12 +795,42 @@
       }
 
       async function apiFetch(path, opts) {
-        const headers = Object.assign({ "Content-Type": "application/json" }, (opts && opts.headers) || {});
+        const options = opts || {};
+        const isForm = typeof FormData !== "undefined" && options.body instanceof FormData;
+        const headers = Object.assign({}, options.headers || {});
+        if (!isForm) headers["Content-Type"] = "application/json";
         if (accessToken) headers.Authorization = "Bearer " + accessToken;
-        const res = await fetch(SITE_API + path, Object.assign({}, opts, { headers }));
+        const res = await fetch(SITE_API + path, Object.assign({}, options, { headers }));
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.message || "Ошибка запроса");
         return data;
+      }
+
+      const FALLBACK_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2327272a'/%3E%3Ccircle cx='32' cy='24' r='12' fill='%2352525b'/%3E%3Cpath d='M8 58c4-14 16-20 24-20s20 6 24 20' fill='%2352525b'/%3E%3C/svg%3E";
+      let siteSettings = {
+        theme: "dark",
+        notifications: true,
+        soundEnabled: true,
+        compactSidebar: false,
+        animations: true,
+        language: "ru",
+      };
+      let siteSubscriptions = [];
+
+      function mediaUrl(value, discordId) {
+        if (value && (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("data:"))) return value;
+        if (value && value.startsWith("/")) return SITE_API + value;
+        if (discordId && value && !value.startsWith("/")) {
+          const format = String(value).startsWith("a_") ? "gif" : "png";
+          return "https://cdn.discordapp.com/avatars/" + discordId + "/" + value + "." + format;
+        }
+        if (discordId) return "https://cdn.discordapp.com/embed/avatars/" + (Number(discordId) % 5) + ".png";
+        return FALLBACK_AVATAR;
+      }
+
+      function accountTag(user) {
+        const id = user && (user.discriminator || user.uid);
+        return id ? "#" + id : "#ASPECT";
       }
 
       function toLauncherUser(user) {
@@ -962,17 +996,115 @@
       tabRegister.addEventListener("click", () => { setAuthMode(true); });
       setAuthMode(false);
 
-      function applyUserToProfile(user) {
+      function applyUserToProfile(user, settings, subscriptions) {
+        if (!user) return;
         currentUser = user;
-        const email = (user && user.email) || "email@example.com";
-        const meta = (user && user.user_metadata) || {};
-        const nick = String(meta.nickname || meta.full_name || email.split("@")[0] || "User").trim() || "User";
+        if (settings) siteSettings = Object.assign({}, siteSettings, settings);
+        if (subscriptions) siteSubscriptions = subscriptions;
+
+        const email = user.email || "email@example.com";
+        const nick = String(user.username || (user.user_metadata && (user.user_metadata.nickname || user.user_metadata.full_name)) || email.split("@")[0] || "User").trim() || "User";
+        const tag = accountTag(user);
         profileEmail.textContent = email;
-        const editName = document.getElementById("editName");
-        const sidebarName = document.getElementById("sidebarName");
-        if (editName && (!editName.dataset.custom || editName.dataset.custom === "0")) {
-          editName.textContent = nick;
-          sidebarName.textContent = nick;
+        const editNameEl = document.getElementById("editName");
+        const sidebarNameEl = document.getElementById("sidebarName");
+        const sidebarTagEl = document.getElementById("sidebarTag");
+        const editTagEl = document.getElementById("editTag");
+        if (editNameEl) editNameEl.textContent = nick;
+        if (sidebarNameEl) sidebarNameEl.textContent = nick;
+        if (sidebarTagEl) sidebarTagEl.textContent = tag;
+        if (editTagEl) editTagEl.textContent = tag;
+
+        const avatar = mediaUrl(user.avatar, user.discordId);
+        const popoutAvatarEl = document.getElementById("popoutAvatar");
+        const sidebarAvatarEl = document.getElementById("sidebarAvatar");
+        if (popoutAvatarEl) popoutAvatarEl.src = avatar;
+        if (sidebarAvatarEl) sidebarAvatarEl.src = avatar;
+        const bannerEl = document.getElementById("bannerEdit");
+        if (bannerEl) {
+          const banner = user.banner && mediaUrl(user.banner);
+          bannerEl.style.backgroundImage = banner ? "url('" + banner + "')" : "";
+        }
+
+        const emailLine = document.getElementById("accountEmailLine");
+        const uidLine = document.getElementById("accountUidLine");
+        const discordLine = document.getElementById("accountDiscordLine");
+        const subsBox = document.getElementById("accountSubs");
+        if (emailLine) emailLine.textContent = email;
+        if (uidLine) uidLine.textContent = "UID " + (user.discriminator || user.uid || "—");
+        if (discordLine) discordLine.textContent = user.discordLinked ? "Discord привязан" : "Discord не привязан";
+        if (subsBox) {
+          const items = siteSubscriptions || [];
+          subsBox.innerHTML = items.length
+            ? items.map((s) => "<p style='font-size:13px;color:#fafafa;'>" + (s.name || "Подписка") + (s.expiresAt ? " · до " + new Date(s.expiresAt).toLocaleDateString("ru-RU") : " · навсегда") + "</p>").join("")
+            : "<p style='font-size:13px;color:#71717a;'>Нет активных подписок</p>";
+        }
+
+        applySyncedSettings(siteSettings, false);
+      }
+
+      function applySyncedSettings(settings, persist) {
+        siteSettings = Object.assign({}, siteSettings, settings || {});
+        soundEnabled = siteSettings.soundEnabled !== false;
+        const soundBtn = document.getElementById("toggleSound");
+        const animBtn = document.getElementById("toggleAnim");
+        const notifBtn = document.getElementById("toggleNotif");
+        if (soundBtn) soundBtn.classList.toggle("off", !soundEnabled);
+        if (animBtn) animBtn.classList.toggle("off", siteSettings.animations === false);
+        if (notifBtn) notifBtn.classList.toggle("off", siteSettings.notifications === false);
+        const appRoot = document.getElementById("app");
+        if (appRoot) {
+          appRoot.classList.toggle("sidebar-collapsed", Boolean(siteSettings.compactSidebar));
+          const compactBtn = document.getElementById("toggleCompact");
+          if (compactBtn) compactBtn.classList.toggle("off", !siteSettings.compactSidebar);
+        }
+        if (persist) void saveSyncedSettings();
+      }
+
+      async function saveSyncedSettings() {
+        if (!accessToken) return;
+        try {
+          const data = await apiFetch("/api/settings", {
+            method: "PUT",
+            body: JSON.stringify({
+              soundEnabled,
+              compactSidebar: document.getElementById("app").classList.contains("sidebar-collapsed"),
+              animations: !(document.getElementById("toggleAnim") && document.getElementById("toggleAnim").classList.contains("off")),
+              notifications: !(document.getElementById("toggleNotif") && document.getElementById("toggleNotif").classList.contains("off")),
+            }),
+          });
+          if (data.settings) siteSettings = Object.assign({}, siteSettings, data.settings);
+        } catch (err) {
+          console.warn("[Settings]", err.message || err);
+        }
+      }
+
+      async function refreshAccount() {
+        if (!accessToken) return;
+        try {
+          const data = await apiFetch("/api/profile", { method: "GET" });
+          applyUserToProfile(data.user, data.settings, data.subscriptions);
+          const stored = loadSession() || {};
+          saveSession(Object.assign({}, stored, { user: data.user, settings: data.settings, accessToken, refreshToken }));
+        } catch (err) {
+          console.warn("[Profile]", err.message || err);
+        }
+        void loadShop();
+      }
+
+      async function loadShop() {
+        const host = document.getElementById("shopGrid");
+        if (!host) return;
+        try {
+          const data = await apiFetch("/api/shop/subscriptions", { method: "GET" });
+          const items = data.subscriptions || [];
+          host.innerHTML = items.length
+            ? items.map((item) => (
+              "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + (item.name || "Пакет") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + (item.price != null ? item.price + " ₽" : "") + "</p></div>"
+            )).join("")
+            : "<p style='font-size:13px;color:#71717a;'>Магазин пока пуст</p>";
+        } catch (_) {
+          host.innerHTML = "<p style='font-size:13px;color:#71717a;'>Не удалось загрузить магазин</p>";
         }
       }
 
@@ -1022,8 +1154,9 @@
 
       function enterLauncher(user, opts) {
         if (!user) return;
-        applyUserToProfile(user);
+        applyUserToProfile(user, opts && opts.settings, opts && opts.subscriptions);
         hideAuth();
+        void refreshAccount();
         if (launcherReady) {
           launcherShell.classList.add("visible");
           return;
@@ -1060,7 +1193,7 @@
           try {
             const data = await apiFetch("/api/auth/me", { method: "GET" });
             if (data && data.user) {
-              enterLauncher(toLauncherUser(data.user));
+              enterLauncher(data.user, { settings: data.settings });
               return;
             }
           } catch (err) {
@@ -1128,7 +1261,7 @@
             : { email, password, turnstileToken };
           const data = await apiFetch(path, { method: "POST", body: JSON.stringify(body) });
           saveSession(data);
-          enterLauncher(toLauncherUser(data.user), isSignUp ? { skipIntro: true } : undefined);
+          enterLauncher(data.user, Object.assign(isSignUp ? { skipIntro: true } : {}, { settings: data.settings }));
         } catch (err) {
           authError.style.color = "#f87171";
           authError.textContent = mapAuthError(err);
@@ -1200,7 +1333,7 @@
               body: JSON.stringify({ code: oauth.code, state: oauth.state }),
             });
             saveSession(data);
-            enterLauncher(toLauncherUser(data.user));
+            enterLauncher(data.user, { settings: data.settings });
           } catch (err) {
             const msg = (err && err.message) || "Не удалось войти через Discord";
             if (msg.toLowerCase().includes("закрыт") || msg.toLowerCase().includes("отмен")) {
@@ -1221,15 +1354,17 @@
 
       const appEl = document.getElementById("app");
       const toggleCompact = document.getElementById("toggleCompact");
-      function setCollapsed(collapsed) {
+      function setCollapsed(collapsed, persist) {
         appEl.classList.toggle("sidebar-collapsed", collapsed);
         if (toggleCompact) toggleCompact.classList.toggle("off", !collapsed);
+        siteSettings.compactSidebar = !!collapsed;
+        if (persist) void saveSyncedSettings();
       }
       document.getElementById("btnBrandLogo").addEventListener("click", () => {
-        setCollapsed(!appEl.classList.contains("sidebar-collapsed"));
+        setCollapsed(!appEl.classList.contains("sidebar-collapsed"), true);
       });
       if (toggleCompact) toggleCompact.addEventListener("click", () => {
-        setCollapsed(!appEl.classList.contains("sidebar-collapsed"));
+        setCollapsed(!appEl.classList.contains("sidebar-collapsed"), true);
       });
 
       const navItems = document.querySelectorAll(".nav-item");
@@ -1256,6 +1391,16 @@
           btn.classList.toggle("off");
           if (btn.id === "toggleSound") {
             soundEnabled = !btn.classList.contains("off");
+            siteSettings.soundEnabled = soundEnabled;
+            void saveSyncedSettings();
+          }
+          if (btn.id === "toggleAnim") {
+            siteSettings.animations = !btn.classList.contains("off");
+            void saveSyncedSettings();
+          }
+          if (btn.id === "toggleNotif") {
+            siteSettings.notifications = !btn.classList.contains("off");
+            void saveSyncedSettings();
           }
         });
       });
@@ -1273,13 +1418,18 @@
 
       function syncSidebarText() {
         const name = (editName.textContent || "").trim() || "User";
-        let tag = (editTag.textContent || "").trim() || "#ASPECT";
-        if (!tag.startsWith("#")) tag = "#" + tag;
+        const tag = accountTag(currentUser || {});
         editName.textContent = name;
-        editTag.textContent = tag;
-        editName.dataset.custom = "1";
+        if (editTag) editTag.textContent = tag;
         sidebarName.textContent = name;
         sidebarTag.textContent = tag;
+        if (accessToken && currentUser && name !== currentUser.username) {
+          apiFetch("/api/profile", { method: "PUT", body: JSON.stringify({ username: name }) })
+            .then((data) => {
+              if (data.user) applyUserToProfile(data.user, data.settings, data.subscriptions);
+            })
+            .catch((err) => console.warn("[Profile]", err.message || err));
+        }
       }
       function openPopout() {
         profilePopout.classList.add("open");
@@ -1288,7 +1438,7 @@
       }
       function closePopout() {
         if (!profilePopout.classList.contains("open")) return;
-        if (document.activeElement === editName || document.activeElement === editTag) document.activeElement.blur();
+        if (document.activeElement === editName) document.activeElement.blur();
         syncSidebarText();
         profilePopout.classList.remove("open");
         profilePopout.setAttribute("aria-hidden", "true");
@@ -1305,12 +1455,23 @@
 
       document.getElementById("avatarEdit").addEventListener("click", (e) => { e.stopPropagation(); avatarInput.click(); });
       document.getElementById("bannerEdit").addEventListener("click", (e) => { e.stopPropagation(); bannerInput.click(); });
+      async function uploadProfileImage(file, kind) {
+        const form = new FormData();
+        form.append("file", file);
+        const uploaded = await apiFetch("/api/profile/upload?kind=" + kind, { method: "POST", body: form });
+        const path = kind === "banner" ? "/api/profile/banner" : "/api/profile/avatar";
+        const payload = kind === "banner" ? { banner: uploaded.url } : { avatar: uploaded.url };
+        const data = await apiFetch(path, { method: "PUT", body: JSON.stringify(payload) });
+        if (data.user) applyUserToProfile(data.user, data.settings, data.subscriptions);
+      }
+
       avatarInput.addEventListener("change", () => {
         const file = avatarInput.files && avatarInput.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = () => { popoutAvatar.src = reader.result; sidebarAvatar.src = reader.result; };
         reader.readAsDataURL(file);
+        uploadProfileImage(file, "avatar").catch((err) => console.warn("[Avatar]", err.message || err));
       });
       bannerInput.addEventListener("change", () => {
         const file = bannerInput.files && bannerInput.files[0];
@@ -1318,13 +1479,14 @@
         const reader = new FileReader();
         reader.onload = () => { document.getElementById("bannerEdit").style.backgroundImage = "url('" + reader.result + "')"; };
         reader.readAsDataURL(file);
+        uploadProfileImage(file, "banner").catch((err) => console.warn("[Banner]", err.message || err));
       });
-      [editName, editTag].forEach((el) => {
-        el.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); el.blur(); } e.stopPropagation(); });
-        el.addEventListener("blur", syncSidebarText);
-        el.addEventListener("mousedown", (e) => e.stopPropagation());
-        el.addEventListener("click", (e) => e.stopPropagation());
-      });
+      if (editName) {
+        editName.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); editName.blur(); } e.stopPropagation(); });
+        editName.addEventListener("blur", syncSidebarText);
+        editName.addEventListener("mousedown", (e) => e.stopPropagation());
+        editName.addEventListener("click", (e) => e.stopPropagation());
+      }
 
       const modeModal = document.getElementById("modeModal");
       const skipPlayModalCheck = document.getElementById("skipPlayModalCheck");
