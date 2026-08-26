@@ -166,33 +166,51 @@ export async function discordCallback(req: Request, res: Response) {
 
     const tokens = await exchangeCode(code)
     const discordUser = await getDiscordUser(tokens.access_token)
-    const existing = await prisma.user.findUnique({ where: { discordId: discordUser.id } })
+    const email = discordUser.email?.toLowerCase() || null
 
-    if (!existing || !existing.discordLinked) {
-      res.status(403).json({ message: 'Discord не привязан к аккаунту' })
-      return
+    let existing = await prisma.user.findUnique({ where: { discordId: discordUser.id } })
+    if (!existing && email) {
+      existing = await prisma.user.findUnique({ where: { email } })
     }
 
     const discordRoles = await getGuildMemberRoles(discordUser.id, tokens.access_token)
 
-    const user = await prisma.user.update({
-      where: { id: existing.id },
-      data: {
-        avatar: isCustomMedia(existing.avatar) ? existing.avatar : discordUser.avatar,
-        email: existing.email || discordUser.email || existing.email,
-        discordAccessToken: tokens.access_token,
-        discordRefreshToken: tokens.refresh_token,
-      },
-    })
+    if (!existing) {
+      existing = await prisma.user.create({
+        data: {
+          discordId: discordUser.id,
+          discordLinked: true,
+          username: discordUser.username.slice(0, 32),
+          email,
+          avatar: discordUser.avatar,
+          discordAccessToken: tokens.access_token,
+          discordRefreshToken: tokens.refresh_token,
+          isEmailVerified: Boolean(email),
+        },
+      })
+      await attachDefaultRole(existing.id)
+    } else {
+      existing = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          discordId: discordUser.id,
+          discordLinked: true,
+          avatar: isCustomMedia(existing.avatar) ? existing.avatar : discordUser.avatar,
+          email: existing.email || email,
+          discordAccessToken: tokens.access_token,
+          discordRefreshToken: tokens.refresh_token,
+        },
+      })
+    }
 
-    await ensureUserSettings(user.id)
-    await ensureUserUid(user.id, {
-      username: user.username,
+    await ensureUserSettings(existing.id)
+    await ensureUserUid(existing.id, {
+      username: existing.username,
       discordUsername: discordUser.username,
     })
-    await syncUserRoles(user.id, discordRoles)
+    await syncUserRoles(existing.id, discordRoles)
 
-    res.json(await authPayload(user.id))
+    res.json(await authPayload(existing.id))
   } catch (error) {
     discordError(res, error, 'Не удалось авторизоваться через Discord')
   }

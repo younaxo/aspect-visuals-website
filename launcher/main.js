@@ -154,6 +154,93 @@ ipcMain.on("app-max", () => {
 });
 ipcMain.on("app-close", () => mainWindow && mainWindow.close());
 
+const CALLBACK_PREFIX = "https://aspectvisuals.su/auth/discord/callback";
+
+function loadSiteConfig() {
+  try {
+    return require("./site-config.js");
+  } catch (_) {
+    return { apiUrl: "https://aspectvisuals.su", siteUrl: "https://aspectvisuals.su" };
+  }
+}
+
+ipcMain.handle("discord-oauth", async () => {
+  const cfg = loadSiteConfig();
+  const apiUrl = String(cfg.apiUrl || "https://aspectvisuals.su").replace(/\/$/, "");
+  const authRes = await fetch(`${apiUrl}/api/auth/discord`);
+  const authJson = await authRes.json().catch(() => ({}));
+  if (!authRes.ok || !authJson.url) {
+    throw new Error(authJson.message || "Не удалось начать вход через Discord");
+  }
+
+  return new Promise((resolve, reject) => {
+    let settled = false
+    const finish = (err, payload) => {
+      if (settled) return
+      settled = true
+      if (oauthWin && !oauthWin.isDestroyed()) oauthWin.close()
+      if (err) reject(err)
+      else resolve(payload)
+    }
+
+    const oauthWin = new BrowserWindow({
+      parent: mainWindow || undefined,
+      modal: Boolean(mainWindow),
+      width: 520,
+      height: 740,
+      title: "Discord",
+      autoHideMenuBar: true,
+      backgroundColor: "#09090b",
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    })
+
+    const tryCapture = (navUrl) => {
+      const raw = String(navUrl || "")
+      if (!raw.includes("/auth/discord/callback")) return false
+      try {
+        const parsed = new URL(navUrl)
+        const error = parsed.searchParams.get("error")
+        const code = parsed.searchParams.get("code")
+        const state = parsed.searchParams.get("state")
+        if (error) {
+          finish(new Error(error === "access_denied" ? "Вход через Discord отменён" : "Ошибка Discord OAuth"))
+          return true
+        }
+        if (!code || !state) {
+          finish(new Error("Discord не вернул код авторизации"))
+          return true
+        }
+        finish(null, { code, state })
+        return true
+      } catch (_) {
+        return false
+      }
+    }
+
+    oauthWin.webContents.on("will-redirect", (event, url) => {
+      if (tryCapture(url)) event.preventDefault()
+    })
+    oauthWin.webContents.on("will-navigate", (event, url) => {
+      if (tryCapture(url)) event.preventDefault()
+    })
+    oauthWin.webContents.on("did-navigate", (_event, url) => {
+      tryCapture(url)
+    })
+    oauthWin.webContents.on("did-redirect-navigation", (_event, url) => {
+      tryCapture(url)
+    })
+
+    oauthWin.on("closed", () => {
+      finish(new Error("Вход через Discord закрыт"))
+    })
+
+    oauthWin.loadURL(authJson.url)
+  })
+})
+
 app.whenReady().then(() => {
   createWindow();
   initDiscordRPC();

@@ -1186,9 +1186,30 @@
       const authDiscord = document.getElementById("authDiscord");
       const authTelegram = document.getElementById("authTelegram");
       if (authDiscord) {
-        authDiscord.addEventListener("click", () => {
-          if (shell) shell.openExternal(SITE_URL + "/discord-login");
-          else window.open(SITE_URL + "/discord-login", "_blank");
+        authDiscord.addEventListener("click", async () => {
+          authError.textContent = "";
+          authError.style.color = "#f87171";
+          authDiscord.disabled = true;
+          try {
+            if (!ipcRenderer || !ipcRenderer.invoke) {
+              throw new Error("Откройте лаунчер как приложение, чтобы войти через Discord.");
+            }
+            const oauth = await ipcRenderer.invoke("discord-oauth");
+            const data = await apiFetch("/api/auth/discord/callback", {
+              method: "POST",
+              body: JSON.stringify({ code: oauth.code, state: oauth.state }),
+            });
+            saveSession(data);
+            enterLauncher(toLauncherUser(data.user));
+          } catch (err) {
+            const msg = (err && err.message) || "Не удалось войти через Discord";
+            if (msg.toLowerCase().includes("закрыт") || msg.toLowerCase().includes("отмен")) {
+              authError.style.color = "#a1a1aa";
+            }
+            authError.textContent = msg;
+          } finally {
+            authDiscord.disabled = false;
+          }
         });
       }
       if (authTelegram) {

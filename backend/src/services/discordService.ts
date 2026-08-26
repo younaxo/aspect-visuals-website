@@ -41,10 +41,12 @@ interface DiscordGuildMember {
 }
 
 export function getOAuthRedirectUri(): string {
-  return (
-    process.env.DISCORD_REDIRECT_URI ||
-    `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/discord/callback`
-  )
+  const explicit = (process.env.DISCORD_REDIRECT_URI || '').trim()
+  if (explicit && !explicit.includes('localhost')) {
+    return explicit
+  }
+  const frontend = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')
+  return `${frontend}/auth/discord/callback`
 }
 
 export function getOAuthUrl(state: string): string {
