@@ -26,7 +26,7 @@ export function DiscordCallback() {
 
   if (error) {
     return (
-      <section className="content-panel liquid-glass">
+      <section className="content-panel">
         <h1 className="page-title">Вход через Discord</h1>
         <p className="page-text error-text">{error}</p>
       </section>

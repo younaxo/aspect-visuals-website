@@ -82,67 +82,26 @@ textarea,
 .liquid-glass {
   position: relative;
   isolation: isolate;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025)),
-    rgba(18, 18, 21, 0.42);
-  backdrop-filter: blur(42px) saturate(185%);
-  -webkit-backdrop-filter: blur(42px) saturate(185%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 18, 21, 0.78);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
-    0 18px 48px rgba(0, 0, 0, 0.38);
-}
-
-.liquid-glass::before {
-  content: "";
-  position: absolute;
-  inset: -40% -20%;
-  background:
-    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.22), transparent 34%),
-    radial-gradient(circle at 82% 88%, rgba(255, 255, 255, 0.08), transparent 32%);
-  pointer-events: none;
-  animation: liquidShift 9s var(--ease-out) infinite alternate;
-  z-index: 0;
-}
-
-.liquid-glass::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0.16) 0%, transparent 28%, transparent 72%, rgba(255, 255, 255, 0.05) 100%);
-  pointer-events: none;
-  mix-blend-mode: screen;
-  z-index: 0;
-}
-
-.liquid-glass > * {
-  position: relative;
-  z-index: 1;
-}
-
-@keyframes liquidShift {
-  from {
-    transform: translate3d(-4%, -3%, 0) scale(1.04);
-  }
-  to {
-    transform: translate3d(5%, 4%, 0) scale(1.08);
-  }
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 .side-rail {
   position: fixed;
   top: 108px;
   bottom: 108px;
-  left: 10px;
+  right: 10px;
   z-index: 20;
-  width: 4px;
+  width: 3px;
   border-radius: 99px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 0 18px rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .side-rail::before {
@@ -150,9 +109,9 @@ textarea,
   position: absolute;
   left: 0;
   right: 0;
-  height: 28%;
-  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.85), transparent);
-  animation: railGlow 4.8s var(--ease-out) infinite;
+  height: 24%;
+  background: linear-gradient(180deg, transparent, rgba(250, 250, 250, 0.45), transparent);
+  animation: railGlow 5.4s var(--ease-out) infinite;
 }
 
 @keyframes railGlow {
@@ -178,8 +137,8 @@ textarea,
 .site-header {
   position: fixed;
   top: 14px;
-  left: 18px;
-  right: 14px;
+  left: 14px;
+  right: 18px;
   z-index: 50;
   display: flex;
   flex-wrap: wrap;
@@ -219,7 +178,7 @@ textarea,
   display: inline-flex;
   align-items: center;
   height: 38px;
-  padding: 0 14px 0 16px;
+  padding: 0 16px 0 14px;
   border-radius: 10px;
   color: #a1a1aa;
   font-size: 13px;
@@ -232,7 +191,7 @@ textarea,
 .header-link::before {
   content: "";
   position: absolute;
-  left: 6px;
+  right: 6px;
   top: 10px;
   bottom: 10px;
   width: 2px;
@@ -257,7 +216,6 @@ textarea,
 .header-link.active::before {
   opacity: 1;
   transform: scaleY(1);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.45);
 }
 
 .header-actions {
@@ -519,14 +477,9 @@ textarea,
 
 .hero-panel,
 .content-panel,
-.feature-card,
-.site-footer {
-  overflow: hidden;
-}
-
-.hero-panel,
-.content-panel,
 .feature-card {
+  background: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius);
 }
 
@@ -734,15 +687,15 @@ textarea,
 
 @media (min-width: 768px) {
   .side-rail {
-    left: 14px;
+    right: 14px;
     top: 112px;
     bottom: 112px;
   }
 
   .site-header {
     top: 18px;
-    left: 36px;
-    right: 24px;
+    left: 24px;
+    right: 36px;
     padding: 8px 12px 8px 18px;
   }
 
@@ -807,7 +760,6 @@ textarea,
   }
 
   .liquid-glass::before,
-  .liquid-glass::after,
   .side-rail::before {
     display: none;
   }
