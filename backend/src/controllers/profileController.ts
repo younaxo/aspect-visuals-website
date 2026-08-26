@@ -93,7 +93,7 @@ export async function updateProfile(req: AuthRequest, res: Response) {
     }
 
     const username = asOptionalString(req.body?.username, 'Имя пользователя', 32)
-    const bio = asOptionalString(req.body?.bio, 'Описание', 190)
+    const bio = asOptionalString(req.body?.bio, 'Описание', 1000)
     const location = asOptionalString(req.body?.location, 'Местоположение', 80)
     const website = asOptionalString(req.body?.website, 'Сайт', 200)
     const customStatus = asOptionalString(req.body?.customStatus, 'Статус', 128)

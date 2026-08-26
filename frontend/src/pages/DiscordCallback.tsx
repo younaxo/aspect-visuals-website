@@ -44,7 +44,7 @@ export function DiscordCallback() {
     run
       .then(() => {
         showToast(linking ? 'Discord привязан' : 'Вы вошли через Discord', 'success')
-        navigate(linking ? '/profile' : '/', { replace: true })
+        navigate(linking ? '/settings' : '/', { replace: true })
       })
       .catch((err: unknown) => {
         const message = axios.isAxiosError(err)

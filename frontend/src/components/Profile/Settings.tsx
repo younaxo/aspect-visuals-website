@@ -1,6 +1,10 @@
 import { useState } from 'react'
+import { useAuth } from '../../hooks/useAuth'
 import { useAuthStore } from '../../store/authStore'
+import { useDiscord } from '../../hooks/useDiscord'
 import { useProfile } from '../../hooks/useProfile'
+import { useToastStore } from '../../store/toastStore'
+import { Button } from '../Common/Button'
 import type { ThemePreference } from '../../types'
 
 interface ToggleRowProps {
@@ -31,7 +35,11 @@ function ToggleRow({ label, description, checked, onChange, disabled }: ToggleRo
 
 export function Settings() {
   const settings = useAuthStore((state) => state.settings)
+  const user = useAuthStore((state) => state.user)
   const { saveSettings, isSaving } = useProfile()
+  const { unlinkDiscord } = useAuth()
+  const { link, isLoading: discordBusy, error: discordError } = useDiscord()
+  const showToast = useToastStore((state) => state.showToast)
   const [error, setError] = useState<string | null>(null)
 
   const patch = async (payload: Partial<typeof settings>) => {
@@ -48,7 +56,7 @@ export function Settings() {
       <header className="content-panel settings-hero">
         <p className="eyebrow">Аккаунт</p>
         <h1 className="page-title">Настройки</h1>
-        <p className="page-text">Интерфейс сайта. Тема и анимации применяются сразу.</p>
+        <p className="page-text">Интерфейс сайта и привязка Discord.</p>
       </header>
 
       <article className="settings-card">
@@ -99,6 +107,47 @@ export function Settings() {
         </label>
 
         {error && <p className="error-text">{error}</p>}
+      </article>
+
+      <article className="settings-card" style={{ marginTop: 12 }}>
+        <h2 className="settings-section-title">Discord</h2>
+        <p className="settings-desc" style={{ display: 'block', marginBottom: 14 }}>
+          {user?.discordLinked
+            ? 'Аккаунт привязан. Можно входить через Discord и открывать профиль с сайта.'
+            : 'Привяжите Discord, чтобы входить через него и синхронизировать роли.'}
+        </p>
+        {discordError && <p className="error-text">{discordError}</p>}
+        <div className="hero-actions">
+          {user?.discordLinked ? (
+            <Button
+              variant="ghost"
+              disabled={discordBusy}
+              onClick={() => {
+                void unlinkDiscord()
+                  .then(() => showToast('Discord отвязан', 'success'))
+                  .catch((err: unknown) => {
+                    const message = err instanceof Error ? err.message : 'Не удалось отвязать Discord'
+                    showToast(message, 'error')
+                  })
+              }}
+            >
+              Отвязать Discord
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              disabled={discordBusy}
+              onClick={() => {
+                void link().catch((err: unknown) => {
+                  const message = err instanceof Error ? err.message : 'Не удалось начать привязку Discord'
+                  showToast(message, 'error')
+                })
+              }}
+            >
+              {discordBusy ? 'Открываем Discord…' : 'Привязать Discord'}
+            </Button>
+          )}
+        </div>
       </article>
     </section>
   )

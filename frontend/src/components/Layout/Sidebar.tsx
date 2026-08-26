@@ -1,12 +1,10 @@
-import { KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { Button } from '../Common/Button'
-import { ImageUpload } from '../Common/ImageUpload'
 import { UserNameLine } from '../Profile/UserNameLine'
 import { useAuth } from '../../hooks/useAuth'
-import { useProfile } from '../../hooks/useProfile'
 import { getHighestRole } from '../../utils/discordRoles'
 import { getUserAvatarUrl, getUserBannerUrl } from '../../utils/media'
 
@@ -22,18 +20,11 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function Sidebar() {
   const { user, logout } = useAuth()
-  const { saveProfile, uploadAvatar, uploadBanner, isSaving } = useProfile()
   const [open, setOpen] = useState(false)
-  const [username, setUsername] = useState(user?.username ?? '')
-  const [error, setError] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const role = getHighestRole(user)
   const avatar = user ? getUserAvatarUrl(user) : fallbackAvatar
   const banner = user ? getUserBannerUrl(user.banner) : null
-
-  useEffect(() => {
-    setUsername(user?.username ?? '')
-  }, [user?.username])
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
@@ -41,49 +32,29 @@ export function Sidebar() {
         setOpen(false)
       }
     }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
 
     document.addEventListener('mousedown', onPointerDown)
-    return () => document.removeEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [])
 
   if (!user) return null
 
   const close = () => setOpen(false)
 
-  const persistUsername = async () => {
-    const nextName = username.trim()
-    if (!nextName || nextName.length < 2) {
-      setUsername(user.username)
-      return
-    }
-    if (nextName === user.username) return
-
-    setError(null)
-    try {
-      await saveProfile({ username: nextName })
-    } catch (err: unknown) {
-      setUsername(user.username)
-      setError(err instanceof Error ? err.message : 'Не удалось сохранить имя')
-    }
-  }
-
-  const onUsernameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      event.currentTarget.blur()
-    }
-    if (event.key === 'Escape') {
-      setUsername(user.username)
-      event.currentTarget.blur()
-    }
-  }
-
   return (
-    <div className="profile-menu sidebar-account" ref={panelRef}>
+    <div className={`profile-menu sidebar-account ${open ? 'is-open' : ''}`} ref={panelRef}>
       <button
         type="button"
         className={`profile-chip ${open ? 'open' : ''}`}
         aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={() => setOpen((value) => !value)}
       >
         <span className={`avatar-wrap status-${user.status ?? 'online'}`}>
@@ -97,38 +68,19 @@ export function Sidebar() {
       </button>
 
       {open && (
-        <div className="profile-dropdown liquid-glass" role="dialog" aria-label="Профиль">
-          <div className="profile-dropdown-banner-slot">
-            <ImageUpload
-              variant="banner"
-              currentImage={banner}
-              onUpload={uploadBanner}
-              label="Загрузить баннер"
-            />
-          </div>
+        <div className="profile-dropdown liquid-glass" role="dialog" aria-label="Минипрофиль">
+          <div
+            className="profile-dropdown-banner"
+            style={banner ? { backgroundImage: `url(${banner})` } : undefined}
+          />
           <div className="profile-dropdown-body">
             <div className="profile-dropdown-user">
-              <div className={`avatar-upload-slot status-${user.status ?? 'online'}`}>
-                <ImageUpload
-                  variant="avatar"
-                  size="medium"
-                  currentImage={avatar}
-                  onUpload={uploadAvatar}
-                  label="Загрузить аватар"
-                />
+              <span className={`avatar-wrap avatar-lg status-${user.status ?? 'online'}`}>
+                <img className="avatar" src={avatar} alt="" draggable={false} />
                 <span className="online-dot" aria-hidden="true" />
-              </div>
+              </span>
               <div className="profile-dropdown-meta">
-                <UserNameLine
-                  user={user}
-                  editing
-                  compact
-                  username={username}
-                  disabled={isSaving}
-                  onUsernameChange={setUsername}
-                  onUsernameBlur={() => void persistUsername()}
-                  onUsernameKeyDown={onUsernameKeyDown}
-                />
+                <UserNameLine user={user} compact />
                 <p className="profile-status-line">
                   {user.customStatus || STATUS_LABELS[user.status ?? 'online']}
                 </p>
@@ -137,7 +89,6 @@ export function Sidebar() {
                 </p>
               </div>
             </div>
-            {error && <p className="error-text">{error}</p>}
             <Link to="/profile" className="dropdown-link" onClick={close}>
               Профиль
             </Link>

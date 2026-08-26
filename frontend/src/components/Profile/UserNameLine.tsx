@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react'
 import type { User } from '../../types'
 import { getHighestRole, getHighestRoleKey, getRoleIconUrl } from '../../utils/discordRoles'
+import { Tooltip } from '../Common/Tooltip'
 
 interface UserNameLineProps {
   user: User
@@ -44,12 +45,14 @@ export function UserNameLine({
         <span className={compact ? 'profile-name' : 'profile-display-name'}>{user.username}</span>
       )}
       {icon && (
-        <img className="role-icon" src={icon} alt={role?.name ?? ''} title={role?.name ?? undefined} draggable={false} />
+        <Tooltip content={role?.name ?? 'Роль'} side="top">
+          <img className="role-icon" src={icon} alt={role?.name ?? ''} draggable={false} />
+        </Tooltip>
       )}
       {uid !== null && (
-        <span className="profile-uid" title="Уникальный номер профиля">
-          #{uid}
-        </span>
+        <Tooltip content="Уникальный номер профиля" side="top">
+          <span className="profile-uid">#{uid}</span>
+        </Tooltip>
       )}
     </div>
   )
