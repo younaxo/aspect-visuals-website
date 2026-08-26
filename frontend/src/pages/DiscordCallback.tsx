@@ -10,6 +10,7 @@ export function DiscordCallback() {
   const navigate = useNavigate()
   const { loginWithDiscord } = useAuth()
   const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     const oauthError = params.get('error')
@@ -26,8 +27,9 @@ export function DiscordCallback() {
     }
 
     // Код Discord одноразовый: защищаемся от повторного вызова в React StrictMode
-    if (processedCodes.has(code)) return
+    if (processedCodes.has(code) || busy) return
     processedCodes.add(code)
+    setBusy(true)
 
     loginWithDiscord({ code, state })
       .then(() => navigate('/', { replace: true }))
@@ -35,14 +37,20 @@ export function DiscordCallback() {
         processedCodes.delete(code)
         const message = err instanceof Error ? err.message : 'Не удалось войти через Discord'
         setError(message)
+        setBusy(false)
       })
-  }, [loginWithDiscord, navigate, params])
+  }, [busy, loginWithDiscord, navigate, params])
 
   if (error) {
     return (
       <section className="content-panel">
         <h1 className="page-title">Вход через Discord</h1>
         <p className="page-text error-text">{error}</p>
+        <div className="hero-actions" style={{ marginTop: 20 }}>
+          <button type="button" className="btn-primary" onClick={() => navigate('/', { replace: true })}>
+            На главную
+          </button>
+        </div>
       </section>
     )
   }

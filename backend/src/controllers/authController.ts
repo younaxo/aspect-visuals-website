@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import axios from 'axios'
 import { prisma } from '../utils/prisma'
 import {
   issueTokens,
@@ -116,6 +117,25 @@ export async function discordCallback(req: Request, res: Response) {
     })
   } catch (error) {
     console.error('Discord callback error:', error)
+
+    if (axios.isAxiosError(error)) {
+      const description =
+        (error.response?.data as { error_description?: string; error?: string } | undefined)?.error_description ||
+        (error.response?.data as { error?: string } | undefined)?.error
+      if (description?.includes('Invalid "code"') || description === 'invalid_grant') {
+        res.status(400).json({ message: 'Код Discord уже использован. Нажмите «Войти» ещё раз.' })
+        return
+      }
+      res.status(401).json({ message: 'Не удалось обменять код Discord. Попробуйте войти снова.' })
+      return
+    }
+
+    const message = error instanceof Error ? error.message : ''
+    if (message.includes('recovery mode') || message.includes('Can\'t reach database')) {
+      res.status(503).json({ message: 'База данных временно недоступна. Попробуйте через минуту.' })
+      return
+    }
+
     res.status(401).json({ message: 'Не удалось авторизоваться через Discord' })
   }
 }
