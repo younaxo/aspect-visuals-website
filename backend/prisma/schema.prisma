@@ -8,18 +8,39 @@ datasource db {
 }
 
 model User {
-  id                  String    @id @default(cuid())
-  discordId           String    @unique
+  id                  String        @id @default(cuid())
+  discordId           String        @unique
   username            String
   discriminator       String?
   avatar              String?
+  banner              String?
+  bio                 String?
+  location            String?
+  website             String?
+  customStatus        String?
+  status              String        @default("online")
   email               String?
   discordAccessToken  String?
   discordRefreshToken String?
   roles               Role[]
   sessions            Session[]
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  settings            UserSettings?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+}
+
+model UserSettings {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme          String   @default("dark")
+  notifications  Boolean  @default(true)
+  soundEnabled   Boolean  @default(true)
+  compactSidebar Boolean  @default(false)
+  animations     Boolean  @default(true)
+  language       String   @default("ru")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Session {

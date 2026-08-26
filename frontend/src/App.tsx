@@ -5,6 +5,8 @@ import { MainLayout } from './components/Layout/MainLayout'
 import { DiscordCallback } from './pages/DiscordCallback'
 import { HomePage } from './pages/HomePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
+import { Profile } from './components/Profile/Profile'
+import { Settings } from './components/Profile/Settings'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +32,8 @@ function App() {
             <Route path="refund" element={<PlaceholderPage title="Политика возвратов" />} />
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
             <Route element={<ProtectedRoute />}>
-              <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

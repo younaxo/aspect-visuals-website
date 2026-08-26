@@ -2,15 +2,9 @@ import { useState } from 'react'
 import axios from 'axios'
 import api from '../api'
 import type { DiscordAuthUrl } from '../types'
+import { getDiscordAvatarUrl } from '../utils/media'
 
-export function getDiscordAvatarUrl(discordId: string, avatar?: string | null): string {
-  if (!avatar) {
-    return `https://cdn.discordapp.com/embed/avatars/${Number(discordId) % 5}.png`
-  }
-
-  const format = avatar.startsWith('a_') ? 'gif' : 'png'
-  return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.${format}`
-}
+export { getDiscordAvatarUrl }
 
 function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {

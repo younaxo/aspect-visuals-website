@@ -4,16 +4,48 @@ export interface Role {
   name: string
 }
 
+export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'offline'
+export type ThemePreference = 'dark' | 'light' | 'system'
+
 export interface User {
   id: string
   discordId: string
   username: string
   discriminator?: string | null
   avatar?: string | null
+  banner?: string | null
+  bio?: string | null
+  location?: string | null
+  website?: string | null
+  customStatus?: string | null
+  status?: PresenceStatus
   email?: string | null
   roles: Role[]
   createdAt: string
   updatedAt: string
+}
+
+export interface UserSettings {
+  id?: string
+  userId?: string
+  theme: ThemePreference
+  notifications: boolean
+  soundEnabled: boolean
+  compactSidebar: boolean
+  animations: boolean
+  language: string
+}
+
+export interface SubscriptionPreview {
+  id: string
+  name: string
+  expiresAt: string | null
+}
+
+export interface ProfileResponse {
+  user: User
+  settings: UserSettings
+  subscriptions: SubscriptionPreview[]
 }
 
 export interface AuthTokens {
@@ -23,6 +55,7 @@ export interface AuthTokens {
 
 export interface AuthResponse extends AuthTokens {
   user: User
+  settings?: UserSettings
 }
 
 export interface DiscordAuthUrl {

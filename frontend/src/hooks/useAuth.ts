@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import api from '../api'
 import { useAuthStore } from '../store/authStore'
-import type { AuthResponse, User } from '../types'
+import type { AuthResponse, User, UserSettings } from '../types'
 
 interface DiscordLoginPayload {
   code: string
@@ -26,8 +26,9 @@ export function useAuth() {
   const meQuery = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const { data } = await api.get<{ user: User }>('/api/auth/me')
+      const { data } = await api.get<{ user: User; settings?: UserSettings }>('/api/auth/me')
       useAuthStore.getState().setUser(data.user)
+      if (data.settings) useAuthStore.getState().setSettings(data.settings)
       return data.user
     },
     enabled: Boolean(accessToken),
@@ -40,7 +41,7 @@ export function useAuth() {
       return data
     },
     onSuccess: (data) => {
-      setAuth(data.user, data.accessToken, data.refreshToken)
+      setAuth(data.user, data.accessToken, data.refreshToken, data.settings)
       queryClient.setQueryData(['auth', 'me'], data.user)
     },
   })
@@ -55,6 +56,8 @@ export function useAuth() {
     } finally {
       clearAuth()
       queryClient.removeQueries({ queryKey: ['auth'] })
+      queryClient.removeQueries({ queryKey: ['profile'] })
+      queryClient.removeQueries({ queryKey: ['settings'] })
     }
   }, [clearAuth, queryClient])
 

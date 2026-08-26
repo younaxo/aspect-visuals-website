@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { DiscordLogin } from '../Auth/DiscordLogin'
-import { Button } from '../Common/Button'
 import { Logo } from '../Common/Logo'
+import { Sidebar } from './Sidebar'
 import { useAuth } from '../../hooks/useAuth'
-import { getDiscordAvatarUrl } from '../../hooks/useDiscord'
-import { getHighestRole } from '../../utils/discordRoles'
 
 const navItems = [
   { to: '/', label: 'Главная' },
@@ -13,27 +11,9 @@ const navItems = [
   { to: '/shop', label: 'Магазин' },
 ]
 
-const fallbackAvatar =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2327272a'/%3E%3Ccircle cx='32' cy='24' r='12' fill='%2352525b'/%3E%3Cpath d='M8 58c4-14 16-20 24-20s20 6 24 20' fill='%2352525b'/%3E%3C/svg%3E"
-
 export function Header() {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
-  const profileRef = useRef<HTMLDivElement>(null)
-  const role = getHighestRole(user)
-  const avatar = user ? getDiscordAvatarUrl(user.discordId, user.avatar) : fallbackAvatar
-
-  useEffect(() => {
-    const onPointerDown = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setProfileOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', onPointerDown)
-    return () => document.removeEventListener('mousedown', onPointerDown)
-  }, [])
 
   useEffect(() => {
     const onResize = () => {
@@ -45,7 +25,6 @@ export function Header() {
 
   const closeMenus = () => {
     setMenuOpen(false)
-    setProfileOpen(false)
   }
 
   return (
@@ -89,56 +68,7 @@ export function Header() {
           </svg>
         </button>
 
-        {isAuthenticated && user ? (
-          <div className="profile-menu" ref={profileRef}>
-            <button
-              type="button"
-              className={`profile-chip ${profileOpen ? 'open' : ''}`}
-              aria-expanded={profileOpen}
-              onClick={() => setProfileOpen((open) => !open)}
-            >
-              <span className="avatar-wrap">
-                <img className="avatar" src={avatar} alt="" draggable={false} />
-                <span className="online-dot" aria-hidden="true" />
-              </span>
-              <span className="profile-meta">
-                <span className="profile-name">{user.username}</span>
-                <span className="profile-role">{role?.name ?? 'Профиль'}</span>
-              </span>
-            </button>
-            {profileOpen && (
-              <div className="profile-dropdown liquid-glass" role="menu">
-                <div className="profile-dropdown-banner" />
-                <div className="profile-dropdown-body">
-                  <div className="profile-dropdown-user">
-                    <span className="avatar-wrap avatar-lg">
-                      <img className="avatar" src={avatar} alt="" draggable={false} />
-                      <span className="online-dot" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <p className="profile-name">{user.username}</p>
-                      <p className="profile-role">{role?.name ?? 'Пользователь'}</p>
-                    </div>
-                  </div>
-                  <Link to="/settings" className="dropdown-link" role="menuitem" onClick={closeMenus}>
-                    Настройки
-                  </Link>
-                  <Button
-                    variant="logout"
-                    onClick={() => {
-                      closeMenus()
-                      void logout()
-                    }}
-                  >
-                    Выйти
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <DiscordLogin />
-        )}
+        {isAuthenticated && user ? <Sidebar /> : <DiscordLogin />}
       </div>
 
       {menuOpen && (
@@ -154,6 +84,24 @@ export function Header() {
               {item.label}
             </NavLink>
           ))}
+          {isAuthenticated && (
+            <>
+              <NavLink
+                to="/profile"
+                className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenus}
+              >
+                Профиль
+              </NavLink>
+              <NavLink
+                to="/settings"
+                className={({ isActive }) => `header-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenus}
+              >
+                Настройки
+              </NavLink>
+            </>
+          )}
         </nav>
       )}
     </header>

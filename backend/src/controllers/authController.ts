@@ -16,6 +16,8 @@ import {
   syncUserRoles,
 } from '../services/discordService'
 import { toPublicUser } from '../utils/user'
+import { isCustomMedia } from '../utils/media'
+import { ensureUserSettings } from '../utils/settings'
 import type { AuthRequest } from '../middleware/auth'
 
 export function discordAuthUrl(_req: Request, res: Response) {
@@ -66,12 +68,13 @@ export async function discordCallback(req: Request, res: Response) {
     const discordUser = await getDiscordUser(tokens.access_token)
     const discordRoles = await getGuildMemberRoles(discordUser.id, tokens.access_token)
 
+    const existing = await prisma.user.findUnique({ where: { discordId: discordUser.id } })
+
+    // Локальные username/discriminator/avatar/banner не перезаписываются из Discord
     const user = await prisma.user.upsert({
       where: { discordId: discordUser.id },
       update: {
-        username: discordUser.username,
-        discriminator: discordUser.discriminator,
-        avatar: discordUser.avatar,
+        avatar: existing && isCustomMedia(existing.avatar) ? existing.avatar : discordUser.avatar,
         email: discordUser.email,
         discordAccessToken: tokens.access_token,
         discordRefreshToken: tokens.refresh_token,
@@ -79,7 +82,7 @@ export async function discordCallback(req: Request, res: Response) {
       create: {
         discordId: discordUser.id,
         username: discordUser.username,
-        discriminator: discordUser.discriminator,
+        discriminator: discordUser.discriminator === '0' ? null : discordUser.discriminator,
         avatar: discordUser.avatar,
         email: discordUser.email,
         discordAccessToken: tokens.access_token,
@@ -87,11 +90,13 @@ export async function discordCallback(req: Request, res: Response) {
       },
     })
 
+    await ensureUserSettings(user.id)
+
     await syncUserRoles(user.id, discordRoles)
 
     const userWithRoles = await prisma.user.findUniqueOrThrow({
       where: { id: user.id },
-      include: { roles: true },
+      include: { roles: true, settings: true },
     })
 
     const jwtTokens = await issueTokens({
@@ -101,6 +106,7 @@ export async function discordCallback(req: Request, res: Response) {
 
     res.json({
       user: toPublicUser(userWithRoles),
+      settings: userWithRoles.settings,
       ...jwtTokens,
     })
   } catch (error) {
@@ -118,7 +124,7 @@ export async function getMe(req: AuthRequest, res: Response) {
 
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      include: { roles: true },
+      include: { roles: true, settings: true },
     })
 
     if (!user) {
@@ -126,7 +132,9 @@ export async function getMe(req: AuthRequest, res: Response) {
       return
     }
 
-    res.json({ user: toPublicUser(user) })
+    const settings = user.settings ?? (await ensureUserSettings(user.id))
+
+    res.json({ user: toPublicUser(user), settings })
   } catch (error) {
     console.error('Get me error:', error)
     res.status(500).json({ message: 'Не удалось получить данные пользователя' })
