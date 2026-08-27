@@ -1,39 +1,41 @@
-const readline = require("readline");
-
 /**
  * Работа с игровой сессией.
  *
- * Launch-токен приходит в stdin, а не аргументом командной строки:
- * аргументы видны в списке процессов, stdin — нет.
- * Токен одноразовый и живёт секунды, поэтому обменивается сразу при старте.
+ * Launch-токен не приходит аргументом командной строки: аргументы видны
+ * любому процессу в системе. Лаунчер поднимает одноразовый локальный обмен
+ * и передаёт только его адрес, по которому токен выдаётся ровно один раз.
  */
 
 const HEARTBEAT_MS = 30 * 1000;
 
-/** Читает первую строку stdin. Отдельный поток закрывается сразу после чтения. */
-function readLaunchToken(timeoutMs = 15000) {
-  return new Promise((resolve, reject) => {
-    if (process.stdin.isTTY) {
-      reject(new Error("Клиент запускается через лаунчер Aspect Visuals"));
-      return;
-    }
+/** Адрес обмена приходит в --aspect-handshake=... Сам токен в аргументах не появляется. */
+function handshakeUrl(argv = process.argv) {
+  const arg = argv.find((a) => a.startsWith("--aspect-handshake="));
+  if (!arg) return null;
 
-    const rl = readline.createInterface({ input: process.stdin });
-    const timer = setTimeout(() => {
-      rl.close();
-      reject(new Error("Лаунчер не передал токен запуска"));
-    }, timeoutMs);
+  const url = arg.slice("--aspect-handshake=".length);
+  try {
+    const parsed = new URL(url);
+    // Принимаем только петлевой интерфейс: обмен локальный по замыслу
+    if (parsed.hostname !== "127.0.0.1") return null;
+    return url;
+  } catch (_) {
+    return null;
+  }
+}
 
-    rl.once("line", (line) => {
-      clearTimeout(timer);
-      rl.close();
-      const token = String(line || "").trim();
-      if (!token) reject(new Error("Пустой токен запуска"));
-      else resolve(token);
-    });
+async function readLaunchToken(timeoutMs = 15000) {
+  const url = handshakeUrl();
+  if (!url) throw new Error("Клиент запускается через лаунчер Aspect Visuals");
 
-    rl.once("close", () => clearTimeout(timer));
-  });
+  const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok) throw new Error(`Лаунчер не выдал токен запуска (HTTP ${res.status})`);
+
+  const data = await res.json().catch(() => ({}));
+  const token = String(data.token || "").trim();
+  if (!token) throw new Error("Лаунчер вернул пустой токен");
+
+  return token;
 }
 
 async function openSession(apiUrl, token) {
@@ -81,4 +83,4 @@ async function closeSession(apiUrl, session) {
   }
 }
 
-module.exports = { readLaunchToken, openSession, startHeartbeat, closeSession, HEARTBEAT_MS };
+module.exports = { readLaunchToken, openSession, startHeartbeat, closeSession, handshakeUrl, HEARTBEAT_MS };

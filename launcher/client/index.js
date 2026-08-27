@@ -36,7 +36,7 @@ async function prepareAndLaunch({ apiUrl, accessToken, channel = "stable", onPro
   }
   onProgress({ stage: "token", done: 1, total: 1, label: "Доступ получен" });
 
-  const started = launchClient({
+  const started = await launchClient({
     dir: installed.dir,
     manifest,
     token: data.token,

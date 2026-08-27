@@ -3,13 +3,15 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const { paths, readCurrent } = require("./paths");
+const { createHandshake } = require("./handshake");
 
 /**
  * Запуск клиента.
  *
- * Launch-токен передаётся в stdin, а не аргументом командной строки:
- * аргументы видны в списке процессов любому пользователю системы,
- * а stdin виден только самому процессу.
+ * Токен не идёт ни аргументом, ни через stdin: аргументы видны всей системе,
+ * а Electron на Windows собран как GUI-приложение и рабочего stdin от пайпа
+ * не получает. Вместо этого поднимается одноразовый локальный обмен,
+ * клиенту передаётся только его адрес с одноразовым секретом.
  */
 
 let running = null;
@@ -37,7 +39,7 @@ function resolveExecutable(dir, manifest) {
   return null;
 }
 
-function launchClient({ dir, manifest, token, onExit }) {
+async function launchClient({ dir, manifest, token, onExit }) {
   if (isRunning()) throw new Error("Клиент уже запущен");
 
   const exe = resolveExecutable(dir, manifest);
@@ -47,10 +49,12 @@ function launchClient({ dir, manifest, token, onExit }) {
   fs.mkdirSync(paths.logs, { recursive: true });
   const log = fs.createWriteStream(logFile, { flags: "a" });
 
-  const child = spawn(exe, [], {
+  // Клиент получает только адрес обмена: сам токен по нему выдаётся один раз
+  const handshake = await createHandshake(token);
+
+  const child = spawn(exe, [`--aspect-handshake=${handshake.url}`], {
     cwd: dir,
-    // Токен уходит в stdin, поэтому его нет ни в аргументах, ни в окружении
-    stdio: ["pipe", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe"],
     windowsHide: false,
   });
 
@@ -59,20 +63,16 @@ function launchClient({ dir, manifest, token, onExit }) {
   child.stdout.pipe(log);
   child.stderr.pipe(log);
 
-  child.stdin.on("error", () => {
-    // Клиент мог закрыться раньше, чем мы записали токен
-  });
-  child.stdin.write(`${token}\n`);
-  child.stdin.end();
-
   child.on("exit", (code, signal) => {
     running = null;
+    handshake.close();
     log.end();
     if (onExit) onExit({ code, signal, logFile });
   });
 
   child.on("error", (err) => {
     running = null;
+    handshake.close();
     log.end();
     if (onExit) onExit({ code: null, signal: null, logFile, error: err.message });
   });
