@@ -116,4 +116,10 @@ export const shopApi = {
   cancel: (id: string) => api.post(`/api/shop/subscription/cancel/${id}`),
 }
 
+export const bonusApi = {
+  dailyStatus: () => api.get('/api/bonus/daily'),
+  claimDaily: () => api.post('/api/bonus/daily/claim'),
+  redeemCode: (code: string) => api.post('/api/bonus/redeem', { code }),
+}
+
 export default api

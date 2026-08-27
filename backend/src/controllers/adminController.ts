@@ -5,6 +5,7 @@ import type { AuthRequest } from '../middleware/auth'
 import { logAdminRequest } from '../middleware/logging'
 import { generateBatch } from '../utils/generateKeys'
 import { toPublicUser } from '../utils/user'
+import { DEFAULT_SETTINGS, isKnownSetting } from '../services/systemSettingsService'
 
 function asString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -566,16 +567,6 @@ export async function getAdminLogs(req: AuthRequest, res: Response) {
   res.json({ total, page, pageSize, logs })
 }
 
-const DEFAULT_SETTINGS: Record<string, { value: unknown; description: string }> = {
-  chatMaxLength: { value: 2000, description: 'Максимальная длина сообщения в чате' },
-  testSubscriptionDays: { value: 90, description: 'Интервал тестовой подписки (дни)' },
-  hwidResetPrice: { value: 139, description: 'Стоимость сброса HWID' },
-  registrationEnabled: { value: true, description: 'Включить регистрацию' },
-  discordLinkEnabled: { value: true, description: 'Включить привязку Discord' },
-  currency: { value: 'RUB', description: 'Валюта' },
-  notifyEmail: { value: '', description: 'Email для уведомлений' },
-}
-
 export async function getSystemSettings(_req: AuthRequest, res: Response) {
   const rows = await prisma.systemSetting.findMany()
   const map = new Map(rows.map((row) => [row.key, row]))
@@ -599,7 +590,7 @@ export async function updateSystemSettings(req: AuthRequest, res: Response) {
   }
   const entries = Object.entries(payload as Record<string, unknown>)
   for (const [key, value] of entries) {
-    if (!(key in DEFAULT_SETTINGS)) continue
+    if (!isKnownSetting(key)) continue
     await prisma.systemSetting.upsert({
       where: { key },
       update: { value: value as Prisma.InputJsonValue, updatedBy: req.userId },

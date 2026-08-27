@@ -2,6 +2,119 @@ import type { Response } from 'express'
 import { prisma } from '../utils/prisma'
 import type { AuthRequest } from '../middleware/auth'
 import { activateSubscription } from './shopController'
+import { getNumberSetting } from '../services/systemSettingsService'
+
+interface DailyBonusState {
+  available: boolean
+  amount: number
+  cooldownHours: number
+  balance: number
+  lastClaimedAt: string | null
+  nextAvailableAt: string | null
+  msUntilNext: number
+}
+
+async function dailyBonusState(userId: string): Promise<DailyBonusState> {
+  const [amount, cooldownHours, user] = await Promise.all([
+    getNumberSetting('dailyBonusAmount', 25),
+    getNumberSetting('dailyBonusCooldownHours', 24),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { balance: true, lastDailyBonusAt: true },
+    }),
+  ])
+
+  const cooldownMs = cooldownHours * 60 * 60 * 1000
+  const last = user.lastDailyBonusAt
+  const nextAt = last ? new Date(last.getTime() + cooldownMs) : null
+  const msUntilNext = nextAt ? Math.max(0, nextAt.getTime() - Date.now()) : 0
+
+  return {
+    available: msUntilNext === 0,
+    amount,
+    cooldownHours,
+    balance: Number(user.balance),
+    lastClaimedAt: last ? last.toISOString() : null,
+    nextAvailableAt: nextAt ? nextAt.toISOString() : null,
+    msUntilNext,
+  }
+}
+
+export async function getDailyBonus(req: AuthRequest, res: Response) {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ message: 'Нужна авторизация' })
+      return
+    }
+    res.json(await dailyBonusState(req.userId))
+  } catch (error) {
+    console.error('Daily bonus state error:', error)
+    res.status(500).json({ message: 'Не удалось получить состояние бонуса' })
+  }
+}
+
+export async function claimDailyBonus(req: AuthRequest, res: Response) {
+  try {
+    const userId = req.userId
+    if (!userId) {
+      res.status(401).json({ message: 'Нужна авторизация' })
+      return
+    }
+
+    const [amount, cooldownHours] = await Promise.all([
+      getNumberSetting('dailyBonusAmount', 25),
+      getNumberSetting('dailyBonusCooldownHours', 24),
+    ])
+
+    if (amount <= 0) {
+      res.status(400).json({ message: 'Ежедневный бонус сейчас отключён' })
+      return
+    }
+
+    const now = new Date()
+    const threshold = new Date(now.getTime() - cooldownHours * 60 * 60 * 1000)
+
+    const claimed = await prisma.$transaction(async (tx) => {
+      // Условие cooldown внутри UPDATE ... WHERE делает выдачу атомарной:
+      // параллельные запросы не смогут начислить бонус дважды
+      const result = await tx.user.updateMany({
+        where: {
+          id: userId,
+          OR: [{ lastDailyBonusAt: null }, { lastDailyBonusAt: { lte: threshold } }],
+        },
+        data: {
+          lastDailyBonusAt: now,
+          balance: { increment: amount },
+        },
+      })
+
+      if (result.count === 0) return false
+
+      await tx.balanceTransaction.create({
+        data: {
+          userId,
+          amount,
+          kind: 'DAILY_BONUS',
+          note: 'Ежедневный бонус',
+        },
+      })
+
+      return true
+    })
+
+    if (!claimed) {
+      const state = await dailyBonusState(userId)
+      res.status(429).json({ message: 'Бонус уже получен, приходите позже', ...state })
+      return
+    }
+
+    const state = await dailyBonusState(userId)
+    res.json({ ok: true, claimedAmount: amount, ...state })
+  } catch (error) {
+    console.error('Daily bonus claim error:', error)
+    res.status(500).json({ message: 'Не удалось получить бонус' })
+  }
+}
 
 function asString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -73,12 +186,23 @@ export async function redeemBonus(req: AuthRequest, res: Response) {
 
     const amount = Number(bonus.amount)
     if (amount > 0) {
-      await prisma.user.update({
-        where: { id: req.userId },
-        data: { balance: { increment: amount } },
+      const userId = req.userId
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: userId },
+          data: { balance: { increment: amount } },
+        })
+        await tx.balanceTransaction.create({
+          data: {
+            userId,
+            amount,
+            kind: 'BONUS_CODE',
+            note: `Бонус-код ${bonus.code}`,
+          },
+        })
+        await tx.bonusCodeUsed.create({ data: { userId, bonusCodeId: bonus.id } })
+        await tx.bonusCode.update({ where: { id: bonus.id }, data: { usedCount: { increment: 1 } } })
       })
-      await prisma.bonusCodeUsed.create({ data: { userId: req.userId, bonusCodeId: bonus.id } })
-      await prisma.bonusCode.update({ where: { id: bonus.id }, data: { usedCount: { increment: 1 } } })
       res.json({ ok: true, amount, kind: 'BALANCE' })
       return
     }

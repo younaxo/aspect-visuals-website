@@ -44,7 +44,9 @@ model User {
   messageReactions       MessageReaction[]
   chatPresence           ChatUser?
   lastTestSubscriptionAt DateTime?
+  lastDailyBonusAt       DateTime?
   balance                Decimal             @default(0)
+  balanceTransactions    BalanceTransaction[]
   deletedAt              DateTime?
   isDeleted              Boolean             @default(false)
   adminLogs              AdminLog[]
@@ -286,6 +288,20 @@ model UserSubscription {
   updatedAt      DateTime     @updatedAt
 
   @@index([userId])
+}
+
+// Журнал операций с балансом: ежедневный бонус, бонус-коды, покупки, возвраты
+model BalanceTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Decimal
+  kind      String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([kind])
 }
 
 model UserSettings {

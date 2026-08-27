@@ -105,6 +105,21 @@ export interface UserShopSubscription {
   lifetime: boolean
 }
 
+export interface DailyBonusState {
+  available: boolean
+  amount: number
+  cooldownHours: number
+  balance: number
+  lastClaimedAt: string | null
+  nextAvailableAt: string | null
+  msUntilNext: number
+}
+
+export interface DailyBonusClaimResult extends DailyBonusState {
+  ok: true
+  claimedAmount: number
+}
+
 export interface TestSubscriptionInfo {
   available: boolean
   reason: string | null
