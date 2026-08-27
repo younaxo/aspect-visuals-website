@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import { prisma } from '../utils/prisma'
 import { ROLE_MAPPING } from '../services/discordService'
-import { AUTHOR_SELECT, NEWS_ORDER, PUBLISHED_WHERE, serializeNewsCard } from '../services/newsService'
+import { AUTHOR_SELECT, NEWS_ORDER, publishedWhere, serializeNewsCard } from '../services/newsService'
 import { getContentSettings } from '../services/siteContentService'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -66,7 +66,7 @@ export async function getSiteContent(_req: Request, res: Response) {
   try {
     const [news, subscriptions, products, configs, cosmetics, settings] = await Promise.all([
       prisma.news.findMany({
-        where: { ...PUBLISHED_WHERE },
+        where: publishedWhere(),
         include: { author: AUTHOR_SELECT },
         orderBy: [...NEWS_ORDER],
         take: 10,

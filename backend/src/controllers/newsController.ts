@@ -7,7 +7,7 @@ import {
   buildUniqueSlug,
   isNewsStatus,
   NEWS_ORDER,
-  PUBLISHED_WHERE,
+  publishedWhere,
   serializeNews,
   serializeNewsCard,
 } from '../services/newsService'
@@ -31,7 +31,7 @@ function parsePaging(req: Request): { page: number; pageSize: number } {
 export async function listPublishedNews(req: Request, res: Response) {
   try {
     const { page, pageSize } = parsePaging(req)
-    const where: Prisma.NewsWhereInput = { ...PUBLISHED_WHERE }
+    const where: Prisma.NewsWhereInput = publishedWhere()
 
     const [total, items] = await Promise.all([
       prisma.news.count({ where }),
@@ -55,7 +55,7 @@ export async function getPublishedNews(req: Request, res: Response) {
   try {
     const slug = routeParam(req.params.slug)
     const item = await prisma.news.findFirst({
-      where: { slug, ...PUBLISHED_WHERE },
+      where: { slug, ...publishedWhere() },
       include: { author: AUTHOR_SELECT },
     })
 

@@ -66,10 +66,17 @@ export function serializeNewsCard(item: NewsWithAuthor) {
   return card
 }
 
-export const PUBLISHED_WHERE = {
-  status: 'PUBLISHED',
-  publishedAt: { not: null, lte: new Date() },
-} as const
+/**
+ * Условие «опубликовано» вычисляется на каждый запрос.
+ * Константой его делать нельзя: new Date() зафиксировал бы момент старта сервера,
+ * и новости, опубликованные после запуска, не появлялись бы до перезапуска.
+ */
+export function publishedWhere() {
+  return {
+    status: 'PUBLISHED',
+    publishedAt: { not: null, lte: new Date() },
+  }
+}
 
 export const NEWS_ORDER = [{ pinned: 'desc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }] as const
 
