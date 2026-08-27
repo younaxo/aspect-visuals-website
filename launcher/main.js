@@ -198,10 +198,18 @@ ipcMain.handle("discord-oauth", async () => {
     })
 
     const tryCapture = (navUrl) => {
-      const raw = String(navUrl || "")
-      if (!raw.includes("/auth/discord/callback")) return false
+      let parsed
       try {
-        const parsed = new URL(navUrl)
+        parsed = new URL(String(navUrl || ""))
+      } catch (_) {
+        return false
+      }
+
+      // Callback принимаем только с ожидаемого origin и пути, а не по подстроке URL
+      const expected = new URL(CALLBACK_PREFIX)
+      if (parsed.origin !== expected.origin || parsed.pathname !== expected.pathname) return false
+
+      try {
         const error = parsed.searchParams.get("error")
         const code = parsed.searchParams.get("code")
         const state = parsed.searchParams.get("state")
@@ -220,11 +228,30 @@ ipcMain.handle("discord-oauth", async () => {
       }
     }
 
+    // OAuth-окно не должно открывать popup и уходить на посторонние адреса
+    oauthWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }))
+
+    const ALLOWED_OAUTH_ORIGINS = [
+      "https://discord.com",
+      "https://discordapp.com",
+      new URL(CALLBACK_PREFIX).origin,
+    ]
+
+    const isAllowedOAuthUrl = (navUrl) => {
+      try {
+        return ALLOWED_OAUTH_ORIGINS.indexOf(new URL(String(navUrl || "")).origin) !== -1
+      } catch (_) {
+        return false
+      }
+    }
+
     oauthWin.webContents.on("will-redirect", (event, url) => {
-      if (tryCapture(url)) event.preventDefault()
+      if (tryCapture(url)) { event.preventDefault(); return }
+      if (!isAllowedOAuthUrl(url)) event.preventDefault()
     })
     oauthWin.webContents.on("will-navigate", (event, url) => {
-      if (tryCapture(url)) event.preventDefault()
+      if (tryCapture(url)) { event.preventDefault(); return }
+      if (!isAllowedOAuthUrl(url)) event.preventDefault()
     })
     oauthWin.webContents.on("did-navigate", (_event, url) => {
       tryCapture(url)

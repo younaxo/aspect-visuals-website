@@ -11,7 +11,6 @@
     "dist": "node scripts/dist.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.109.0",
     "discord-rpc": "^4.0.1"
   },
   "devDependencies": {
@@ -30,14 +29,11 @@
       "main.js",
       "discord-rpc-ipc.patch.js",
       "index.html",
-      "supabase-config.js",
+      "site-config.js",
       "icon.ico",
       "icon.png",
-      "sounds/click.mp3",
-      "sounds/click.wav",
-      "sounds/intro.mp3",
+      "sounds/**/*",
       "package.json",
-      "node_modules/@supabase/**/*",
       "node_modules/discord-rpc/**/*",
       "node_modules/ws/**/*",
       "node_modules/node-fetch/**/*",
