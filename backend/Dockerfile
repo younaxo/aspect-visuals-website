@@ -9,4 +9,6 @@ COPY . .
 RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 5000
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/index.js"]
+# migrate deploy применяет только незакоммиченные миграции и никогда не удаляет данные.
+# db push --accept-data-loss здесь недопустим: он молча дропает несовпавшие колонки и таблицы.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
