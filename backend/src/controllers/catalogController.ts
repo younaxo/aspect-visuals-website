@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import {
   curseforgeConfigured,
+  getModrinthFile,
   searchCatalog,
   type CatalogKind,
   type CatalogSource,
@@ -41,3 +42,40 @@ function handle(kind: CatalogKind) {
 
 export const searchMods = handle('mod')
 export const searchResourcePacks = handle('resourcepack')
+
+const DEFAULT_GAME_VERSION = '1.21.4'
+
+/** Ссылка на файл для установки в лаунчер. */
+function handleFile(kind: CatalogKind) {
+  return async (req: Request, res: Response) => {
+    try {
+      const source = asString(req.params.source)
+      const id = asString(req.params.id)
+      const gameVersion = asString(req.query.gameVersion) || DEFAULT_GAME_VERSION
+
+      if (!id) {
+        res.status(400).json({ message: 'Не указан идентификатор проекта' })
+        return
+      }
+
+      if (source === 'curseforge') {
+        res.status(503).json({ message: 'CurseForge в разработке' })
+        return
+      }
+
+      if (source !== 'modrinth') {
+        res.status(400).json({ message: 'Неизвестный источник' })
+        return
+      }
+
+      res.json({ file: await getModrinthFile(kind, id, gameVersion) })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Не удалось получить файл'
+      console.error('Catalog file error:', message)
+      res.status(404).json({ message })
+    }
+  }
+}
+
+export const modFile = handleFile('mod')
+export const resourcePackFile = handleFile('resourcepack')

@@ -131,6 +131,70 @@ async function searchCurseForge(kind: CatalogKind, query: string, limit: number)
   }))
 }
 
+export interface CatalogFile {
+  url: string
+  filename: string
+  sha1: string | null
+  size: number | null
+  versionName: string | null
+  gameVersions: string[]
+}
+
+interface ModrinthFile {
+  url?: string
+  filename?: string
+  size?: number
+  primary?: boolean
+  hashes?: { sha1?: string }
+}
+
+interface ModrinthVersion {
+  name?: string
+  version_number?: string
+  game_versions?: string[]
+  loaders?: string[]
+  date_published?: string
+  files?: ModrinthFile[]
+}
+
+/**
+ * Возвращает файл для установки: последняя версия проекта,
+ * подходящая под версию игры и загрузчик.
+ */
+export async function getModrinthFile(
+  kind: CatalogKind,
+  projectId: string,
+  gameVersion: string,
+): Promise<CatalogFile> {
+  const params = new URLSearchParams({ game_versions: JSON.stringify([gameVersion]) })
+  // Ресурспаки в Modrinth помечены загрузчиком minecraft, моды — fabric
+  params.set('loaders', JSON.stringify(kind === 'mod' ? ['fabric'] : ['minecraft']))
+
+  const url = `${MODRINTH_API}/project/${encodeURIComponent(projectId)}/version?${params.toString()}`
+  const versions = (await fetchJson(url, {})) as ModrinthVersion[]
+
+  if (!Array.isArray(versions) || versions.length === 0) {
+    throw new Error(`Нет версии для Minecraft ${gameVersion}`)
+  }
+
+  // Список уже отсортирован от новых к старым
+  for (const version of versions) {
+    const file = (version.files || []).find((f) => f.primary) || (version.files || [])[0]
+    if (file?.url && file.filename) {
+      return {
+        url: file.url,
+        filename: file.filename,
+        sha1: file.hashes?.sha1 ?? null,
+        size: typeof file.size === 'number' ? file.size : null,
+        versionName: version.version_number || version.name || null,
+        gameVersions: version.game_versions || [],
+      }
+    }
+  }
+
+  throw new Error('У версии нет файла для скачивания')
+}
+
 export interface CatalogResult {
   items: CatalogItem[]
   sources: Array<{ source: CatalogSource; ok: boolean; message?: string }>
