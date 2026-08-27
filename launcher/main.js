@@ -4,6 +4,17 @@ const fs = require("fs");
 
 // Windows taskbar: show "Aspect Visuals" instead of "Electron"
 app.setAppUserModelId("com.aspectvisuals.launcher");
+// Имя процесса и приложения: в собранной сборке электрон не должен светиться
+app.setName("Aspect Visuals");
+
+// Иконка для всех окон приложения, включая окна OAuth
+function appIcon() {
+  const ico = path.join(__dirname, "icon.ico");
+  const png = path.join(__dirname, "icon.png");
+  if (fs.existsSync(ico)) return ico;
+  if (fs.existsSync(png)) return png;
+  return undefined;
+}
 
 // Fix: skip logged-out Discord IPC pipes (Stable + Canary)
 (() => {
@@ -244,7 +255,8 @@ ipcMain.handle("discord-oauth", async () => {
       modal: Boolean(mainWindow),
       width: 520,
       height: 740,
-      title: "Discord",
+      title: "Aspect Visuals — Discord",
+      icon: appIcon(),
       autoHideMenuBar: true,
       backgroundColor: "#09090b",
       webPreferences: {
@@ -361,7 +373,8 @@ ipcMain.handle("telegram-oauth", async () => {
       modal: Boolean(mainWindow),
       width: 520,
       height: 640,
-      title: "Telegram",
+      title: "Aspect Visuals — Telegram",
+      icon: appIcon(),
       autoHideMenuBar: true,
       backgroundColor: "#09090b",
       webPreferences: { nodeIntegration: false, contextIsolation: true },
