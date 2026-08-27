@@ -37,11 +37,13 @@ const corsOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || origin === 'null' || origin.startsWith('file://') || corsOrigins.includes(origin)) {
+      // Electron-лаунчер грузит index.html с file://, поэтому Origin отсутствует или равен null
+      const isLauncher = !origin || origin === 'null' || origin.startsWith('file://')
+      if (isLauncher || corsOrigins.includes(origin)) {
         callback(null, true)
         return
       }
-      callback(null, true)
+      callback(new Error(`Origin ${origin} не разрешён политикой CORS`))
     },
     credentials: true,
   }),
@@ -62,10 +64,26 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// Отклонённый CORS не должен превращаться в HTML-страницу 500 от Express
+app.use((err: Error, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err?.message?.includes('политикой CORS')) {
+    res.status(403).json({ message: 'Запрос с этого домена запрещён' })
+    return
+  }
+  next(err)
+})
+
 const server = http.createServer(app)
 const io = new Server(server, {
   cors: {
-    origin: true,
+    origin: (origin, callback) => {
+      const isLauncher = !origin || origin === 'null' || origin.startsWith('file://')
+      if (isLauncher || corsOrigins.includes(origin)) {
+        callback(null, true)
+        return
+      }
+      callback(new Error(`Origin ${origin} не разрешён политикой CORS`))
+    },
     credentials: true,
   },
 })
