@@ -32,8 +32,9 @@ services:
       FRONTEND_URL: https://aspectvisuals.su
       BACKEND_URL: https://aspectvisuals.su
       DISCORD_REDIRECT_URI: https://aspectvisuals.su/auth/discord/callback
-      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
-      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}
+      # TURNSTILE_* намеренно не задаются здесь: блок environment перекрывает env_file,
+      # из-за чего прод раньше работал на тестовых ключах Cloudflare.
+      # Реальные ключи приходят из backend/.env.production
     depends_on:
       postgres:
         condition: service_healthy
