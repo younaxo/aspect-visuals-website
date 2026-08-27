@@ -324,6 +324,103 @@ ipcMain.handle("discord-oauth", async () => {
   })
 })
 
+const TELEGRAM_CALLBACK = "https://aspectvisuals.su/auth/telegram/callback";
+
+ipcMain.handle("telegram-oauth", async () => {
+  const cfg = loadSiteConfig();
+  const apiUrl = String(cfg.apiUrl || "https://aspectvisuals.su").replace(/\/$/, "");
+
+  const configRes = await fetch(`${apiUrl}/api/auth/telegram/config`);
+  const configJson = await configRes.json().catch(() => ({}));
+  if (!configRes.ok || !configJson.botId) {
+    throw new Error(configJson.message || "Вход через Telegram пока недоступен");
+  }
+
+  const expected = new URL(TELEGRAM_CALLBACK);
+  const authUrl =
+    "https://oauth.telegram.org/auth?" +
+    new URLSearchParams({
+      bot_id: String(configJson.botId),
+      origin: expected.origin,
+      return_to: TELEGRAM_CALLBACK,
+      request_access: "write",
+    }).toString();
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (err, payload) => {
+      if (settled) return;
+      settled = true;
+      if (win && !win.isDestroyed()) win.close();
+      if (err) reject(err);
+      else resolve(payload);
+    };
+
+    const win = new BrowserWindow({
+      parent: mainWindow || undefined,
+      modal: Boolean(mainWindow),
+      width: 520,
+      height: 640,
+      title: "Telegram",
+      autoHideMenuBar: true,
+      backgroundColor: "#09090b",
+      webPreferences: { nodeIntegration: false, contextIsolation: true },
+    });
+
+    win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+
+    // Telegram возвращает результат во фрагменте #tgAuthResult=<base64url(json)>
+    const tryCapture = (navUrl) => {
+      let parsed;
+      try {
+        parsed = new URL(String(navUrl || ""));
+      } catch (_) {
+        return false;
+      }
+      if (parsed.origin !== expected.origin || parsed.pathname !== expected.pathname) return false;
+
+      const match = /tgAuthResult=([^&]+)/.exec(parsed.hash || "");
+      if (!match) {
+        finish(new Error("Telegram не вернул данные авторизации"));
+        return true;
+      }
+
+      try {
+        const base64 = match[1].replace(/-/g, "+").replace(/_/g, "/");
+        const json = Buffer.from(base64, "base64").toString("utf8");
+        finish(null, JSON.parse(json));
+      } catch (_) {
+        finish(new Error("Не удалось разобрать ответ Telegram"));
+      }
+      return true;
+    };
+
+    const ALLOWED = ["https://oauth.telegram.org", "https://telegram.org", expected.origin];
+    const allowed = (navUrl) => {
+      try {
+        return ALLOWED.indexOf(new URL(String(navUrl || "")).origin) !== -1;
+      } catch (_) {
+        return false;
+      }
+    };
+
+    win.webContents.on("will-redirect", (event, url) => {
+      if (tryCapture(url)) { event.preventDefault(); return; }
+      if (!allowed(url)) event.preventDefault();
+    });
+    win.webContents.on("will-navigate", (event, url) => {
+      if (tryCapture(url)) { event.preventDefault(); return; }
+      if (!allowed(url)) event.preventDefault();
+    });
+    win.webContents.on("did-redirect-navigation", (_event, url) => { tryCapture(url); });
+    win.webContents.on("did-navigate", (_event, url) => { tryCapture(url); });
+
+    win.on("closed", () => finish(new Error("Вход через Telegram закрыт")));
+
+    win.loadURL(authUrl);
+  });
+});
+
 app.whenReady().then(() => {
   createWindow();
   initDiscordRPC();

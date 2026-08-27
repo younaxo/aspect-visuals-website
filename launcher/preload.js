@@ -34,4 +34,6 @@ contextBridge.exposeInMainWorld("av", {
   openExternal: (url) => ipcRenderer.invoke("open-external", String(url || "")),
 
   discordOAuth: () => ipcRenderer.invoke("discord-oauth"),
+
+  telegramOAuth: () => ipcRenderer.invoke("telegram-oauth"),
 });

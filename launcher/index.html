@@ -243,6 +243,22 @@
     .news-item:last-child { border-bottom: 0; }
     .role-chip { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; color: #fafafa; font-size: 13px; }
     .role-chip img { width: 14px; height: 14px; object-fit: contain; }
+    .settings-group-title { margin-top: 28px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #71717a; }
+    .game-profile { margin-top: 12px; padding: 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
+    .game-nick-field { display: flex; flex-direction: column; gap: 6px; }
+    .game-nick-field span { font-size: 13px; color: #a1a1aa; }
+    .game-nick-field .catalog-input { flex: none; width: 100%; max-width: 280px; }
+    .game-nick-hint { margin-top: 6px; font-size: 12px; color: #71717a; }
+    .game-nick-hint.is-error { color: #f87171; }
+    .game-nick-hint.is-ok { color: #4ade80; }
+    .ms-link-row { margin-top: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ms-link-btn {
+      display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px;
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04);
+      color: #a1a1aa; font-size: 13px; font-family: inherit;
+    }
+    .ms-link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ms-link-badge { padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.08); color: #71717a; font-size: 11px; }
     .catalog-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
     .catalog-input, .catalog-select {
       height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
@@ -748,7 +764,31 @@
               <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Настройки</h2>
                 <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Синхронизируются с сайтом.</p>
-                <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
+
+                <h3 class="settings-group-title">Игровой профиль</h3>
+                <div class="game-profile">
+                  <label class="game-nick-field">
+                    <span>Никнейм в игре</span>
+                    <input type="text" id="gameNick" class="catalog-input" maxlength="16" placeholder="Steve" autocomplete="off" />
+                  </label>
+                  <p id="gameNickHint" class="game-nick-hint">От 3 до 16 символов: латиница, цифры и подчёркивание.</p>
+
+                  <div class="ms-link-row">
+                    <button type="button" class="ms-link-btn" id="btnMicrosoftLink" disabled aria-disabled="true">
+                      <svg viewBox="0 0 23 23" width="16" height="16" aria-hidden="true">
+                        <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
+                        <rect x="12" y="1" width="10" height="10" fill="#7fba00"/>
+                        <rect x="1" y="12" width="10" height="10" fill="#00a4ef"/>
+                        <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+                      </svg>
+                      <span>Привязать лицензию Microsoft</span>
+                    </button>
+                    <span class="ms-link-badge">Скоро</span>
+                  </div>
+                </div>
+
+                <h3 class="settings-group-title">Интерфейс</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;">
                   <div class="field"><span>Компактный сайдбар</span><button type="button" class="toggle interactive" id="toggleCompact"></button></div>
                   <div class="field"><span>Звуки интерфейса</span><button type="button" class="toggle interactive" id="toggleSound"></button></div>
                   <div class="field"><span>Анимации</span><button type="button" class="toggle interactive" id="toggleAnim"></button></div>
@@ -1429,9 +1469,30 @@
         });
       }
       if (authTelegram) {
-        authTelegram.addEventListener("click", () => {
-          authError.style.color = "#a1a1aa";
-          authError.textContent = "Вход через Telegram пока недоступен.";
+        authTelegram.addEventListener("click", async () => {
+          authError.textContent = "";
+          authError.style.color = "#f87171";
+          authTelegram.disabled = true;
+          try {
+            if (!av || !av.telegramOAuth) {
+              throw new Error("Откройте лаунчер как приложение, чтобы войти через Telegram.");
+            }
+            const payload = await av.telegramOAuth();
+            const data = await apiFetch("/api/auth/telegram", {
+              method: "POST",
+              body: JSON.stringify(payload),
+            });
+            saveSession(data);
+            enterLauncher(data.user, { settings: data.settings });
+          } catch (err) {
+            const msg = (err && err.message) || "Вход через Telegram пока недоступен";
+            // Отмена и неготовая интеграция — не ошибки, показываем спокойно
+            const soft = /закрыт|отмен|недоступен|не настроен/i.test(msg);
+            authError.style.color = soft ? "#a1a1aa" : "#f87171";
+            authError.textContent = soft ? "Вход через Telegram пока недоступен." : msg;
+          } finally {
+            authTelegram.disabled = false;
+          }
         });
       }
 
@@ -1720,6 +1781,48 @@
         }
       });
       void refreshBonusUi();
+
+      // Игровой ник — локальная настройка запуска, рядом с lastPlayMode и skipPlayModal.
+      // Серверные данные аккаунта здесь не хранятся.
+      const GAME_NICK_KEY = "aspect-game-nick";
+      const NICK_RE = /^[A-Za-z0-9_]{3,16}$/;
+
+      function getGameNick() {
+        const stored = (localStorage.getItem(GAME_NICK_KEY) || "").trim();
+        if (stored) return stored;
+        const fromAccount = currentUser && currentUser.username ? String(currentUser.username) : "";
+        return NICK_RE.test(fromAccount) ? fromAccount : "";
+      }
+
+      function initGameNick() {
+        const input = document.getElementById("gameNick");
+        const hint = document.getElementById("gameNickHint");
+        if (!input || !hint) return;
+
+        input.value = getGameNick();
+
+        const setHint = (text, state) => {
+          hint.textContent = text;
+          hint.classList.toggle("is-error", state === "error");
+          hint.classList.toggle("is-ok", state === "ok");
+        };
+
+        input.addEventListener("input", () => {
+          const value = input.value.trim();
+          if (!value) {
+            localStorage.removeItem(GAME_NICK_KEY);
+            setHint("От 3 до 16 символов: латиница, цифры и подчёркивание.", null);
+            return;
+          }
+          if (!NICK_RE.test(value)) {
+            setHint("Недопустимый ник: только латиница, цифры и подчёркивание, 3–16 символов.", "error");
+            return;
+          }
+          localStorage.setItem(GAME_NICK_KEY, value);
+          setHint("Ник сохранён.", "ok");
+        });
+      }
+      initGameNick();
 
       // Каталоги модов и ресурспаков: данные идут через наш backend,
       // ключ CurseForge не покидает сервер

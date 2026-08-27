@@ -645,7 +645,9 @@ export async function turnstileConfig(_req: Request, res: Response) {
 
 export async function telegramConfig(_req: Request, res: Response) {
   try {
-    const { getTelegramBotUsername, telegramConfigured } = await import('../services/telegramService')
+    const { getTelegramBotId, getTelegramBotUsername, telegramConfigured } = await import(
+      '../services/telegramService'
+    )
     if (!telegramConfigured()) {
       res.status(503).json({ message: 'Telegram-бот не настроен' })
       return
@@ -655,7 +657,8 @@ export async function telegramConfig(_req: Request, res: Response) {
       res.status(503).json({ message: 'Не удалось получить имя бота' })
       return
     }
-    res.json({ botUsername })
+    // botId нужен лаунчеру для oauth.telegram.org, сам токен наружу не уходит
+    res.json({ botUsername, botId: getTelegramBotId() })
   } catch (error) {
     console.error('Telegram config error:', error)
     res.status(500).json({ message: 'Не удалось загрузить Telegram' })

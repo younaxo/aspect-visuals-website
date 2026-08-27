@@ -18,6 +18,16 @@ export function telegramConfigured() {
   return botToken().length > 20
 }
 
+/**
+ * bot_id — числовая часть токена до двоеточия.
+ * Это публичное значение: оно присутствует в каждом Telegram Login Widget.
+ * Сам токен наружу не отдаётся.
+ */
+export function getTelegramBotId(): string | null {
+  const id = botToken().split(':')[0]
+  return /^\d+$/.test(id) ? id : null
+}
+
 export async function getTelegramBotUsername(): Promise<string | null> {
   const token = botToken()
   if (!token) return null
