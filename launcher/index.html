@@ -2236,8 +2236,7 @@
         modeModal.classList.remove("open");
         modeModal.setAttribute("aria-hidden", "true");
       }
-      // Реальная подготовка клиента: прогресс приходит из main-процесса,
-      // никаких заранее заданных таймеров
+      // Запуск собственного клиента Aspect: прогресс приходит из main-процесса
       let launchBusy = false;
 
       function logLine(text) {
@@ -2247,16 +2246,13 @@
         loadingLog.scrollTop = loadingLog.scrollHeight;
       }
 
-      // Каждая стадия занимает свою долю общей полосы прогресса
+      // Каждая стадия занимает свою долю полосы прогресса
       const STAGE_WEIGHT = {
-        meta: [0, 2],
-        client: [2, 12],
-        libraries: [12, 34],
-        natives: [34, 38],
-        assets: [38, 88],
-        "fabric-meta": [88, 90],
-        "fabric-libraries": [90, 98],
-        servers: [98, 100],
+        manifest: [0, 8],
+        verify: [8, 20],
+        download: [20, 88],
+        apply: [88, 95],
+        token: [95, 100],
       };
 
       let lastStage = null;
@@ -2275,39 +2271,42 @@
 
       async function startLaunch(mode) {
         if (launchBusy) return;
-        if (!av || !av.minecraft) { toast("Откройте лаунчер как приложение"); return; }
+        if (!av || !av.client) { toast("Откройте лаунчер как приложение"); return; }
+        if (!accessToken) { toast("Войдите в аккаунт"); return; }
 
         launchBusy = true;
         closeModeModal();
         lastStage = null;
-        loadingTitle.textContent = mode === "solo" ? "Одиночная игра" : "Зайти на TwoMC";
+        loadingTitle.textContent = mode === "solo" ? "Одиночная игра" : "Aspect Visuals";
         loadingStatus.textContent = "Подготовка клиента…";
         loadingProgress.style.width = "0%";
         loadingLog.innerHTML = "";
         loadingScreen.classList.add("open");
         loadingScreen.setAttribute("aria-hidden", "false");
 
-        const unsubscribe = av.minecraft.onProgress(applyProgress);
+        const offProgress = av.client.onProgress(applyProgress);
+        const offExit = av.client.onExit((info) => {
+          const reason = info.error ? info.error : "код " + info.code;
+          toast("Клиент завершил работу (" + reason + ")");
+        });
 
         try {
-          const result = await av.minecraft.prepare();
+          const result = await av.client.launch(accessToken);
           loadingProgress.style.width = "100%";
-          logLine("> Клиент готов: " + result.version + " · Fabric " + result.loaderVersion);
-          logLine("> Сервер play.twomc.su добавлен в список");
+          loadingStatus.textContent = "Клиент запущен";
+          logLine("> Версия " + result.version + (result.updated ? " (обновлено)" : ""));
+          logLine("> Клиент запущен, PID " + result.pid);
 
-          if (!result.java) {
-            loadingStatus.textContent = "Нужна Java " + result.minJava + " или новее";
-            logLine("> Java " + result.minJava + "+ не найдена, установите её");
-          } else {
-            loadingStatus.textContent = "Клиент готов";
-            logLine("> Java: " + result.java.raw);
-            logLine("> Запуск требует входа через Microsoft — он ещё не подключён");
-          }
+          setTimeout(() => {
+            loadingScreen.classList.remove("open");
+            loadingScreen.setAttribute("aria-hidden", "true");
+          }, 1600);
         } catch (err) {
-          loadingStatus.textContent = "Ошибка подготовки";
+          loadingStatus.textContent = "Не удалось запустить";
           logLine("> " + ((err && err.message) || "неизвестная ошибка"));
         } finally {
-          unsubscribe();
+          offProgress();
+          offExit();
           launchBusy = false;
         }
       }
@@ -2511,10 +2510,10 @@
       let installedFiles = { mods: [], resourcepacks: [] };
 
       async function refreshInstalled() {
-        if (!av || !av.minecraft) return;
+        if (!av || !av.client) return;
         try {
-          const status = await av.minecraft.status();
-          installedFiles = status.installed || { mods: [], resourcepacks: [] };
+          const status = await av.client.status();
+          installedFiles = status.content || { mods: [], resourcepacks: [] };
         } catch (err) {
           console.warn("[MC]", err.message || err);
         }
@@ -2590,7 +2589,7 @@
           const previous = btn.textContent;
           try {
             if (btn.dataset.filename) {
-              await av.minecraft.removeContent(kind, btn.dataset.filename);
+              await av.client.removeContent(kind, btn.dataset.filename);
               toast("Удалено: " + btn.dataset.filename);
               delete btn.dataset.filename;
             } else {
@@ -2599,7 +2598,7 @@
                 "/api/catalog/" + name + "/" + item.source + "/" + encodeURIComponent(item.id) + "/file",
                 { method: "GET" },
               );
-              const saved = await av.minecraft.installContent(kind, data.file);
+              const saved = await av.client.installContent(kind, data.file);
               btn.dataset.filename = saved.filename;
               toast("Установлено: " + saved.filename);
             }

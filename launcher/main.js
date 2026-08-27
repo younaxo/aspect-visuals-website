@@ -336,63 +336,61 @@ ipcMain.handle("discord-oauth", async () => {
   })
 })
 
-// --- Minecraft: подготовка клиента и управление контентом ---
-const minecraft = require("./minecraft");
+// --- Собственный клиент Aspect: обновление и запуск ---
+const gameClient = require("./client");
 
-let prepareInFlight = null;
+let launchInFlight = null;
 
-ipcMain.handle("mc-prepare", async () => {
-  // Повторный вызов не запускает вторую установку
-  if (prepareInFlight) return prepareInFlight;
+function clientApiUrl() {
+  const cfg = loadSiteConfig();
+  return String(cfg.apiUrl || "https://aspectvisuals.su").replace(/\/$/, "");
+}
 
-  prepareInFlight = (async () => {
+ipcMain.handle("client-status", async () => gameClient.status());
+
+ipcMain.handle("client-launch", async (_event, accessToken) => {
+  if (launchInFlight) return launchInFlight;
+  if (!accessToken) throw new Error("Нужна авторизация");
+
+  launchInFlight = (async () => {
     try {
-      return await minecraft.prepareClient((progress) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send("mc-progress", progress);
-        }
+      return await gameClient.prepareAndLaunch({
+        apiUrl: clientApiUrl(),
+        accessToken,
+        onProgress: (progress) => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("client-progress", progress);
+          }
+        },
+        onExit: (info) => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("client-exit", info);
+          }
+        },
       });
     } finally {
-      prepareInFlight = null;
+      launchInFlight = null;
     }
   })();
 
-  return prepareInFlight;
+  return launchInFlight;
 });
 
-ipcMain.handle("mc-status", async () => {
-  const { findJava } = require("./minecraft/java");
-  const java = await findJava(minecraft.MIN_JAVA);
-  return {
-    version: minecraft.TARGET_VERSION,
-    root: minecraft.paths.root,
-    minJava: minecraft.MIN_JAVA,
-    java: java.java,
-    javaInstalled: java.installed,
-    installed: minecraft.listInstalled(),
-  };
-});
+ipcMain.handle("client-stop", async () => ({ stopped: gameClient.stopClient() }));
 
-ipcMain.handle("mc-install-content", async (_event, kind, item) => {
+ipcMain.handle("client-install-content", async (_event, kind, item) => {
   if (kind !== "mod" && kind !== "resourcepack") throw new Error("Неизвестный тип контента");
-  return minecraft.installContent(kind, item);
+  return gameClient.installContent(kind, item);
 });
 
-ipcMain.handle("mc-remove-content", async (_event, kind, filename) => {
+ipcMain.handle("client-remove-content", async (_event, kind, filename) => {
   if (kind !== "mod" && kind !== "resourcepack") throw new Error("Неизвестный тип контента");
-  return minecraft.removeContent(kind, filename);
+  return gameClient.removeContent(kind, filename);
 });
 
-ipcMain.handle("mc-open-folder", async (_event, which) => {
-  const map = {
-    root: minecraft.paths.root,
-    mods: minecraft.paths.mods,
-    resourcepacks: minecraft.paths.resourcepacks,
-  };
-  const target = map[which];
-  if (!target) throw new Error("Неизвестная папка");
-  await shell.openPath(target);
-  return { ok: true, path: target };
+ipcMain.handle("client-open-folder", async () => {
+  await shell.openPath(gameClient.paths.root);
+  return { ok: true, path: gameClient.paths.root };
 });
 
 // Капча встраивается прямо в окно лаунчера отдельным слоем.

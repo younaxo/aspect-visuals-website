@@ -48,17 +48,22 @@ contextBridge.exposeInMainWorld("av", {
     },
   },
 
-  minecraft: {
-    status: () => ipcRenderer.invoke("mc-status"),
-    prepare: () => ipcRenderer.invoke("mc-prepare"),
-    installContent: (kind, item) => ipcRenderer.invoke("mc-install-content", kind, item),
-    removeContent: (kind, filename) => ipcRenderer.invoke("mc-remove-content", kind, filename),
-    openFolder: (which) => ipcRenderer.invoke("mc-open-folder", which),
-    // Подписка на прогресс: возвращает функцию отписки, слушатель наружу не утекает
+  client: {
+    status: () => ipcRenderer.invoke("client-status"),
+    launch: (accessToken) => ipcRenderer.invoke("client-launch", accessToken),
+    stop: () => ipcRenderer.invoke("client-stop"),
+    openFolder: () => ipcRenderer.invoke("client-open-folder"),
+    installContent: (kind, item) => ipcRenderer.invoke("client-install-content", kind, item),
+    removeContent: (kind, filename) => ipcRenderer.invoke("client-remove-content", kind, filename),
     onProgress: (callback) => {
       const handler = (_event, payload) => callback(payload);
-      ipcRenderer.on("mc-progress", handler);
-      return () => ipcRenderer.removeListener("mc-progress", handler);
+      ipcRenderer.on("client-progress", handler);
+      return () => ipcRenderer.removeListener("client-progress", handler);
+    },
+    onExit: (callback) => {
+      const handler = (_event, payload) => callback(payload);
+      ipcRenderer.on("client-exit", handler);
+      return () => ipcRenderer.removeListener("client-exit", handler);
     },
   },
 });
