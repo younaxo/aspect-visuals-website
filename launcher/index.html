@@ -241,19 +241,32 @@
     .toggle.off::after { left: 2px; background: #a1a1aa; }
     .news-item { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .news-item:last-child { border-bottom: 0; }
-    .nav-admin { display: none !important; }
-    .nav-admin.is-on { display: flex !important; }
     .role-chip { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; color: #fafafa; font-size: 13px; }
     .role-chip img { width: 14px; height: 14px; object-fit: contain; }
-    .shop-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-    .stat { padding: 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
-    .stat span { display: block; font-size: 12px; color: #71717a; }
-    .stat b { display: block; margin-top: 8px; font-size: 18px; color: #fafafa; }
-    .shop-filter {
-      height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04); color: #a1a1aa; font-size: 12px; cursor: pointer; font-family: inherit;
+    .catalog-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .catalog-input, .catalog-select {
+      height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); color: #fafafa; font-size: 13px; font-family: inherit; outline: none;
     }
-    .shop-filter.active { background: #fafafa; color: #09090b; }
+    .catalog-input { flex: 1; min-width: 200px; }
+    .catalog-input:focus, .catalog-select:focus { border-color: rgba(255,255,255,0.24); }
+    .catalog-input::placeholder { color: #71717a; }
+    .catalog-select option { background: #18181b; color: #fafafa; }
+    .catalog-btn { height: 36px; width: auto; padding: 0 18px; }
+    .catalog-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .catalog-status { margin-top: 12px; font-size: 13px; color: #71717a; min-height: 18px; }
+    .catalog-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .catalog-card { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+    .catalog-card img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: rgba(255,255,255,0.06); }
+    .catalog-card-body { min-width: 0; }
+    .catalog-card-title { font-size: 13px; font-weight: 500; color: #fafafa; overflow-wrap: anywhere; }
+    .catalog-card-desc {
+      margin-top: 4px; font-size: 12px; color: #71717a; overflow-wrap: anywhere;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .catalog-card-meta { margin-top: 6px; font-size: 11px; color: #52525b; }
+    .catalog-source { display: inline-block; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,0.08); color: #a1a1aa; }
+    @media (max-width: 1000px) { .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .account-rows { display: grid; gap: 10px; margin-top: 16px; }
     .account-rows div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
     .account-rows dt { color: #71717a; }
@@ -526,21 +539,18 @@
           <nav class="sidebar-nav">
             <button type="button" class="nav-item tip interactive active" data-view="home" data-tip="Главная"><svg class="icon" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nav-label">Главная</span></button>
             <button type="button" class="nav-item tip interactive" data-view="news" data-tip="Новости"><svg class="icon" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/></svg><span class="nav-label">Новости</span></button>
-            <button type="button" class="nav-item tip interactive" data-view="shop" data-tip="Магазин"><svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="nav-label">Магазин</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="mods" data-tip="Моды"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span class="nav-label">Моды</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="resourcepacks" data-tip="Ресурспаки"><svg class="icon" viewBox="0 0 24 24"><path d="M3 5a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 11h18"/></svg><span class="nav-label">Ресурспаки</span></button>
             <div class="nav-sep"></div>
             <button type="button" class="nav-item tip interactive" data-view="account" data-tip="Аккаунт"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg><span class="nav-label">Аккаунт</span></button>
             <button type="button" class="nav-item tip interactive" data-view="profile" data-tip="Профиль"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h8M8 14h5"/></svg><span class="nav-label">Профиль</span></button>
             <button type="button" class="nav-item tip interactive" data-view="balance" data-tip="Баланс"><svg class="icon" viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1ZM16 12h.01"/></svg><span class="nav-label">Баланс</span></button>
             <button type="button" class="nav-item tip interactive" data-view="subscriptions" data-tip="Подписки"><svg class="icon" viewBox="0 0 24 24"><path d="m12 3 2.4 6.6H21l-5.4 4 2.1 6.4L12 16.8 6.3 20l2.1-6.4L3 9.6h6.6Z"/></svg><span class="nav-label">Подписки</span></button>
-            <button type="button" class="nav-item tip interactive" data-view="download" data-tip="Скачать клиент"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg><span class="nav-label">Скачать клиент</span></button>
             <button type="button" class="nav-item tip interactive" data-view="settings" data-tip="Настройки"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg><span class="nav-label">Настройки</span></button>
             <div class="nav-sep"></div>
             <button type="button" class="nav-item tip interactive" data-view="bonus" data-tip="Ежедневный бонус"><svg class="icon" viewBox="0 0 24 24"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 7V3M12 22V12"/></svg><span class="nav-label">Ежедневный бонус</span></button>
             <button type="button" class="nav-item tip interactive" data-view="configs" data-tip="Конфиги"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></svg><span class="nav-label">Конфиги</span></button>
             <button type="button" class="nav-item tip interactive" data-view="cosmetics" data-tip="Косметика"><svg class="icon" viewBox="0 0 24 24"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/></svg><span class="nav-label">Косметика</span></button>
-            <div class="nav-sep"></div>
-            <button type="button" class="nav-item tip interactive" data-view="support" data-tip="Поддержка"><svg class="icon" viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4.2 2.8c-.8.4-1.2.9-1.2 1.7V14m0 4h.01"/></svg><span class="nav-label">Поддержка</span></button>
-            <button type="button" class="nav-item tip interactive nav-admin" data-view="admin" data-tip="Админ-панель"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7l-8-4Z"/></svg><span class="nav-label">Админ-панель</span></button>
           </nav>
 
           <div class="socials">
@@ -639,13 +649,40 @@
                 <div id="rolesCatalog" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;"></div>
               </div>
             </div>
-            <div class="view" id="view-shop">
+            <div class="view" id="view-mods">
               <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
-                <p style="font-size:12px;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">Магазин</p>
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Пакеты и дополнения</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Цены в рублях. После оплаты роль в Discord выдаётся, если она задана у тарифа.</p>
-                <div class="shop-filters" id="shopFilters"></div>
-                <div id="shopGrid" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+                <p style="font-size:12px;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">Моды</p>
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Каталог модов</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Поиск по Modrinth и CurseForge.</p>
+                <div class="catalog-controls">
+                  <input type="text" id="modsSearch" class="catalog-input" placeholder="Название мода" />
+                  <select id="modsSource" class="catalog-select">
+                    <option value="all">Все источники</option>
+                    <option value="modrinth">Modrinth</option>
+                    <option value="curseforge">CurseForge</option>
+                  </select>
+                  <button type="button" class="play-btn interactive catalog-btn" id="modsSearchBtn">Найти</button>
+                </div>
+                <p id="modsStatus" class="catalog-status"></p>
+                <div id="modsGrid" class="catalog-grid"></div>
+              </div>
+            </div>
+            <div class="view" id="view-resourcepacks">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <p style="font-size:12px;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">Ресурспаки</p>
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Каталог ресурспаков</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Поиск по Modrinth и CurseForge.</p>
+                <div class="catalog-controls">
+                  <input type="text" id="packsSearch" class="catalog-input" placeholder="Название ресурспака" />
+                  <select id="packsSource" class="catalog-select">
+                    <option value="all">Все источники</option>
+                    <option value="modrinth">Modrinth</option>
+                    <option value="curseforge">CurseForge</option>
+                  </select>
+                  <button type="button" class="play-btn interactive catalog-btn" id="packsSearchBtn">Найти</button>
+                </div>
+                <p id="packsStatus" class="catalog-status"></p>
+                <div id="packsGrid" class="catalog-grid"></div>
               </div>
             </div>
             <div class="view" id="view-account">
@@ -682,13 +719,6 @@
                 <div id="accountSubs" style="margin-top:20px;display:flex;flex-direction:column;gap:8px;"></div>
               </div>
             </div>
-            <div class="view" id="view-download">
-              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Как установить</h2>
-                <ol id="downloadSteps" style="margin-top:20px;padding-left:20px;color:#a1a1aa;font-size:13px;line-height:1.6;"></ol>
-                <button type="button" class="play-btn interactive" id="btnDownloadLauncher" style="margin-top:20px;width:auto;padding:0 18px;">Скачать лаунчер</button>
-              </div>
-            </div>
             <div class="view" id="view-bonus">
               <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Ежедневный бонус</h2>
@@ -713,20 +743,6 @@
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Косметика</h2>
                 <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Визуальные пакеты и оформление клиента.</p>
                 <div id="cosmeticsGrid" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
-              </div>
-            </div>
-            <div class="view" id="view-support">
-              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Поддержка</h2>
-                <p id="supportText" style="margin-top:8px;font-size:14px;color:#a1a1aa;"></p>
-                <div id="legalList" style="margin-top:20px;display:flex;flex-direction:column;gap:8px;"></div>
-              </div>
-            </div>
-            <div class="view" id="view-admin">
-              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Админ-панель</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Сводка с сайта.</p>
-                <div id="adminStats" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
               </div>
             </div>
             <div class="view" id="view-settings">
@@ -1058,10 +1074,6 @@
             ? items.map((s) => "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + (s.name || "Подписка") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + (s.expiresAt ? "до " + new Date(s.expiresAt).toLocaleDateString("ru-RU") : "навсегда") + "</p></div>").join("")
             : "<p style='font-size:13px;color:#71717a;'>Нет активных подписок</p>";
         }
-        document.querySelectorAll(".nav-admin").forEach((el) => {
-          el.classList.toggle("is-on", isPanelAdmin(user));
-        });
-
         applySyncedSettings(siteSettings, false);
       }
 
@@ -1114,13 +1126,7 @@
         void loadSiteContent();
       }
 
-      const ADMIN_ROLE_IDS = ["1541875062208995328", "1541784961986596874", "1541875599331561604"];
       let siteCatalog = null;
-      let shopFilter = "all";
-
-      function isPanelAdmin(user) {
-        return ((user && user.roles) || []).some((role) => ADMIN_ROLE_IDS.indexOf(role.discordId) !== -1);
-      }
 
       function renderUserRoles(user) {
         const roles = (user && user.roles) || [];
@@ -1134,33 +1140,19 @@
         }).join("");
       }
 
+      // Данные приходят из базы и от внешних каталогов, поэтому перед вставкой в innerHTML экранируем
+      function escapeHtml(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
       function renderCards(host, items, mapFn) {
         if (!host) return;
         host.innerHTML = items && items.length ? items.map(mapFn).join("") : "<p style='font-size:13px;color:#71717a;'>Пока пусто</p>";
-      }
-
-      function renderShop() {
-        const host = document.getElementById("shopGrid");
-        if (!host || !siteCatalog || !siteCatalog.shop) return;
-        const subs = siteCatalog.shop.subscriptions || [];
-        const products = siteCatalog.shop.products || [];
-        const isPremium = (item) => item.type === "PREMIUM";
-        const isLife = (item) => Number(item.duration) <= 0;
-        let list = [];
-        if (shopFilter === "PRODUCTS") list = products.map((p) => Object.assign({ kind: "product" }, p));
-        else {
-          list = subs.filter((item) => {
-            if (shopFilter === "all") return true;
-            if (shopFilter === "BASIC") return !isPremium(item);
-            if (shopFilter === "PREMIUM") return isPremium(item);
-            if (shopFilter === "LIFETIME") return isLife(item);
-            return true;
-          }).map((s) => Object.assign({ kind: "sub" }, s));
-        }
-        renderCards(host, list, (item) => {
-          const meta = item.kind === "product" ? (item.price + " ₽") : (item.price + " ₽" + (item.duration > 0 ? " · " + item.duration + " дн." : " · навсегда"));
-          return "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + (item.name || "Товар") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + meta + "</p><p style='margin-top:6px;font-size:12px;color:#71717a;'>" + (item.description || "") + "</p></div>";
-        });
       }
 
       async function loadSiteContent() {
@@ -1172,53 +1164,17 @@
         }
         const news = document.getElementById("newsList");
         if (news) {
-          news.innerHTML = (siteCatalog.news || []).map((item) => (
-            "<div class='news-item'><p style='font-size:12px;color:#52525b;'>" + (item.date || "") + "</p><p style='margin-top:4px;font-size:14px;font-weight:500;color:#fafafa;'>" + item.title + "</p><p style='margin-top:4px;font-size:13px;color:#71717a;'>" + (item.text || "") + "</p></div>"
-          )).join("") || "<p style='font-size:13px;color:#71717a;'>Нет новостей</p>";
+          news.innerHTML = (siteCatalog.news || []).map((item) => {
+            const date = item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("ru-RU") : "";
+            return "<div class='news-item'><p style='font-size:12px;color:#52525b;'>" + escapeHtml(date) + "</p><p style='margin-top:4px;font-size:14px;font-weight:500;color:#fafafa;'>" + escapeHtml(item.title) + "</p><p style='margin-top:4px;font-size:13px;color:#71717a;'>" + escapeHtml(item.excerpt || "") + "</p></div>";
+          }).join("") || "<p style='font-size:13px;color:#71717a;'>Нет новостей</p>";
         }
-        const filters = document.getElementById("shopFilters");
-        if (filters && !filters.dataset.ready) {
-          filters.dataset.ready = "1";
-          [["all", "Все"], ["BASIC", "Базовые"], ["PREMIUM", "Премиум"], ["LIFETIME", "Навсегда"], ["PRODUCTS", "Допы"]].forEach(([value, label]) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "shop-filter interactive" + (value === "all" ? " active" : "");
-            btn.textContent = label;
-            btn.addEventListener("click", () => {
-              shopFilter = value;
-              filters.querySelectorAll(".shop-filter").forEach((el) => el.classList.toggle("active", el === btn));
-              renderShop();
-            });
-            filters.appendChild(btn);
-          });
-        }
-        renderShop();
         renderCards(document.getElementById("configsGrid"), siteCatalog.configs, (item) => (
-          "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + item.name + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + item.desc + "</p></div>"
+          "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + escapeHtml(item.name) + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + escapeHtml(item.description || "") + "</p></div>"
         ));
         renderCards(document.getElementById("cosmeticsGrid"), siteCatalog.cosmetics, (item) => (
-          "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + item.name + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + item.status + "</p></div>"
+          "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + escapeHtml(item.name) + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + escapeHtml(item.status === "SOON" ? "Скоро" : "Доступно") + "</p></div>"
         ));
-        const steps = document.getElementById("downloadSteps");
-        if (steps && siteCatalog.download) {
-          steps.innerHTML = (siteCatalog.download.steps || []).map((step, i) => (
-            "<li style='margin-bottom:12px;'><strong style='color:#fafafa;'>" + (i + 1) + ". " + step.title + "</strong><br/>" + step.text + "</li>"
-          )).join("");
-        }
-        const supportText = document.getElementById("supportText");
-        if (supportText && siteCatalog.support) supportText.textContent = siteCatalog.support.text;
-        const legal = document.getElementById("legalList");
-        if (legal) {
-          legal.innerHTML = (siteCatalog.legal || []).map((item) => (
-            "<button type='button' class='lib-card interactive legal-link' data-url='" + (item.url || (SITE_URL + "/" + item.slug)) + "' style='text-align:left;width:100%;'><p style='font-size:13px;color:#fafafa;'>" + item.title + "</p></button>"
-          )).join("");
-          legal.querySelectorAll(".legal-link").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const url = btn.getAttribute("data-url");
-              if (url && shell) shell.openExternal(url);
-            });
-          });
-        }
         const rolesCat = document.getElementById("rolesCatalog");
         if (rolesCat) {
           rolesCat.innerHTML = (siteCatalog.roles || []).map((role) => (
@@ -1521,8 +1477,9 @@
           document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
           const panel = document.getElementById("view-" + item.dataset.view);
           if (panel) panel.classList.add("active");
-          if (item.dataset.view === "admin") void loadAdminDashboard();
           if (item.dataset.view === "bonus") void refreshBonusUi();
+          if (item.dataset.view === "mods") void ensureCatalogLoaded("mods");
+          if (item.dataset.view === "resourcepacks") void ensureCatalogLoaded("resourcepacks");
         });
       });
 
@@ -1782,30 +1739,101 @@
       });
       void refreshBonusUi();
 
-      document.getElementById("btnDownloadLauncher").addEventListener("click", () => {
-        const url = (siteCatalog && siteCatalog.download && siteCatalog.download.url)
-          || "https://cdn-files.aspectvisuals.su/launcher/AspectVisualsSetup.exe";
-        if (window.av && window.av.openExternal) window.av.openExternal(url);
-        else window.open(url, "_blank");
-      });
+      // Каталоги модов и ресурспаков: данные идут через наш backend,
+      // ключ CurseForge не покидает сервер
+      const CATALOGS = {
+        mods: { path: "/api/catalog/mods", loaded: false, els: { search: "modsSearch", source: "modsSource", btn: "modsSearchBtn", status: "modsStatus", grid: "modsGrid" } },
+        resourcepacks: { path: "/api/catalog/resourcepacks", loaded: false, els: { search: "packsSearch", source: "packsSource", btn: "packsSearchBtn", status: "packsStatus", grid: "packsGrid" } },
+      };
 
-      async function loadAdminDashboard() {
-        const box = document.getElementById("adminStats");
-        if (!box || !accessToken || !isPanelAdmin(currentUser)) return;
+      function formatDownloads(value) {
+        const n = Number(value) || 0;
+        if (n >= 1000000) return (n / 1000000).toFixed(1).replace(".0", "") + "M";
+        if (n >= 1000) return (n / 1000).toFixed(1).replace(".0", "") + "K";
+        return String(n);
+      }
+
+      function renderCatalogItems(grid, items) {
+        if (!items.length) {
+          grid.innerHTML = "<p style='font-size:13px;color:#71717a;'>Ничего не найдено</p>";
+          return;
+        }
+        grid.innerHTML = items.map((item) => {
+          const icon = item.iconUrl
+            ? "<img src='" + escapeHtml(item.iconUrl) + "' alt='' loading='lazy' />"
+            : "<img alt='' />";
+          const author = item.author ? " · " + escapeHtml(item.author) : "";
+          return "<div class='lib-card catalog-card' data-url='" + escapeHtml(item.pageUrl || "") + "'>"
+            + icon
+            + "<div class='catalog-card-body'>"
+            + "<p class='catalog-card-title'>" + escapeHtml(item.name) + "</p>"
+            + "<p class='catalog-card-desc'>" + escapeHtml(item.description) + "</p>"
+            + "<p class='catalog-card-meta'><span class='catalog-source'>" + escapeHtml(item.source) + "</span> "
+            + formatDownloads(item.downloads) + " загрузок" + author + "</p>"
+            + "</div></div>";
+        }).join("");
+
+        // Страница мода открывается во внешнем браузере — это внешний ресурс
+        grid.querySelectorAll(".catalog-card").forEach((card) => {
+          const url = card.getAttribute("data-url");
+          if (!url) return;
+          card.classList.add("interactive");
+          card.style.cursor = "pointer";
+          card.addEventListener("click", () => { if (shell) shell.openExternal(url); });
+        });
+      }
+
+      async function loadCatalog(name) {
+        const cfg = CATALOGS[name];
+        if (!cfg) return;
+        const grid = document.getElementById(cfg.els.grid);
+        const status = document.getElementById(cfg.els.status);
+        const btn = document.getElementById(cfg.els.btn);
+        const query = (document.getElementById(cfg.els.search) || {}).value || "";
+        const source = (document.getElementById(cfg.els.source) || {}).value || "all";
+        if (!grid || !status) return;
+
+        if (btn) btn.disabled = true;
+        status.textContent = "Загружаем каталог…";
+
         try {
-          const data = await apiFetch("/api/admin/dashboard", { method: "GET" });
-          const s = data.stats || {};
-          box.innerHTML = [
-            ["Пользователи", s.totalUsers],
-            ["Новые за 30 дней", s.newUsers],
-            ["Активные подписки", s.activeSubscriptions],
-            ["Выручка за месяц", s.revenueMonth + " ₽"],
-            ["Покупок за месяц", s.purchasesMonth],
-          ].map(([k, v]) => "<div class='stat'><span>" + k + "</span><b>" + (v == null ? "—" : v) + "</b></div>").join("");
+          const params = new URLSearchParams({ source: source, limit: "21" });
+          if (query.trim()) params.set("q", query.trim());
+          const data = await apiFetch(cfg.path + "?" + params.toString(), { method: "GET" });
+
+          renderCatalogItems(grid, data.items || []);
+          cfg.loaded = true;
+
+          const failed = (data.sources || []).filter((s) => !s.ok);
+          status.textContent = failed.length
+            ? failed.map((s) => s.message).filter(Boolean).join("; ")
+            : "";
         } catch (err) {
-          box.textContent = err.message || "Нет доступа к статистике";
+          grid.innerHTML = "";
+          status.textContent = err.message || "Не удалось загрузить каталог";
+        } finally {
+          if (btn) btn.disabled = false;
         }
       }
+
+      function ensureCatalogLoaded(name) {
+        const cfg = CATALOGS[name];
+        if (cfg && !cfg.loaded) void loadCatalog(name);
+      }
+
+      Object.keys(CATALOGS).forEach((name) => {
+        const cfg = CATALOGS[name];
+        const btn = document.getElementById(cfg.els.btn);
+        const input = document.getElementById(cfg.els.search);
+        const source = document.getElementById(cfg.els.source);
+        if (btn) btn.addEventListener("click", () => void loadCatalog(name));
+        if (source) source.addEventListener("change", () => void loadCatalog(name));
+        if (input) {
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); void loadCatalog(name); }
+          });
+        }
+      });
 
       void loadSiteContent();
       bootstrapAuth();
