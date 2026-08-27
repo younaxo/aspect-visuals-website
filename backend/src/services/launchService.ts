@@ -11,6 +11,8 @@ import { prisma } from '../utils/prisma'
  */
 
 export const LAUNCH_AUDIENCE = 'game-client'
+export const SESSION_AUDIENCE = 'game-session'
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000
 export const LAUNCH_TTL_MS = 45 * 1000
 const MAX_ACTIVE_SESSIONS = 1
 
@@ -103,7 +105,28 @@ export async function issueLaunchToken(userId: string, ip?: string) {
 export interface RedeemResult {
   ok: boolean
   reason?: string
-  session?: { id: string; userId: string; username: string; roles: string[] }
+  session?: { id: string; userId: string; username: string; roles: string[]; sessionToken: string }
+}
+
+/**
+ * Токен сессии выдаётся клиенту при обмене и нужен для heartbeat и выхода.
+ * Без него хватило бы знания одного sessionId, чтобы завершить чужую сессию.
+ */
+export function signSessionToken(sessionId: string, userId: string): string {
+  return signPayload({
+    sid: sessionId,
+    sub: userId,
+    aud: SESSION_AUDIENCE,
+    exp: Math.floor((Date.now() + SESSION_TTL_MS) / 1000),
+  })
+}
+
+export function verifySessionToken(token: string): { sid: string; sub: string } | null {
+  const claims = verifyPayload(token) as { sid?: string; sub?: string; aud?: string; exp?: number } | null
+  if (!claims || claims.aud !== SESSION_AUDIENCE) return null
+  if (!claims.sid || !claims.sub) return null
+  if (!claims.exp || claims.exp * 1000 < Date.now()) return null
+  return { sid: claims.sid, sub: claims.sub }
 }
 
 /** Обмен launch-токена на игровую сессию. Данные берутся из БД, а не из токена. */
@@ -160,7 +183,13 @@ export async function redeemLaunchToken(token: string, ip?: string): Promise<Red
 
   return {
     ok: true,
-    session: { id: session.id, userId: user.id, username: user.username, roles: session.roles },
+    session: {
+      id: session.id,
+      userId: user.id,
+      username: user.username,
+      roles: session.roles,
+      sessionToken: signSessionToken(session.id, user.id),
+    },
   }
 }
 

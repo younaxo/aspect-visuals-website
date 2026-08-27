@@ -9,6 +9,7 @@ import {
   redeemLaunchToken,
   signingConfigured,
   touchSession,
+  verifySessionToken,
 } from '../services/launchService'
 
 function asString(value: unknown): string {
@@ -68,9 +69,21 @@ export async function createGameSession(req: Request, res: Response) {
   }
 }
 
+/** Клиент подтверждает сессию токеном: одного sessionId недостаточно. */
+function sessionFromRequest(req: Request): { sid: string; sub: string } | null {
+  const header = req.headers.authorization || ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : asString(req.body?.sessionToken)
+  const claims = verifySessionToken(token)
+  if (!claims) return null
+  return claims.sid === routeParam(req.params.id) ? claims : null
+}
+
 export async function heartbeatGameSession(req: Request, res: Response) {
-  const id = routeParam(req.params.id)
-  const ok = await touchSession(id)
+  if (!sessionFromRequest(req)) {
+    res.status(401).json({ message: 'Недействительный токен сессии' })
+    return
+  }
+  const ok = await touchSession(routeParam(req.params.id))
   if (!ok) {
     res.status(404).json({ message: 'Сессия не найдена или уже завершена' })
     return
@@ -78,12 +91,17 @@ export async function heartbeatGameSession(req: Request, res: Response) {
   res.json({ ok: true })
 }
 
+/** Завершить сессию может её клиент по токену либо владелец аккаунта. */
 export async function closeGameSession(req: AuthRequest, res: Response) {
-  if (!req.userId) {
+  const claims = sessionFromRequest(req)
+  const userId = claims ? claims.sub : req.userId
+
+  if (!userId) {
     res.status(401).json({ message: 'Нужна авторизация' })
     return
   }
-  const ok = await endSession(routeParam(req.params.id), req.userId)
+
+  const ok = await endSession(routeParam(req.params.id), userId)
   if (!ok) {
     res.status(404).json({ message: 'Сессия не найдена или уже завершена' })
     return

@@ -21,7 +21,8 @@ router.get('/launch/public-key', launchPublicKey)
 
 router.post('/game/session', sessionLimiter, createGameSession)
 router.post('/game/session/:id/heartbeat', sessionLimiter, heartbeatGameSession)
-router.delete('/game/session/:id', authMiddleware, closeGameSession)
+// Закрыть сессию может клиент по токену сессии или владелец по JWT
+router.delete('/game/session/:id', closeGameSession)
 
 router.get('/client/manifest', clientManifest)
 

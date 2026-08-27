@@ -1,0 +1,39 @@
+{
+  "name": "aspect-visuals-client",
+  "version": "0.1.0",
+  "description": "Игровой клиент Aspect Visuals",
+  "main": "main.js",
+  "author": "Aspect Visuals",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "build": {
+    "appId": "com.aspectvisuals.client",
+    "productName": "AspectVisuals",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "session.js",
+      "index.html",
+      "config.js",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}
