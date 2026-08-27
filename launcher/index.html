@@ -2,13 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com https://cdn.discordapp.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com https://aspectvisuals.su http://2.26.85.78 https://cdn.discordapp.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://aspectvisuals.su http://2.26.85.78 https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file: https://aspectvisuals.su https://challenges.cloudflare.com https://cdn.discordapp.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' file: data: blob:; img-src 'self' data: blob: https://images.unsplash.com https://aspectvisuals.su https://cdn.discordapp.com https://cdn-files.aspectvisuals.su; connect-src 'self' https://aspectvisuals.su https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com;" />
   <title>Aspect Visuals</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -242,6 +241,23 @@
     .toggle.off::after { left: 2px; background: #a1a1aa; }
     .news-item { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .news-item:last-child { border-bottom: 0; }
+    .nav-admin { display: none !important; }
+    .nav-admin.is-on { display: flex !important; }
+    .role-chip { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; color: #fafafa; font-size: 13px; }
+    .role-chip img { width: 14px; height: 14px; object-fit: contain; }
+    .shop-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .stat { padding: 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
+    .stat span { display: block; font-size: 12px; color: #71717a; }
+    .stat b { display: block; margin-top: 8px; font-size: 18px; color: #fafafa; }
+    .shop-filter {
+      height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); color: #a1a1aa; font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+    .shop-filter.active { background: #fafafa; color: #09090b; }
+    .account-rows { display: grid; gap: 10px; margin-top: 16px; }
+    .account-rows div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+    .account-rows dt { color: #71717a; }
+    .account-rows dd { color: #fafafa; margin: 0; }
 
     .profile-popout {
       position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; z-index: 50; width: 100%;
@@ -508,43 +524,33 @@
           </div>
 
           <nav class="sidebar-nav">
-            <button type="button" class="nav-item tip interactive active" data-view="home" data-tip="Главная">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-              <span class="nav-label">Главная</span>
-            </button>
-            <button type="button" class="nav-item tip interactive" data-view="news" data-tip="Новости">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
-              <span class="nav-label">Новости</span>
-            </button>
-            <button type="button" class="nav-item tip interactive" data-view="shop" data-tip="Магазин">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              <span class="nav-label">Магазин</span>
-            </button>
+            <button type="button" class="nav-item tip interactive active" data-view="home" data-tip="Главная"><svg class="icon" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nav-label">Главная</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="news" data-tip="Новости"><svg class="icon" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/></svg><span class="nav-label">Новости</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="shop" data-tip="Магазин"><svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="nav-label">Магазин</span></button>
             <div class="nav-sep"></div>
-            <button type="button" class="nav-item tip interactive" data-view="customization" data-tip="Кастомизация">
-              <svg class="icon" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-              <span class="nav-label">Кастомизация</span>
-            </button>
-            <button type="button" class="nav-item tip interactive" data-view="skins" data-tip="Скины">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
-              <span class="nav-label">Скины</span>
-            </button>
+            <button type="button" class="nav-item tip interactive" data-view="account" data-tip="Аккаунт"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg><span class="nav-label">Аккаунт</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="profile" data-tip="Профиль"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h8M8 14h5"/></svg><span class="nav-label">Профиль</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="balance" data-tip="Баланс"><svg class="icon" viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1ZM16 12h.01"/></svg><span class="nav-label">Баланс</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="subscriptions" data-tip="Подписки"><svg class="icon" viewBox="0 0 24 24"><path d="m12 3 2.4 6.6H21l-5.4 4 2.1 6.4L12 16.8 6.3 20l2.1-6.4L3 9.6h6.6Z"/></svg><span class="nav-label">Подписки</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="download" data-tip="Скачать клиент"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg><span class="nav-label">Скачать клиент</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="settings" data-tip="Настройки"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg><span class="nav-label">Настройки</span></button>
             <div class="nav-sep"></div>
-            <button type="button" class="nav-item tip interactive" data-view="settings" data-tip="Настройки">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span class="nav-label">Настройки</span>
-            </button>
+            <button type="button" class="nav-item tip interactive" data-view="bonus" data-tip="Ежедневный бонус"><svg class="icon" viewBox="0 0 24 24"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 7V3M12 22V12"/></svg><span class="nav-label">Ежедневный бонус</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="configs" data-tip="Конфиги"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></svg><span class="nav-label">Конфиги</span></button>
+            <button type="button" class="nav-item tip interactive" data-view="cosmetics" data-tip="Косметика"><svg class="icon" viewBox="0 0 24 24"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/></svg><span class="nav-label">Косметика</span></button>
             <div class="nav-sep"></div>
+            <button type="button" class="nav-item tip interactive" data-view="support" data-tip="Поддержка"><svg class="icon" viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4.2 2.8c-.8.4-1.2.9-1.2 1.7V14m0 4h.01"/></svg><span class="nav-label">Поддержка</span></button>
+            <button type="button" class="nav-item tip interactive nav-admin" data-view="admin" data-tip="Админ-панель"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7l-8-4Z"/></svg><span class="nav-label">Админ-панель</span></button>
           </nav>
 
           <div class="socials">
-            <button type="button" class="social-btn tip interactive" data-url="https://discord.com" data-tip="Discord" aria-label="Discord">
+            <button type="button" class="social-btn tip interactive" data-url="https://discord.gg/aspectvisuals" data-tip="Discord" aria-label="Discord">
               <svg class="icon-discord icon-fill" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
             </button>
-            <button type="button" class="social-btn tip interactive" data-url="https://t.me" data-tip="Telegram" aria-label="Telegram">
+            <button type="button" class="social-btn tip interactive" data-url="https://t.me/aspectvisuals" data-tip="Telegram" aria-label="Telegram">
               <svg class="icon" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
             </button>
-            <button type="button" class="social-btn tip interactive" data-url="https://youtube.com" data-tip="YouTube" aria-label="YouTube">
+            <button type="button" class="social-btn tip interactive" data-url="https://youtube.com/@aspectvisuals" data-tip="YouTube" aria-label="YouTube">
               <svg class="icon" viewBox="0 0 24 24"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
             </button>
           </div>
@@ -627,58 +633,111 @@
             <div class="view" id="view-news">
               <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
                 <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Новости</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Последние обновления проекта.</p>
-                <div style="margin-top:24px;">
-                  <div class="news-item"><p style="font-size:12px;color:#52525b;">26 Aug 2026</p><p style="margin-top:4px;font-size:14px;font-weight:500;color:#fafafa;">V2.4.1 — Auth & Build</p><p style="margin-top:4px;font-size:13px;color:#71717a;">Supabase auth и защищённая сборка.</p></div>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Контент с сайта Aspect Visuals.</p>
+                <div id="newsList" style="margin-top:24px;"></div>
+                <h3 style="margin-top:32px;font-size:16px;font-weight:600;color:#fafafa;">Роли Discord</h3>
+                <div id="rolesCatalog" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+              </div>
+            </div>
+            <div class="view" id="view-shop">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <p style="font-size:12px;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">Магазин</p>
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Пакеты и дополнения</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Цены в рублях. После оплаты роль в Discord выдаётся, если она задана у тарифа.</p>
+                <div class="shop-filters" id="shopFilters"></div>
+                <div id="shopGrid" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+              </div>
+            </div>
+            <div class="view" id="view-account">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <p style="font-size:12px;color:#71717a;">Главная / Мой аккаунт / Аккаунт</p>
+                <h2 id="accountHello" style="margin-top:8px;font-size:28px;font-weight:700;color:#fafafa;">Аккаунт</h2>
+                <dl class="account-rows">
+                  <div><dt>Дата регистрации</dt><dd id="accountCreated">—</dd></div>
+                  <div><dt>ID</dt><dd id="accountUidLine">—</dd></div>
+                  <div><dt>Роли</dt><dd id="accountRoles">—</dd></div>
+                  <div><dt>Email</dt><dd id="accountEmailLine">—</dd></div>
+                  <div><dt>Discord</dt><dd id="accountDiscordLine">—</dd></div>
+                </dl>
+              </div>
+            </div>
+            <div class="view" id="view-profile">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Профиль</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Данные с сайта, те же что в кабинете.</p>
+                <div id="profileRoles" style="margin-top:16px;"></div>
+                <p id="profileBio" style="margin-top:16px;font-size:13px;color:#a1a1aa;"></p>
+              </div>
+            </div>
+            <div class="view" id="view-balance">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Баланс</h2>
+                <p id="balanceValue" style="margin-top:16px;font-size:32px;font-weight:700;color:#fafafa;">0 ₽</p>
+                <p style="margin-top:8px;font-size:13px;color:#71717a;">История операций и пополнение — как на сайте.</p>
+              </div>
+            </div>
+            <div class="view" id="view-subscriptions">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Подписки</h2>
+                <div id="accountSubs" style="margin-top:20px;display:flex;flex-direction:column;gap:8px;"></div>
+              </div>
+            </div>
+            <div class="view" id="view-download">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Как установить</h2>
+                <ol id="downloadSteps" style="margin-top:20px;padding-left:20px;color:#a1a1aa;font-size:13px;line-height:1.6;"></ol>
+                <button type="button" class="play-btn interactive" id="btnDownloadLauncher" style="margin-top:20px;width:auto;padding:0 18px;">Скачать лаунчер</button>
+              </div>
+            </div>
+            <div class="view" id="view-bonus">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Ежедневный бонус</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Заходите каждый день и забирайте награду за активность.</p>
+                <div class="lib-card" style="margin-top:20px;">
+                  <p style="font-size:13px;color:#a1a1aa;">Награда сегодня</p>
+                  <p id="bonusAmount" style="margin-top:6px;font-size:18px;font-weight:700;color:#fafafa;">—</p>
+                  <p id="bonusStatus" style="margin-top:8px;font-size:13px;color:#71717a;"></p>
+                  <button type="button" class="play-btn interactive" id="btnBonus" style="margin-top:16px;width:auto;padding:0 18px;">Забрать бонус</button>
                 </div>
               </div>
             </div>
-
-            <div class="view" id="view-shop">
-              <div class="panel" style="flex:1;padding:32px;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Магазин</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Пакеты с сайта Aspect Visuals.</p>
-                <div id="shopGrid" style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+            <div class="view" id="view-configs">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Конфиги</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Готовые пресеты графики с сайта.</p>
+                <div id="configsGrid" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
               </div>
             </div>
-
-            <div class="view" id="view-customization">
-              <div class="panel" style="flex:1;padding:32px;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Кастомизация</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Синхронизируется с сайтом.</p>
-                <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;">
+            <div class="view" id="view-cosmetics">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Косметика</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Визуальные пакеты и оформление клиента.</p>
+                <div id="cosmeticsGrid" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+              </div>
+            </div>
+            <div class="view" id="view-support">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Поддержка</h2>
+                <p id="supportText" style="margin-top:8px;font-size:14px;color:#a1a1aa;"></p>
+                <div id="legalList" style="margin-top:20px;display:flex;flex-direction:column;gap:8px;"></div>
+              </div>
+            </div>
+            <div class="view" id="view-admin">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Админ-панель</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Сводка с сайта.</p>
+                <div id="adminStats" style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+              </div>
+            </div>
+            <div class="view" id="view-settings">
+              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
+                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Настройки</h2>
+                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Синхронизируются с сайтом.</p>
+                <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
                   <div class="field"><span>Компактный сайдбар</span><button type="button" class="toggle interactive" id="toggleCompact"></button></div>
                   <div class="field"><span>Звуки интерфейса</span><button type="button" class="toggle interactive" id="toggleSound"></button></div>
                   <div class="field"><span>Анимации</span><button type="button" class="toggle interactive" id="toggleAnim"></button></div>
                   <div class="field"><span>Уведомления</span><button type="button" class="toggle interactive" id="toggleNotif"></button></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="view" id="view-skins">
-              <div class="panel" style="flex:1;padding:32px;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Скины</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Визуальные пакеты клиента.</p>
-                <div style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Mono Default</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Активен</p></div>
-                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Carbon</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Locked</p></div>
-                  <div class="lib-card interactive"><p style="font-size:13px;font-weight:500;color:#fafafa;">Ivory</p><p style="margin-top:4px;font-size:12px;color:#71717a;">Locked</p></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="view" id="view-settings">
-              <div class="panel" style="flex:1;padding:32px;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Настройки</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Аккаунт с сайта и параметры клиента.</p>
-                <div style="margin-top:24px;display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid #27272a;border-radius:12px;background:#111113;">
-                  <p style="font-size:12px;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">Аккаунт</p>
-                  <p id="accountEmailLine" style="font-size:14px;color:#fafafa;">—</p>
-                  <p id="accountUidLine" style="font-size:13px;color:#a1a1aa;">UID —</p>
-                  <p id="accountDiscordLine" style="font-size:13px;color:#a1a1aa;">Discord —</p>
-                  <div id="accountSubs" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
-                </div>
-                <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
                   <div class="field"><span>Спрашивать куда зайти</span><button type="button" class="toggle interactive" id="toggleAskMode"></button></div>
                   <div class="field"><span>Аппаратное ускорение</span><button type="button" class="toggle interactive" id="toggleHw"></button></div>
                   <div class="field"><span>Автозапуск с Windows</span><button type="button" class="toggle off interactive" id="toggleAuto"></button></div>
@@ -766,8 +825,6 @@
       let accessToken = null;
       let refreshToken = null;
       let turnstileToken = "";
-      let supabase = null;
-      const useLocalAuth = false;
 
       function saveSession(payload) {
         accessToken = payload.accessToken || null;
@@ -860,75 +917,6 @@
       }
       loadTurnstile();
 
-      // Локальная auth до появления ключей с сайта (не Supabase)
-      const LOCAL_USERS_KEY = "aspect-visuals-local-users";
-      const LOCAL_SESSION_KEY = "aspect-visuals-local-session";
-
-      function readLocalUsers() {
-        try {
-          const raw = localStorage.getItem(LOCAL_USERS_KEY);
-          const parsed = raw ? JSON.parse(raw) : [];
-          return Array.isArray(parsed) ? parsed : [];
-        } catch (_) {
-          return [];
-        }
-      }
-
-      function writeLocalUsers(users) {
-        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-      }
-
-      function makeLocalUser(email, nickname) {
-        return {
-          id: "local-" + Date.now().toString(36),
-          email,
-          user_metadata: { nickname, full_name: nickname },
-        };
-      }
-
-      function getLocalSessionUser() {
-        try {
-          const raw = localStorage.getItem(LOCAL_SESSION_KEY);
-          if (!raw) return null;
-          const session = JSON.parse(raw);
-          return session && session.user ? session.user : null;
-        } catch (_) {
-          return null;
-        }
-      }
-
-      function setLocalSession(user) {
-        localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ user }));
-      }
-
-      function clearLocalSession() {
-        localStorage.removeItem(LOCAL_SESSION_KEY);
-      }
-
-      function localSignUp(email, password, nickname) {
-        const users = readLocalUsers();
-        const low = email.toLowerCase();
-        if (users.some((u) => u.email === low)) {
-          throw new Error("Этот email уже зарегистрирован. Войдите во вкладке «Вход».");
-        }
-        const user = makeLocalUser(low, nickname);
-        users.push({ email: low, password, user });
-        writeLocalUsers(users);
-        setLocalSession(user);
-        return user;
-      }
-
-      function localSignIn(email, password) {
-        const users = readLocalUsers();
-        const low = email.toLowerCase();
-        const found = users.find((u) => u.email === low);
-        if (!found || found.password !== password) {
-          throw new Error("Неверный email или пароль.");
-        }
-        setLocalSession(found.user);
-        return found.user;
-      }
-
       let soundEnabled = true;
       let isSignUp = false;
       let currentUser = null;
@@ -938,6 +926,9 @@
       const clickAudio = new Audio("sounds/click.mp3?v=2");
       clickAudio.preload = "auto";
       clickAudio.volume = 0.2;
+      const hoverAudio = new Audio("sounds/hover.mp3");
+      hoverAudio.preload = "auto";
+      hoverAudio.volume = 0.12;
       const introAudio = new Audio("sounds/intro.mp3");
       introAudio.preload = "auto";
       introAudio.volume = 0.35;
@@ -951,6 +942,21 @@
         try {
           const a = clickAudio.cloneNode();
           a.volume = 0.2;
+          a.currentTime = 0;
+          a.play().catch(() => {});
+        } catch (_) {}
+      }
+
+      let hoverLockUntil = 0;
+      function playHover() {
+        if (!soundEnabled) return;
+        const now = Date.now();
+        // Троттлинг, иначе при быстром движении мыши звуки накладываются
+        if (now < hoverLockUntil) return;
+        hoverLockUntil = now + 60;
+        try {
+          const a = hoverAudio.cloneNode();
+          a.volume = 0.12;
           a.currentTime = 0;
           a.play().catch(() => {});
         } catch (_) {}
@@ -1030,15 +1036,31 @@
         const uidLine = document.getElementById("accountUidLine");
         const discordLine = document.getElementById("accountDiscordLine");
         const subsBox = document.getElementById("accountSubs");
+        const hello = document.getElementById("accountHello");
+        const created = document.getElementById("accountCreated");
+        const rolesBox = document.getElementById("accountRoles");
+        const profileRoles = document.getElementById("profileRoles");
+        const profileBio = document.getElementById("profileBio");
+        const balanceValue = document.getElementById("balanceValue");
+        if (hello) hello.textContent = "Привет, " + nick;
+        if (created) created.textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString("ru-RU") : "—";
         if (emailLine) emailLine.textContent = email;
-        if (uidLine) uidLine.textContent = "UID " + (user.discriminator || user.uid || "—");
-        if (discordLine) discordLine.textContent = user.discordLinked ? "Discord привязан" : "Discord не привязан";
+        if (uidLine) uidLine.textContent = String(user.discriminator || user.uid || "—");
+        if (discordLine) discordLine.textContent = user.discordLinked ? "привязан" : "не привязан";
+        if (balanceValue) balanceValue.textContent = (user.balance != null ? user.balance : 0) + " ₽";
+        if (profileBio) profileBio.textContent = user.bio || user.customStatus || "Описание профиля появится здесь.";
+        const rolesHtml = renderUserRoles(user);
+        if (rolesBox) rolesBox.innerHTML = rolesHtml;
+        if (profileRoles) profileRoles.innerHTML = rolesHtml;
         if (subsBox) {
           const items = siteSubscriptions || [];
           subsBox.innerHTML = items.length
-            ? items.map((s) => "<p style='font-size:13px;color:#fafafa;'>" + (s.name || "Подписка") + (s.expiresAt ? " · до " + new Date(s.expiresAt).toLocaleDateString("ru-RU") : " · навсегда") + "</p>").join("")
+            ? items.map((s) => "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + (s.name || "Подписка") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + (s.expiresAt ? "до " + new Date(s.expiresAt).toLocaleDateString("ru-RU") : "навсегда") + "</p></div>").join("")
             : "<p style='font-size:13px;color:#71717a;'>Нет активных подписок</p>";
         }
+        document.querySelectorAll(".nav-admin").forEach((el) => {
+          el.classList.toggle("is-on", isPanelAdmin(user));
+        });
 
         applySyncedSettings(siteSettings, false);
       }
@@ -1089,23 +1111,139 @@
         } catch (err) {
           console.warn("[Profile]", err.message || err);
         }
-        void loadShop();
+        void loadSiteContent();
+      }
+
+      const ADMIN_ROLE_IDS = ["1541875062208995328", "1541784961986596874", "1541875599331561604"];
+      let siteCatalog = null;
+      let shopFilter = "all";
+
+      function isPanelAdmin(user) {
+        return ((user && user.roles) || []).some((role) => ADMIN_ROLE_IDS.indexOf(role.discordId) !== -1);
+      }
+
+      function renderUserRoles(user) {
+        const roles = (user && user.roles) || [];
+        const catalog = (siteCatalog && siteCatalog.roles) || [];
+        if (!roles.length) return "<span class='role-chip'>Def</span>";
+        return roles.map((role) => {
+          const meta = catalog.find((item) => item.discordId === role.discordId) || {};
+          const label = meta.label || role.name || "Роль";
+          const icon = meta.icon ? "<img src='" + meta.icon + "' alt='' />" : "";
+          return "<span class='role-chip'>" + icon + label + "</span>";
+        }).join("");
+      }
+
+      function renderCards(host, items, mapFn) {
+        if (!host) return;
+        host.innerHTML = items && items.length ? items.map(mapFn).join("") : "<p style='font-size:13px;color:#71717a;'>Пока пусто</p>";
+      }
+
+      function renderShop() {
+        const host = document.getElementById("shopGrid");
+        if (!host || !siteCatalog || !siteCatalog.shop) return;
+        const subs = siteCatalog.shop.subscriptions || [];
+        const products = siteCatalog.shop.products || [];
+        const isPremium = (item) => item.type === "PREMIUM";
+        const isLife = (item) => Number(item.duration) <= 0;
+        let list = [];
+        if (shopFilter === "PRODUCTS") list = products.map((p) => Object.assign({ kind: "product" }, p));
+        else {
+          list = subs.filter((item) => {
+            if (shopFilter === "all") return true;
+            if (shopFilter === "BASIC") return !isPremium(item);
+            if (shopFilter === "PREMIUM") return isPremium(item);
+            if (shopFilter === "LIFETIME") return isLife(item);
+            return true;
+          }).map((s) => Object.assign({ kind: "sub" }, s));
+        }
+        renderCards(host, list, (item) => {
+          const meta = item.kind === "product" ? (item.price + " ₽") : (item.price + " ₽" + (item.duration > 0 ? " · " + item.duration + " дн." : " · навсегда"));
+          return "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + (item.name || "Товар") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + meta + "</p><p style='margin-top:6px;font-size:12px;color:#71717a;'>" + (item.description || "") + "</p></div>";
+        });
+      }
+
+      async function loadSiteContent() {
+        try {
+          siteCatalog = await apiFetch("/api/content", { method: "GET" });
+        } catch (err) {
+          console.warn("[Content]", err.message || err);
+          return;
+        }
+        const news = document.getElementById("newsList");
+        if (news) {
+          news.innerHTML = (siteCatalog.news || []).map((item) => (
+            "<div class='news-item'><p style='font-size:12px;color:#52525b;'>" + (item.date || "") + "</p><p style='margin-top:4px;font-size:14px;font-weight:500;color:#fafafa;'>" + item.title + "</p><p style='margin-top:4px;font-size:13px;color:#71717a;'>" + (item.text || "") + "</p></div>"
+          )).join("") || "<p style='font-size:13px;color:#71717a;'>Нет новостей</p>";
+        }
+        const filters = document.getElementById("shopFilters");
+        if (filters && !filters.dataset.ready) {
+          filters.dataset.ready = "1";
+          [["all", "Все"], ["BASIC", "Базовые"], ["PREMIUM", "Премиум"], ["LIFETIME", "Навсегда"], ["PRODUCTS", "Допы"]].forEach(([value, label]) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "shop-filter interactive" + (value === "all" ? " active" : "");
+            btn.textContent = label;
+            btn.addEventListener("click", () => {
+              shopFilter = value;
+              filters.querySelectorAll(".shop-filter").forEach((el) => el.classList.toggle("active", el === btn));
+              renderShop();
+            });
+            filters.appendChild(btn);
+          });
+        }
+        renderShop();
+        renderCards(document.getElementById("configsGrid"), siteCatalog.configs, (item) => (
+          "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + item.name + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + item.desc + "</p></div>"
+        ));
+        renderCards(document.getElementById("cosmeticsGrid"), siteCatalog.cosmetics, (item) => (
+          "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + item.name + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + item.status + "</p></div>"
+        ));
+        const steps = document.getElementById("downloadSteps");
+        if (steps && siteCatalog.download) {
+          steps.innerHTML = (siteCatalog.download.steps || []).map((step, i) => (
+            "<li style='margin-bottom:12px;'><strong style='color:#fafafa;'>" + (i + 1) + ". " + step.title + "</strong><br/>" + step.text + "</li>"
+          )).join("");
+        }
+        const supportText = document.getElementById("supportText");
+        if (supportText && siteCatalog.support) supportText.textContent = siteCatalog.support.text;
+        const legal = document.getElementById("legalList");
+        if (legal) {
+          legal.innerHTML = (siteCatalog.legal || []).map((item) => (
+            "<button type='button' class='lib-card interactive legal-link' data-url='" + (item.url || (SITE_URL + "/" + item.slug)) + "' style='text-align:left;width:100%;'><p style='font-size:13px;color:#fafafa;'>" + item.title + "</p></button>"
+          )).join("");
+          legal.querySelectorAll(".legal-link").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const url = btn.getAttribute("data-url");
+              if (url && shell) shell.openExternal(url);
+            });
+          });
+        }
+        const rolesCat = document.getElementById("rolesCatalog");
+        if (rolesCat) {
+          rolesCat.innerHTML = (siteCatalog.roles || []).map((role) => (
+            "<span class='role-chip'>" + (role.icon ? "<img src='" + role.icon + "' alt='' />" : "") + (role.label || role.name) + "</span>"
+          )).join("");
+        }
+        if (Array.isArray(siteCatalog.socials)) {
+          const map = {};
+          siteCatalog.socials.forEach((s) => { map[s.label] = s.url; });
+          document.querySelectorAll(".social-btn").forEach((btn) => {
+            const label = btn.getAttribute("aria-label");
+            if (label && map[label]) btn.dataset.url = map[label];
+          });
+        }
+        if (currentUser) {
+          const rolesBox = document.getElementById("accountRoles");
+          const profileRoles = document.getElementById("profileRoles");
+          const html = renderUserRoles(currentUser);
+          if (rolesBox) rolesBox.innerHTML = html;
+          if (profileRoles) profileRoles.innerHTML = html;
+        }
       }
 
       async function loadShop() {
-        const host = document.getElementById("shopGrid");
-        if (!host) return;
-        try {
-          const data = await apiFetch("/api/shop/subscriptions", { method: "GET" });
-          const items = data.subscriptions || [];
-          host.innerHTML = items.length
-            ? items.map((item) => (
-              "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>" + (item.name || "Пакет") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>" + (item.price != null ? item.price + " ₽" : "") + "</p></div>"
-            )).join("")
-            : "<p style='font-size:13px;color:#71717a;'>Магазин пока пуст</p>";
-        } catch (_) {
-          host.innerHTML = "<p style='font-size:13px;color:#71717a;'>Не удалось загрузить магазин</p>";
-        }
+        await loadSiteContent();
       }
 
       function showAuth() {
@@ -1157,6 +1295,7 @@
         applyUserToProfile(user, opts && opts.settings, opts && opts.subscriptions);
         hideAuth();
         void refreshAccount();
+        void refreshBonusUi();
         if (launcherReady) {
           launcherShell.classList.add("visible");
           return;
@@ -1200,11 +1339,6 @@
             console.warn("[Auth]", err.message || err);
             clearSiteSession();
           }
-        }
-        const localUser = getLocalSessionUser();
-        if (localUser) {
-          enterLauncher(localUser);
-          return;
         }
         showAuth();
         authError.textContent = "";
@@ -1298,7 +1432,6 @@
           await apiFetch("/api/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }) });
         } catch (_) {}
         clearSiteSession();
-        clearLocalSession();
         currentUser = null;
         showAuth();
       });
@@ -1315,6 +1448,18 @@
         if (!e.target.closest(".interactive")) return;
         playClick();
       }, true);
+
+      // Звук наведения: mouseover всплывает, поэтому нужен один слушатель на контейнер
+      let lastHoverTarget = null;
+      document.getElementById("app").addEventListener("mouseover", (e) => {
+        const target = e.target.closest(".interactive");
+        if (!target || target === lastHoverTarget) return;
+        lastHoverTarget = target;
+        playHover();
+      });
+      document.getElementById("app").addEventListener("mouseout", (e) => {
+        if (e.target.closest(".interactive") === lastHoverTarget) lastHoverTarget = null;
+      });
 
       const authDiscord = document.getElementById("authDiscord");
       const authTelegram = document.getElementById("authTelegram");
@@ -1376,6 +1521,8 @@
           document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
           const panel = document.getElementById("view-" + item.dataset.view);
           if (panel) panel.classList.add("active");
+          if (item.dataset.view === "admin") void loadAdminDashboard();
+          if (item.dataset.view === "bonus") void refreshBonusUi();
         });
       });
 
@@ -1574,6 +1721,93 @@
       });
       modeModal.addEventListener("click", (e) => { if (e.target === modeModal) closeModeModal(); });
 
+      // Ежедневный бонус целиком на backend: cooldown и начисление баланса считает сервер
+      function formatBonusWait(ms) {
+        const totalMinutes = Math.ceil(ms / 60000);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        if (hours > 0) return hours + " ч " + minutes + " мин";
+        return minutes + " мин";
+      }
+
+      function renderBonusState(state) {
+        const btn = document.getElementById("btnBonus");
+        const status = document.getElementById("bonusStatus");
+        const amountEl = document.getElementById("bonusAmount");
+        if (!btn || !status) return;
+
+        if (amountEl) amountEl.textContent = state ? state.amount + " ₽ на баланс" : "—";
+
+        if (!state) {
+          btn.disabled = true;
+          status.textContent = accessToken
+            ? "Не удалось загрузить бонус."
+            : "Войдите в аккаунт, чтобы получать ежедневный бонус.";
+          return;
+        }
+
+        if (state.available) {
+          btn.disabled = false;
+          status.textContent = "Награда " + state.amount + " ₽ доступна. Баланс: " + state.balance + " ₽.";
+        } else {
+          btn.disabled = true;
+          status.textContent =
+            "Бонус уже получен. Следующая награда через " + formatBonusWait(state.msUntilNext) + ".";
+        }
+      }
+
+      async function refreshBonusUi() {
+        if (!accessToken) { renderBonusState(null); return; }
+        try {
+          renderBonusState(await apiFetch("/api/bonus/daily", { method: "GET" }));
+        } catch (err) {
+          console.warn("[Bonus]", err.message || err);
+          renderBonusState(null);
+        }
+      }
+
+      document.getElementById("btnBonus").addEventListener("click", async () => {
+        if (!accessToken) { toast("Войдите в аккаунт"); return; }
+        const btn = document.getElementById("btnBonus");
+        btn.disabled = true;
+        try {
+          const result = await apiFetch("/api/bonus/daily/claim", { method: "POST" });
+          toast("Начислено " + result.claimedAmount + " ₽ на баланс");
+          renderBonusState(result);
+          void refreshAccount();
+        } catch (err) {
+          toast(err.message || "Не удалось получить бонус");
+          void refreshBonusUi();
+        }
+      });
+      void refreshBonusUi();
+
+      document.getElementById("btnDownloadLauncher").addEventListener("click", () => {
+        const url = (siteCatalog && siteCatalog.download && siteCatalog.download.url)
+          || "https://cdn-files.aspectvisuals.su/launcher/AspectVisualsSetup.exe";
+        if (window.av && window.av.openExternal) window.av.openExternal(url);
+        else window.open(url, "_blank");
+      });
+
+      async function loadAdminDashboard() {
+        const box = document.getElementById("adminStats");
+        if (!box || !accessToken || !isPanelAdmin(currentUser)) return;
+        try {
+          const data = await apiFetch("/api/admin/dashboard", { method: "GET" });
+          const s = data.stats || {};
+          box.innerHTML = [
+            ["Пользователи", s.totalUsers],
+            ["Новые за 30 дней", s.newUsers],
+            ["Активные подписки", s.activeSubscriptions],
+            ["Выручка за месяц", s.revenueMonth + " ₽"],
+            ["Покупок за месяц", s.purchasesMonth],
+          ].map(([k, v]) => "<div class='stat'><span>" + k + "</span><b>" + (v == null ? "—" : v) + "</b></div>").join("");
+        } catch (err) {
+          box.textContent = err.message || "Нет доступа к статистике";
+        }
+      }
+
+      void loadSiteContent();
       bootstrapAuth();
     });
   </script>
