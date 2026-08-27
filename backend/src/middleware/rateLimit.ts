@@ -34,7 +34,9 @@ export function rateLimit(scope: string, max: number, windowMs: number) {
   }
 }
 
-export const registerLimiter = rateLimit('register', 8, 15 * 60 * 1000)
-export const loginLimiter = rateLimit('login', 20, 15 * 60 * 1000)
+// Для лаунчера rate limit — основная защита входа: капча из file:// недоступна,
+// поэтому лимиты держим строгими
+export const registerLimiter = rateLimit('register', 5, 15 * 60 * 1000)
+export const loginLimiter = rateLimit('login', 10, 15 * 60 * 1000)
 export const forgotPasswordLimiter = rateLimit('forgot-password', 5, 15 * 60 * 1000)
 export const resetPasswordLimiter = rateLimit('reset-password', 10, 15 * 60 * 1000)

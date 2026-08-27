@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -54,8 +54,10 @@ function createWindow() {
     hasShadow: true,
     show: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: false,
+      preload: path.join(__dirname, "preload.js"),
       autoplayPolicy: "no-user-gesture-required",
     },
   });
@@ -67,6 +69,17 @@ function createWindow() {
       mainWindow.setIcon(icon);
     } catch (_) {}
   }
+
+  // Главное окно ничего не открывает само: любые popup и переходы блокируются,
+  // внешние ссылки идут через проверенный канал open-external
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    void openExternalSafely(url);
+    return { action: "deny" };
+  });
+
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (!url.startsWith("file://")) event.preventDefault();
+  });
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
 
@@ -145,6 +158,49 @@ function shutdownDiscord() {
   } catch (_) {}
   rpc = null;
 }
+
+// Во внешнем браузере разрешаем открывать только известные домены проекта
+const EXTERNAL_ALLOWLIST = [
+  "aspectvisuals.su",
+  "cdn-files.aspectvisuals.su",
+  "discord.gg",
+  "discord.com",
+  "t.me",
+  "telegram.me",
+  "youtube.com",
+  "www.youtube.com",
+  "tiktok.com",
+  "www.tiktok.com",
+  "modrinth.com",
+  "www.modrinth.com",
+  "curseforge.com",
+  "www.curseforge.com",
+];
+
+async function openExternalSafely(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(String(rawUrl || ""));
+  } catch (_) {
+    return { ok: false, reason: "Некорректная ссылка" };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return { ok: false, reason: "Разрешены только https-ссылки" };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  const allowed = EXTERNAL_ALLOWLIST.some((item) => host === item || host.endsWith("." + item));
+  if (!allowed) {
+    console.warn("[external] заблокирован переход на", host);
+    return { ok: false, reason: "Домен не разрешён" };
+  }
+
+  await shell.openExternal(parsed.toString());
+  return { ok: true };
+}
+
+ipcMain.handle("open-external", (_event, url) => openExternalSafely(url));
 
 ipcMain.on("app-min", () => mainWindow && mainWindow.minimize());
 ipcMain.on("app-max", () => {

@@ -460,7 +460,6 @@
             <label class="auth-label" for="authPasswordConfirm">Повтор пароля</label>
             <input class="auth-input" id="authPasswordConfirm" type="password" placeholder="повторите пароль" autocomplete="new-password" />
           </div>
-          <div id="authTurnstile" class="turnstile-wrap" style="margin:12px 0 4px;min-height:0;"></div>
           <button type="submit" class="auth-submit interactive" id="authSubmit">Войти</button>
           <div class="auth-login-only">
             <div class="auth-or"><span>ИЛИ</span></div>
@@ -821,26 +820,30 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      let ipcRenderer = null;
-      let shell = null;
-      try { ({ ipcRenderer, shell } = require("electron")); } catch (e) { console.warn(e); }
+      // Renderer работает без доступа к Node: всё идёт через мост из preload.js
+      const av = window.av || null;
+      if (!av) console.warn("[Bridge] preload недоступен, часть функций отключена");
+
+      function openExternal(url) {
+        if (!av || !url) return;
+        void av.openExternal(url).then((result) => {
+          if (result && result.ok === false) toast(result.reason || "Ссылка заблокирована");
+        }).catch(() => {});
+      }
 
       let SITE_API = "https://aspectvisuals.su";
       let SITE_URL = "https://aspectvisuals.su";
-      let TURNSTILE_SITE_KEY = "";
       try {
-        const site = require("./site-config.js");
+        const site = av ? av.getSiteConfig() : null;
         SITE_API = String((site && site.apiUrl) || SITE_API).replace(/\/$/, "");
         SITE_URL = String((site && site.siteUrl) || SITE_URL).replace(/\/$/, "");
-        TURNSTILE_SITE_KEY = String((site && site.turnstileSiteKey) || "");
       } catch (e) {
-        console.warn("[Auth] site-config.js:", e.message || e);
+        console.warn("[Config]", e.message || e);
       }
 
       const SESSION_KEY = "aspect-visuals-site-session";
       let accessToken = null;
       let refreshToken = null;
-      let turnstileToken = "";
 
       function saveSession(payload) {
         accessToken = payload.accessToken || null;
@@ -914,24 +917,9 @@
         };
       }
 
-      function loadTurnstile() {
-        const host = document.getElementById("authTurnstile");
-        if (!TURNSTILE_SITE_KEY || !host) return;
-        const script = document.createElement("script");
-        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-        script.async = true;
-        script.onload = () => {
-          if (!window.turnstile) return;
-          window.turnstile.render(host, {
-            sitekey: TURNSTILE_SITE_KEY,
-            theme: "dark",
-            callback: (t) => { turnstileToken = t; },
-            "expired-callback": () => { turnstileToken = ""; },
-          });
-        };
-        document.head.appendChild(script);
-      }
-      loadTurnstile();
+      // Turnstile здесь намеренно не подключается: виджет привязан к домену,
+      // а интерфейс лаунчера грузится с file:// и получает ошибку 110200.
+      // Вход из лаунчера защищён rate limit на стороне backend.
 
       let soundEnabled = true;
       let isSignUp = false;
@@ -1338,17 +1326,11 @@
             return;
           }
         }
-        if (TURNSTILE_SITE_KEY && !turnstileToken) {
-          authError.textContent = "Подтвердите капчу CloudFlare.";
-          authSubmit.disabled = false;
-          return;
-        }
-
         try {
           const path = isSignUp ? "/api/auth/register" : "/api/auth/login";
           const body = isSignUp
-            ? { email, password, username: nickname, turnstileToken }
-            : { email, password, turnstileToken };
+            ? { email, password, username: nickname }
+            : { email, password };
           const data = await apiFetch(path, { method: "POST", body: JSON.stringify(body) });
           saveSession(data);
           enterLauncher(data.user, Object.assign(isSignUp ? { skipIntro: true } : {}, { settings: data.settings }));
@@ -1393,11 +1375,11 @@
       });
 
       // Window controls
-      document.getElementById("btn-min").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-min"); });
-      document.getElementById("btn-max").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-max"); });
-      document.getElementById("btn-close").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-close"); });
-      document.getElementById("auth-min").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-min"); });
-      document.getElementById("auth-close").addEventListener("click", () => { if (ipcRenderer) ipcRenderer.send("app-close"); });
+      document.getElementById("btn-min").addEventListener("click", () => { if (av) av.window.minimize(); });
+      document.getElementById("btn-max").addEventListener("click", () => { if (av) av.window.maximize(); });
+      document.getElementById("btn-close").addEventListener("click", () => { if (av) av.window.close(); });
+      document.getElementById("auth-min").addEventListener("click", () => { if (av) av.window.minimize(); });
+      document.getElementById("auth-close").addEventListener("click", () => { if (av) av.window.close(); });
 
       // Один клик = один звук (capture — работает даже при stopPropagation)
       document.getElementById("app").addEventListener("click", (e) => {
@@ -1425,10 +1407,10 @@
           authError.style.color = "#f87171";
           authDiscord.disabled = true;
           try {
-            if (!ipcRenderer || !ipcRenderer.invoke) {
+            if (!av || !av.discordOAuth) {
               throw new Error("Откройте лаунчер как приложение, чтобы войти через Discord.");
             }
-            const oauth = await ipcRenderer.invoke("discord-oauth");
+            const oauth = await av.discordOAuth();
             const data = await apiFetch("/api/auth/discord/callback", {
               method: "POST",
               body: JSON.stringify({ code: oauth.code, state: oauth.state }),
@@ -1485,7 +1467,7 @@
 
       document.querySelectorAll(".social-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          if (btn.dataset.url && shell) shell.openExternal(btn.dataset.url);
+          if (btn.dataset.url) openExternal(btn.dataset.url);
         });
       });
 
@@ -1779,7 +1761,7 @@
           if (!url) return;
           card.classList.add("interactive");
           card.style.cursor = "pointer";
-          card.addEventListener("click", () => { if (shell) shell.openExternal(url); });
+          card.addEventListener("click", () => openExternal(url));
         });
       }
 

@@ -27,6 +27,7 @@
     },
     "files": [
       "main.js",
+      "preload.js",
       "discord-rpc-ipc.patch.js",
       "index.html",
       "site-config.js",
