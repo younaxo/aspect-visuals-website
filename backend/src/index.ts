@@ -14,6 +14,7 @@ import chatRoutes from './routes/chat'
 import adminRoutes from './routes/admin'
 import contentRoutes from './routes/content'
 import newsRoutes from './routes/news'
+import catalogRoutes from './routes/catalog'
 import { registerChatSocket } from './sockets/chatSocket'
 import { ensureUploadDirs, UPLOADS_DIR } from './utils/media'
 
@@ -62,6 +63,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/content', contentRoutes)
 app.use('/api', newsRoutes)
+app.use('/api', catalogRoutes)
 app.use('/api', profileRoutes)
 
 app.get('/api/health', (_req, res) => {
