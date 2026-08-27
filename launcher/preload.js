@@ -37,6 +37,8 @@ contextBridge.exposeInMainWorld("av", {
 
   telegramOAuth: () => ipcRenderer.invoke("telegram-oauth"),
 
+  captcha: () => ipcRenderer.invoke("captcha"),
+
   minecraft: {
     status: () => ipcRenderer.invoke("mc-status"),
     prepare: () => ipcRenderer.invoke("mc-prepare"),

@@ -23,6 +23,7 @@ import {
   isValidEmail,
   sendPasswordResetEmail,
   sendVerificationEmail,
+  smtpConfigured,
 } from '../services/emailService'
 import { toPublicUser } from '../utils/user'
 import { isCustomMedia } from '../utils/media'
@@ -168,40 +169,40 @@ export async function discordCallback(req: Request, res: Response) {
     const discordUser = await getDiscordUser(tokens.access_token)
     const email = discordUser.email?.toLowerCase() || null
 
-    let existing = await prisma.user.findUnique({ where: { discordId: discordUser.id } })
-    if (!existing && email) {
-      existing = await prisma.user.findUnique({ where: { email } })
+    // Вход через Discord доступен только тем, кто уже привязал его к аккаунту.
+    // Новый аккаунт здесь не создаётся и чужой не подхватывается по совпадению email.
+    const existingByDiscord = await prisma.user.findUnique({ where: { discordId: discordUser.id } })
+
+    if (!existingByDiscord || !existingByDiscord.discordLinked) {
+      res.status(403).json({
+        message:
+          'Этот Discord не привязан ни к одному аккаунту. Войдите по email и привяжите Discord в настройках профиля.',
+      })
+      return
+    }
+
+    if (existingByDiscord.isDeleted) {
+      res.status(403).json({ message: 'Аккаунт удалён' })
+      return
+    }
+
+    const ban = await prisma.ban.findUnique({ where: { userId: existingByDiscord.id } })
+    if (ban && (ban.isPermanent || !ban.expiresAt || ban.expiresAt > new Date())) {
+      res.status(403).json({ message: ban.reason ? `Аккаунт заблокирован: ${ban.reason}` : 'Аккаунт заблокирован' })
+      return
     }
 
     const discordRoles = await getGuildMemberRoles(discordUser.id, tokens.access_token)
 
-    if (!existing) {
-      existing = await prisma.user.create({
-        data: {
-          discordId: discordUser.id,
-          discordLinked: true,
-          username: discordUser.username.slice(0, 32),
-          email,
-          avatar: discordUser.avatar,
-          discordAccessToken: tokens.access_token,
-          discordRefreshToken: tokens.refresh_token,
-          isEmailVerified: Boolean(email),
-        },
-      })
-      await attachDefaultRole(existing.id)
-    } else {
-      existing = await prisma.user.update({
-        where: { id: existing.id },
-        data: {
-          discordId: discordUser.id,
-          discordLinked: true,
-          avatar: isCustomMedia(existing.avatar) ? existing.avatar : discordUser.avatar,
-          email: existing.email || email,
-          discordAccessToken: tokens.access_token,
-          discordRefreshToken: tokens.refresh_token,
-        },
-      })
-    }
+    const existing = await prisma.user.update({
+      where: { id: existingByDiscord.id },
+      data: {
+        avatar: isCustomMedia(existingByDiscord.avatar) ? existingByDiscord.avatar : discordUser.avatar,
+        email: existingByDiscord.email || email,
+        discordAccessToken: tokens.access_token,
+        discordRefreshToken: tokens.refresh_token,
+      },
+    })
 
     await ensureUserSettings(existing.id)
     await ensureUserUid(existing.id, {
@@ -268,7 +269,12 @@ export async function register(req: Request, res: Response) {
         expiresAt: new Date(Date.now() + VERIFY_TOKEN_TTL_MS),
       },
     })
-    await sendVerificationEmail(email, verifyToken)
+    // Регистрация не должна падать из-за недоступной почты
+    try {
+      await sendVerificationEmail(email, verifyToken)
+    } catch (mailError) {
+      console.error('Не удалось отправить письмо подтверждения:', mailError)
+    }
 
     res.status(201).json(await authPayload(user.id))
   } catch (error) {
@@ -467,6 +473,14 @@ export async function forgotPassword(req: Request, res: Response) {
     const email = parseString(req.body?.email).toLowerCase()
     if (!isValidEmail(email)) {
       res.status(400).json({ message: 'Укажите корректный email' })
+      return
+    }
+
+    // Проверяем до поиска пользователя: иначе ответ отличался бы для
+    // существующих и несуществующих адресов и выдавал бы наличие аккаунта
+    if (!smtpConfigured()) {
+      console.error('[auth] запрос сброса пароля при ненастроенном SMTP')
+      res.status(503).json({ message: 'Отправка писем временно недоступна. Напишите в поддержку.' })
       return
     }
 
@@ -689,31 +703,33 @@ export async function telegramLogin(req: Request, res: Response) {
     }
 
     const telegramId = String(payload.id)
-    const nickname = payload.username || payload.first_name || `tg_${telegramId.slice(-6)}`
 
-    let user = await prisma.user.findFirst({
-      where: { telegramId },
-    })
+    // Как и с Discord: вход возможен только для уже привязанного Telegram
+    const found = await prisma.user.findFirst({ where: { telegramId } })
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          telegramId,
-          telegramLinked: true,
-          username: nickname.slice(0, 32),
-          avatar: payload.photo_url || null,
-        },
+    if (!found || !found.telegramLinked) {
+      res.status(403).json({
+        message:
+          'Этот Telegram не привязан ни к одному аккаунту. Войдите по email и привяжите Telegram в настройках профиля.',
       })
-      await attachDefaultRole(user.id)
-    } else {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          telegramLinked: true,
-          avatar: user.avatar || payload.photo_url || null,
-        },
-      })
+      return
     }
+
+    if (found.isDeleted) {
+      res.status(403).json({ message: 'Аккаунт удалён' })
+      return
+    }
+
+    const tgBan = await prisma.ban.findUnique({ where: { userId: found.id } })
+    if (tgBan && (tgBan.isPermanent || !tgBan.expiresAt || tgBan.expiresAt > new Date())) {
+      res.status(403).json({ message: tgBan.reason ? `Аккаунт заблокирован: ${tgBan.reason}` : 'Аккаунт заблокирован' })
+      return
+    }
+
+    const user = await prisma.user.update({
+      where: { id: found.id },
+      data: { avatar: found.avatar || payload.photo_url || null },
+    })
 
     res.json(await authPayload(user.id))
   } catch (error) {

@@ -1819,16 +1819,32 @@
           }
         }
         try {
+          // Капча открывается отдельным окном на нашем домене
+          let turnstileToken = "";
+          if (av && av.captcha) {
+            authError.style.color = "#a1a1aa";
+            authError.textContent = "Пройдите проверку в открывшемся окне…";
+            turnstileToken = await av.captcha();
+            authError.textContent = "";
+            authError.style.color = "#f87171";
+          }
+
           const path = isSignUp ? "/api/auth/register" : "/api/auth/login";
           const body = isSignUp
-            ? { email, password, username: nickname }
-            : { email, password };
+            ? { email, password, username: nickname, turnstileToken }
+            : { email, password, turnstileToken };
           const data = await apiFetch(path, { method: "POST", body: JSON.stringify(body) });
           saveSession(data);
           enterLauncher(data.user, Object.assign(isSignUp ? { skipIntro: true } : {}, { settings: data.settings }));
         } catch (err) {
-          authError.style.color = "#f87171";
-          authError.textContent = mapAuthError(err);
+          const msg = (err && err.message) || "";
+          if (/отменен|отменён/i.test(msg)) {
+            authError.style.color = "#a1a1aa";
+            authError.textContent = "Проверка отменена.";
+          } else {
+            authError.style.color = "#f87171";
+            authError.textContent = mapAuthError(err);
+          }
         } finally {
           authSubmit.disabled = false;
         }

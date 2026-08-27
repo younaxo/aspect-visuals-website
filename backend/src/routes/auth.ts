@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { captchaPage } from '../controllers/captchaController'
 import {
   checkDiscordLink,
   discordAuthUrl,
@@ -40,6 +41,8 @@ router.get('/discord/callback', discordCallbackRedirect)
 router.post('/discord/callback', discordCallback)
 
 router.get('/turnstile/config', turnstileConfig)
+// Страница капчи для лаунчера: отдаётся с нашего домена, чтобы виджет работал
+router.get('/captcha', captchaPage)
 router.get('/telegram/config', telegramConfig)
 router.post('/telegram', loginLimiter, telegramLogin)
 

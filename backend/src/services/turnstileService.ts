@@ -24,21 +24,14 @@ export async function verifyTurnstileToken(token: string, ip?: string): Promise<
 }
 
 /**
- * Turnstile привязан к домену, а Electron-лаунчер грузит интерфейс с file://,
- * поэтому получить валидный токен он физически не может (ошибка 110200).
+ * Капча обязательна для всех клиентов, включая лаунчер.
  *
- * Признак определяется по отсутствию браузерного Origin — ровно тот же сигнал,
- * что и в CORS. Это не защита от подделки: клиент может не прислать Origin.
- * Для таких запросов защитой служит rate limit на вход и регистрацию.
+ * Интерфейс лаунчера грузится с file://, где виджет Turnstile не работает,
+ * поэтому лаунчер открывает страницу /api/auth/captcha на нашем домене
+ * в отдельном окне и присылает полученный оттуда токен обычным способом.
  */
-export function isLauncherRequest(req: Request): boolean {
-  const origin = req.headers.origin
-  return !origin || origin === 'null' || origin.startsWith('file://')
-}
-
 export async function assertTurnstile(req: Request, res: Response): Promise<boolean> {
   if (!turnstileConfigured()) return true
-  if (isLauncherRequest(req)) return true
 
   const token = typeof req.body?.turnstileToken === 'string' ? req.body.turnstileToken : ''
   const ok = await verifyTurnstileToken(token, req.ip)
