@@ -105,6 +105,37 @@ export interface UserShopSubscription {
   lifetime: boolean
 }
 
+export interface NewsAuthor {
+  id: string
+  username: string
+  avatar: string | null
+}
+
+export interface NewsCard {
+  id: string
+  title: string
+  slug: string
+  excerpt: string | null
+  cover: string | null
+  status: string
+  pinned: boolean
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+  author: NewsAuthor | null
+}
+
+export interface NewsItem extends NewsCard {
+  content: string
+}
+
+export interface NewsListResponse {
+  total: number
+  page: number
+  pageSize: number
+  news: NewsCard[]
+}
+
 export interface DailyBonusState {
   available: boolean
   amount: number

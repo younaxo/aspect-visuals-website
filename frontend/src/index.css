@@ -3722,3 +3722,92 @@ html[data-animations='off'] *::after {
 }
 
 
+
+/* Новости: список, карточка и постраничная навигация */
+.news-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin-top: 24px;
+  padding: 0;
+}
+
+.news-item {
+  align-items: start;
+}
+
+.news-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.news-cover {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+
+.news-cover-full {
+  margin: 16px 0;
+  aspect-ratio: auto;
+}
+
+.news-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.news-pin {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fafafa;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.news-item h2 {
+  overflow-wrap: anywhere;
+}
+
+.news-item h2 a,
+.news-more {
+  color: #fafafa;
+  text-decoration: none;
+}
+
+.news-item h2 a:hover,
+.news-more:hover {
+  text-decoration: underline;
+}
+
+.news-more {
+  font-size: 13px;
+  justify-self: start;
+}
+
+.news-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.admin-textarea-lg {
+  min-height: 180px;
+  resize: vertical;
+}
+
+.admin-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}

@@ -11,6 +11,7 @@ const links = [
   { to: '/admin/promo', label: 'Промокоды' },
   { to: '/admin/bonus', label: 'Бонус-коды' },
   { to: '/admin/keys', label: 'Ключи' },
+  { to: '/admin/news', label: 'Новости' },
   { to: '/admin/purchases', label: 'Покупки' },
   { to: '/admin/logs', label: 'Логи' },
   { to: '/admin/settings', label: 'Настройки' },

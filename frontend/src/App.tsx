@@ -11,6 +11,8 @@ import { LoginDiscordPage } from './components/Auth/LoginDiscordPage'
 import { MainLayout } from './components/Layout/MainLayout'
 import { DiscordCallback } from './pages/DiscordCallback'
 import { HomePage } from './pages/HomePage'
+import { NewsPage } from './pages/NewsPage'
+import { NewsArticlePage } from './pages/NewsArticlePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { Shop } from './components/Shop/Shop'
@@ -29,6 +31,7 @@ import { AdminRoute } from './components/Auth/AdminRoute'
 import { PromoCodes } from './components/Admin/PromoCodes'
 import { ActivationKeys } from './components/Admin/ActivationKeys'
 import { BonusCodes } from './components/Admin/BonusCodes'
+import { NewsList } from './components/Admin/NewsList'
 import { AdminLayout } from './components/Admin/AdminLayout'
 import { Dashboard } from './components/Admin/Dashboard'
 import { UsersList } from './components/Admin/UsersList'
@@ -64,7 +67,8 @@ function App() {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="news" element={<PlaceholderPage title="Новости" />} />
+            <Route path="news" element={<NewsPage />} />
+            <Route path="news/:slug" element={<NewsArticlePage />} />
             <Route path="shop" element={<Shop />} />
             <Route path="privacy" element={<PlaceholderPage title="Политика конфиденциальности" />} />
             <Route path="terms" element={<PlaceholderPage title="Пользовательское соглашение" />} />
@@ -115,6 +119,7 @@ function App() {
                 <Route path="promo" element={<PromoCodes />} />
                 <Route path="bonus" element={<BonusCodes />} />
                 <Route path="keys" element={<ActivationKeys />} />
+                <Route path="news" element={<NewsList />} />
                 <Route path="purchases" element={<PurchasesList />} />
                 <Route path="logs" element={<AdminLogs />} />
                 <Route path="settings" element={<AdminSettings />} />

@@ -116,6 +116,25 @@ export const shopApi = {
   cancel: (id: string) => api.post(`/api/shop/subscription/cancel/${id}`),
 }
 
+export interface NewsPayload {
+  title: string
+  content: string
+  excerpt?: string | null
+  cover?: string | null
+  status?: string
+  pinned?: boolean
+}
+
+export const newsApi = {
+  list: (page = 1, pageSize = 10) => api.get('/api/news', { params: { page, pageSize } }),
+  bySlug: (slug: string) => api.get(`/api/news/${slug}`),
+  adminList: (params: { page?: number; pageSize?: number; search?: string; status?: string }) =>
+    api.get('/api/admin/news', { params }),
+  create: (payload: NewsPayload) => api.post('/api/admin/news', payload),
+  update: (id: string, payload: Partial<NewsPayload>) => api.put(`/api/admin/news/${id}`, payload),
+  remove: (id: string) => api.delete(`/api/admin/news/${id}`),
+}
+
 export const bonusApi = {
   dailyStatus: () => api.get('/api/bonus/daily'),
   claimDaily: () => api.post('/api/bonus/daily/claim'),
