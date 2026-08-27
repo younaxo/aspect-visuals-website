@@ -48,6 +48,8 @@ model User {
   balance                Decimal             @default(0)
   balanceTransactions    BalanceTransaction[]
   news                   News[]
+  launchTokens           LaunchToken[]
+  gameSessions           GameSession[]
   deletedAt              DateTime?
   isDeleted              Boolean             @default(false)
   adminLogs              AdminLog[]
@@ -440,4 +442,72 @@ model SystemSetting {
   description String?
   updatedBy   String?
   updatedAt   DateTime @updatedAt
+}
+
+// --- Запуск собственного клиента Aspect ---
+
+// Одноразовый короткоживущий токен для передачи клиенту.
+// Одноразовость обеспечивается атомарным UPDATE ... WHERE usedAt IS NULL,
+// поэтому отдельное хранилище не требуется.
+model LaunchToken {
+  id        String       @id @default(cuid())
+  jti       String       @unique
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  audience  String       @default("game-client")
+  issuedAt  DateTime     @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+  issuedIp  String?
+  session   GameSession?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Игровая сессия: создаётся клиентом в обмен на launch-токен
+model GameSession {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  launchTokenId String      @unique
+  launchToken   LaunchToken @relation(fields: [launchTokenId], references: [id], onDelete: Cascade)
+  roles         String[]
+  ip            String?
+  startedAt     DateTime    @default(now())
+  lastSeenAt    DateTime    @default(now())
+  endedAt       DateTime?
+  endedReason   String?
+
+  @@index([userId, endedAt])
+}
+
+// Версия клиента с подписанным манифестом файлов
+model ClientRelease {
+  id          String       @id @default(cuid())
+  channel     String       @default("stable")
+  version     String
+  notes       String?
+  signature   String
+  isActive    Boolean      @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  files       ClientFile[]
+
+  @@unique([channel, version])
+  @@index([channel, isActive])
+}
+
+model ClientFile {
+  id        String        @id @default(cuid())
+  releaseId String
+  release   ClientRelease @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  path      String
+  sha256    String
+  size      Int
+  url       String
+  executable Boolean      @default(false)
+
+  @@unique([releaseId, path])
 }
