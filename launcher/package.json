@@ -11,6 +11,7 @@
     "dist": "node scripts/dist.js"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "discord-rpc": "^4.0.1"
   },
   "devDependencies": {
@@ -34,6 +35,8 @@
       "icon.ico",
       "icon.png",
       "sounds/**/*",
+      "minecraft/**/*",
+      "node_modules/adm-zip/**/*",
       "package.json",
       "node_modules/discord-rpc/**/*",
       "node_modules/ws/**/*",

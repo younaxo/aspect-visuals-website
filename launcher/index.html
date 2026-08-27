@@ -1826,7 +1826,6 @@
       const loadingStatus = document.getElementById("loadingStatus");
       const loadingLog = document.getElementById("loadingLog");
       const loadingTitle = document.getElementById("loadingTitle");
-      let launchTimers = [];
 
       function isSkipPlayModal() { return localStorage.getItem("skipPlayModal") === "true"; }
       function syncAskModeToggle() {
@@ -1854,38 +1853,80 @@
         modeModal.classList.remove("open");
         modeModal.setAttribute("aria-hidden", "true");
       }
-      function startLaunch(mode) {
-        launchTimers.forEach(clearTimeout);
-        launchTimers = [];
+      // Реальная подготовка клиента: прогресс приходит из main-процесса,
+      // никаких заранее заданных таймеров
+      let launchBusy = false;
+
+      function logLine(text) {
+        const row = document.createElement("div");
+        row.textContent = text;
+        loadingLog.appendChild(row);
+        loadingLog.scrollTop = loadingLog.scrollHeight;
+      }
+
+      // Каждая стадия занимает свою долю общей полосы прогресса
+      const STAGE_WEIGHT = {
+        meta: [0, 2],
+        client: [2, 12],
+        libraries: [12, 34],
+        natives: [34, 38],
+        assets: [38, 88],
+        "fabric-meta": [88, 90],
+        "fabric-libraries": [90, 98],
+        servers: [98, 100],
+      };
+
+      let lastStage = null;
+
+      function applyProgress(p) {
+        const range = STAGE_WEIGHT[p.stage] || [0, 100];
+        const ratio = p.total > 0 ? p.done / p.total : 0;
+        const percent = range[0] + (range[1] - range[0]) * ratio;
+        loadingProgress.style.width = percent.toFixed(1) + "%";
+        loadingStatus.textContent = p.label + (p.total > 1 ? " " + p.done + " / " + p.total : "");
+        if (p.stage !== lastStage) {
+          lastStage = p.stage;
+          logLine("> " + p.label);
+        }
+      }
+
+      async function startLaunch(mode) {
+        if (launchBusy) return;
+        if (!av || !av.minecraft) { toast("Откройте лаунчер как приложение"); return; }
+
+        launchBusy = true;
         closeModeModal();
+        lastStage = null;
         loadingTitle.textContent = mode === "solo" ? "Одиночная игра" : "Зайти на TwoMC";
         loadingStatus.textContent = "Подготовка клиента…";
         loadingProgress.style.width = "0%";
         loadingLog.innerHTML = "";
         loadingScreen.classList.add("open");
         loadingScreen.setAttribute("aria-hidden", "false");
-        const logs = [
-          { t: 200, p: 8, status: "Resolving client…", line: "> Resolving Aspect Visuals client" },
-          { t: 900, p: 22, status: "Syncing mods…", line: "> Syncing mods..." },
-          { t: 1700, p: 41, status: "Checking assets…", line: "> Checking assets..." },
-          { t: 2600, p: 63, status: "Verifying Fabric…", line: "> Verifying Fabric 1.21.4" },
-          { t: 3500, p: 82, status: "Preparing session…", line: "> Preparing session handshake" },
-          { t: 4300, p: 100, status: "Ready", line: "> Launch sequence complete" },
-        ];
-        logs.forEach((step) => {
-          launchTimers.push(setTimeout(() => {
-            loadingProgress.style.width = step.p + "%";
-            loadingStatus.textContent = step.status;
-            const row = document.createElement("div");
-            row.textContent = step.line;
-            loadingLog.appendChild(row);
-            loadingLog.scrollTop = loadingLog.scrollHeight;
-          }, step.t));
-        });
-        launchTimers.push(setTimeout(() => {
-          loadingScreen.classList.remove("open");
-          loadingScreen.setAttribute("aria-hidden", "true");
-        }, 5000));
+
+        const unsubscribe = av.minecraft.onProgress(applyProgress);
+
+        try {
+          const result = await av.minecraft.prepare();
+          loadingProgress.style.width = "100%";
+          logLine("> Клиент готов: " + result.version + " · Fabric " + result.loaderVersion);
+          logLine("> Сервер play.twomc.su добавлен в список");
+
+          if (!result.java) {
+            loadingStatus.textContent = "Нужна Java " + result.minJava + " или новее";
+            logLine("> Java " + result.minJava + "+ не найдена, установите её");
+          } else {
+            loadingStatus.textContent = "Клиент готов";
+            logLine("> Java: " + result.java.raw);
+            logLine("> Запуск требует входа через Microsoft — он ещё не подключён");
+          }
+        } catch (err) {
+          loadingStatus.textContent = "Ошибка подготовки";
+          logLine("> " + ((err && err.message) || "неизвестная ошибка"));
+        } finally {
+          unsubscribe();
+          launchBusy = false;
+        }
       }
 
       document.getElementById("btnPlay").addEventListener("click", () => {

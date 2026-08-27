@@ -336,6 +336,65 @@ ipcMain.handle("discord-oauth", async () => {
   })
 })
 
+// --- Minecraft: подготовка клиента и управление контентом ---
+const minecraft = require("./minecraft");
+
+let prepareInFlight = null;
+
+ipcMain.handle("mc-prepare", async () => {
+  // Повторный вызов не запускает вторую установку
+  if (prepareInFlight) return prepareInFlight;
+
+  prepareInFlight = (async () => {
+    try {
+      return await minecraft.prepareClient((progress) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("mc-progress", progress);
+        }
+      });
+    } finally {
+      prepareInFlight = null;
+    }
+  })();
+
+  return prepareInFlight;
+});
+
+ipcMain.handle("mc-status", async () => {
+  const { findJava } = require("./minecraft/java");
+  const java = await findJava(minecraft.MIN_JAVA);
+  return {
+    version: minecraft.TARGET_VERSION,
+    root: minecraft.paths.root,
+    minJava: minecraft.MIN_JAVA,
+    java: java.java,
+    javaInstalled: java.installed,
+    installed: minecraft.listInstalled(),
+  };
+});
+
+ipcMain.handle("mc-install-content", async (_event, kind, item) => {
+  if (kind !== "mod" && kind !== "resourcepack") throw new Error("Неизвестный тип контента");
+  return minecraft.installContent(kind, item);
+});
+
+ipcMain.handle("mc-remove-content", async (_event, kind, filename) => {
+  if (kind !== "mod" && kind !== "resourcepack") throw new Error("Неизвестный тип контента");
+  return minecraft.removeContent(kind, filename);
+});
+
+ipcMain.handle("mc-open-folder", async (_event, which) => {
+  const map = {
+    root: minecraft.paths.root,
+    mods: minecraft.paths.mods,
+    resourcepacks: minecraft.paths.resourcepacks,
+  };
+  const target = map[which];
+  if (!target) throw new Error("Неизвестная папка");
+  await shell.openPath(target);
+  return { ok: true, path: target };
+});
+
 const TELEGRAM_CALLBACK = "https://aspectvisuals.su/auth/telegram/callback";
 
 ipcMain.handle("telegram-oauth", async () => {

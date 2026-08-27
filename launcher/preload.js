@@ -36,4 +36,18 @@ contextBridge.exposeInMainWorld("av", {
   discordOAuth: () => ipcRenderer.invoke("discord-oauth"),
 
   telegramOAuth: () => ipcRenderer.invoke("telegram-oauth"),
+
+  minecraft: {
+    status: () => ipcRenderer.invoke("mc-status"),
+    prepare: () => ipcRenderer.invoke("mc-prepare"),
+    installContent: (kind, item) => ipcRenderer.invoke("mc-install-content", kind, item),
+    removeContent: (kind, filename) => ipcRenderer.invoke("mc-remove-content", kind, filename),
+    openFolder: (which) => ipcRenderer.invoke("mc-open-folder", which),
+    // Подписка на прогресс: возвращает функцию отписки, слушатель наружу не утекает
+    onProgress: (callback) => {
+      const handler = (_event, payload) => callback(payload);
+      ipcRenderer.on("mc-progress", handler);
+      return () => ipcRenderer.removeListener("mc-progress", handler);
+    },
+  },
 });
