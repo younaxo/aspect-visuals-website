@@ -64,10 +64,29 @@ async function sendMail({ to, subject, text, html }: MailInput): Promise<void> {
 }
 
 /**
- * Оформление письма в стиле лаунчера: тёмный фон, стеклянная карточка,
- * белая акцентная кнопка. Вёрстка таблицами, инлайновые стили и никакого SVG —
- * иначе почтовые клиенты ломают разметку.
+ * Оформление письма фирменными средствами проекта:
+ * знак Aspect из frontend/public/brand, шрифт Onest и токены цвета
+ * из frontend/src/index.css (--bg, --accent, карточка #18181b, рамка #27272a).
+ *
+ * Вёрстка таблицами с инлайновыми стилями: почтовые клиенты вырезают
+ * внешний CSS и SVG, поэтому знак подключается растровым PNG,
+ * а Onest — ссылкой на Google Fonts со штатным фолбэком сайта.
  */
+const BRAND = {
+  bg: '#0b0b0f',
+  card: '#18181b',
+  border: '#27272a',
+  accent: '#fafafa',
+  text: '#a1a1aa',
+  muted: '#71717a',
+  faint: '#52525b',
+  font: "'Onest','Segoe UI',system-ui,Roboto,Helvetica,Arial,sans-serif",
+}
+
+function logoUrl(): string {
+  return `${FRONTEND_URL()}/brand/logo-mark-128.png`
+}
+
 function layout(title: string, intro: string, buttonText: string, url: string, footer: string): string {
   return `<!doctype html>
 <html lang="ru">
@@ -76,55 +95,54 @@ function layout(title: string, intro: string, buttonText: string, url: string, f
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <title>${title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
-<body style="margin:0;padding:0;background:#09090b;">
+<body style="margin:0;padding:0;background:${BRAND.bg};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${intro}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#09090b;padding:32px 16px;">
-    <tr><td align="center">
 
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.bg};padding:36px 16px;">
+    <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:460px;">
 
-        <tr><td align="center" style="padding-bottom:22px;">
+        <tr><td align="center" style="padding-bottom:24px;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
             <tr>
-              <td style="width:38px;height:38px;background:#fafafa;border-radius:10px;text-align:center;vertical-align:middle;
-                         font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:700;color:#09090b;line-height:38px;">A</td>
-              <td style="padding-left:11px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-                         font-size:12px;font-weight:600;letter-spacing:.22em;color:#fafafa;">ASPECT VISUALS</td>
+              <td style="vertical-align:middle;">
+                <img src="${logoUrl()}" width="34" height="34" alt="Aspect Visuals"
+                     style="display:block;width:34px;height:34px;border:0;" />
+              </td>
+              <td style="padding-left:12px;vertical-align:middle;font-family:${BRAND.font};
+                         font-size:12px;font-weight:600;letter-spacing:.24em;color:${BRAND.accent};">ASPECT VISUALS</td>
             </tr>
           </table>
         </td></tr>
 
-        <tr><td style="background:#18181b;border:1px solid #27272a;border-radius:14px;padding:32px;">
-          <h1 style="margin:0 0 14px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-                     font-size:20px;font-weight:600;color:#fafafa;">${title}</h1>
-          <p style="margin:0 0 26px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-                    font-size:14px;line-height:1.65;color:#a1a1aa;">${intro}</p>
+        <tr><td style="background:${BRAND.card};border:1px solid ${BRAND.border};border-radius:14px;padding:32px;">
+          <h1 style="margin:0 0 14px;font-family:${BRAND.font};font-size:20px;font-weight:600;color:${BRAND.accent};">${title}</h1>
+          <p style="margin:0 0 26px;font-family:${BRAND.font};font-size:14px;line-height:1.65;color:${BRAND.text};">${intro}</p>
 
           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-            <tr><td style="background:#fafafa;border-radius:9px;">
-              <a href="${url}" style="display:inline-block;padding:12px 26px;
-                 font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;
-                 color:#09090b;text-decoration:none;">${buttonText}</a>
+            <tr><td style="background:${BRAND.accent};border-radius:9px;">
+              <a href="${url}" style="display:inline-block;padding:12px 26px;font-family:${BRAND.font};
+                 font-size:14px;font-weight:600;color:${BRAND.bg};text-decoration:none;">${buttonText}</a>
             </td></tr>
           </table>
 
-          <div style="height:1px;background:#27272a;margin:26px 0 18px;"></div>
+          <div style="height:1px;background:${BRAND.border};margin:26px 0 18px;"></div>
 
-          <p style="margin:0 0 10px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-                    font-size:12px;line-height:1.65;color:#71717a;">${footer}</p>
-          <p style="margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-                    font-size:11px;line-height:1.5;color:#52525b;word-break:break-all;">${url}</p>
+          <p style="margin:0 0 10px;font-family:${BRAND.font};font-size:12px;line-height:1.65;color:${BRAND.muted};">${footer}</p>
+          <p style="margin:0;font-family:${BRAND.font};font-size:11px;line-height:1.5;word-break:break-all;">
+            <a href="${url}" style="color:${BRAND.faint};text-decoration:none;">${url}</a>
+          </p>
         </td></tr>
 
-        <tr><td align="center" style="padding-top:20px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-                                      font-size:11px;color:#3f3f46;">
+        <tr><td align="center" style="padding-top:20px;font-family:${BRAND.font};font-size:11px;line-height:1.6;color:#3f3f46;">
           Письмо отправлено автоматически, отвечать на него не нужно.<br />
-          aspectvisuals.su
+          <a href="${FRONTEND_URL()}" style="color:${BRAND.muted};text-decoration:none;">aspectvisuals.su</a>
         </td></tr>
 
       </table>
-
     </td></tr>
   </table>
 </body>
