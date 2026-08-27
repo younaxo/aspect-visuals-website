@@ -12,8 +12,15 @@ const { findJava } = require("./java");
 const TARGET_VERSION = "1.21.4";
 const MIN_JAVA = 21;
 
+/**
+ * Оставляем символы, реально встречающиеся в именах модов (плюс в версиях
+ * Fabric, скобки), но отсекаем разделители пути и всё опасное.
+ */
 function safeName(name, fallback) {
-  const clean = String(name || "").replace(/[^\w.\- ]+/g, "").trim();
+  const clean = String(name || "")
+    .replace(/[\\/]/g, "")
+    .replace(/[^\w.+\-()[\] ]+/g, "")
+    .trim();
   return clean || fallback;
 }
 
@@ -90,13 +97,25 @@ function listInstalled() {
 
 function removeContent(kind, filename) {
   const dir = kind === "resourcepack" ? paths.resourcepacks : paths.mods;
-  const clean = safeName(filename, "");
+  const raw = String(filename || "");
+
+  // Отказываем сразу, а не «чиним» подозрительное имя: так попытка
+  // выхода из каталога видна, а не маскируется санитизацией
+  // Двоеточие отсекает и абсолютные, и drive-relative пути вида "C:file"
+  if (!raw || /[/\\:]/.test(raw) || raw.includes("..")) {
+    throw new Error("Недопустимое имя файла");
+  }
+
+  const clean = safeName(raw, "");
   if (!clean) throw new Error("Некорректное имя файла");
 
-  const target = path.join(dir, clean);
-  // Не даём выйти за пределы каталога
-  if (!target.startsWith(dir)) throw new Error("Недопустимый путь");
-  if (fs.existsSync(target)) fs.unlinkSync(target);
+  const target = path.resolve(dir, clean);
+  if (path.dirname(target) !== path.resolve(dir)) {
+    throw new Error("Недопустимый путь");
+  }
+
+  if (!fs.existsSync(target)) return false;
+  fs.unlinkSync(target);
   return true;
 }
 
