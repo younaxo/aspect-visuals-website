@@ -25,6 +25,65 @@ async function main() {
   }
 
   await seedShop()
+  await seedConfigs()
+  await seedCosmetics()
+  await seedNews()
+}
+
+const configPresets = [
+  { name: 'FPS Boost', description: 'Лёгкий профиль под слабые ПК', sortOrder: 1 },
+  { name: 'Cinematic', description: 'Максимум теней и объёма', sortOrder: 2 },
+  { name: 'PvP Clean', description: 'Чистая картинка без лишнего', sortOrder: 3 },
+]
+
+const cosmeticItems = [
+  { name: 'Mono Default', description: 'Базовое оформление клиента', status: 'AVAILABLE', sortOrder: 1 },
+  { name: 'Carbon', description: 'Тёмное карбоновое оформление', status: 'SOON', sortOrder: 2 },
+  { name: 'Ivory', description: 'Светлое оформление', status: 'SOON', sortOrder: 3 },
+]
+
+async function seedConfigs() {
+  for (const item of configPresets) {
+    const existing = await prisma.configPreset.findFirst({ where: { name: item.name } })
+    if (existing) {
+      await prisma.configPreset.update({ where: { id: existing.id }, data: item })
+    } else {
+      await prisma.configPreset.create({ data: item })
+    }
+  }
+}
+
+async function seedCosmetics() {
+  for (const item of cosmeticItems) {
+    const existing = await prisma.cosmeticItem.findFirst({ where: { name: item.name } })
+    if (existing) {
+      await prisma.cosmeticItem.update({ where: { id: existing.id }, data: item })
+    } else {
+      await prisma.cosmeticItem.create({ data: item })
+    }
+  }
+}
+
+// Стартовая новость, чтобы раздел не был пустым до первой публикации из админки
+async function seedNews() {
+  const slug = 'aspect-visuals-zapusk'
+  const existing = await prisma.news.findUnique({ where: { slug } })
+  if (existing) return
+
+  await prisma.news.create({
+    data: {
+      title: 'Aspect Visuals',
+      slug,
+      excerpt: 'Клиент визуалов для Minecraft: вход по email, Discord, подписки и магазин.',
+      content:
+        'Aspect Visuals — клиент визуалов для Minecraft. Доступны вход по email и через Discord, ' +
+        'синхронизация ролей, подписки, магазин и ежедневный бонус. ' +
+        'Новости публикуются из административной панели.',
+      status: 'PUBLISHED',
+      pinned: true,
+      publishedAt: new Date(),
+    },
+  })
 }
 
 const subscriptions = [

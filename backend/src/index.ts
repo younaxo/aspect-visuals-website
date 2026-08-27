@@ -12,8 +12,10 @@ import activationRoutes from './routes/activation'
 import bonusRoutes from './routes/bonus'
 import chatRoutes from './routes/chat'
 import adminRoutes from './routes/admin'
-import { ensureUploadDirs, UPLOADS_DIR } from './utils/media'
+import contentRoutes from './routes/content'
+import newsRoutes from './routes/news'
 import { registerChatSocket } from './sockets/chatSocket'
+import { ensureUploadDirs, UPLOADS_DIR } from './utils/media'
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
@@ -58,6 +60,8 @@ app.use('/api', activationRoutes)
 app.use('/api', bonusRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api/content', contentRoutes)
+app.use('/api', newsRoutes)
 app.use('/api', profileRoutes)
 
 app.get('/api/health', (_req, res) => {
