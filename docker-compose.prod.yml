@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aspect_prod_9898}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD обязателен, задайте его в .env рядом с docker-compose.prod.yml}
       POSTGRES_DB: aspect_visuals
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -28,7 +28,7 @@ services:
       - ./backend/.env.production
     environment:
       PORT: 5000
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-aspect_prod_9898}@postgres:5432/aspect_visuals
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD обязателен, задайте его в .env рядом с docker-compose.prod.yml}@postgres:5432/aspect_visuals
       FRONTEND_URL: https://aspectvisuals.su
       BACKEND_URL: https://aspectvisuals.su
       DISCORD_REDIRECT_URI: https://aspectvisuals.su/auth/discord/callback
