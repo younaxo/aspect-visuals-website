@@ -38,5 +38,7 @@ export function rateLimit(scope: string, max: number, windowMs: number) {
 // поэтому лимиты держим строгими
 export const registerLimiter = rateLimit('register', 5, 15 * 60 * 1000)
 export const loginLimiter = rateLimit('login', 10, 15 * 60 * 1000)
-export const forgotPasswordLimiter = rateLimit('forgot-password', 5, 15 * 60 * 1000)
+// Форма сброса отвечает, существует ли аккаунт, поэтому лимит строгий:
+// перебор адресов по ней должен быть непрактичным
+export const forgotPasswordLimiter = rateLimit('forgot-password', 5, 60 * 60 * 1000)
 export const resetPasswordLimiter = rateLimit('reset-password', 10, 15 * 60 * 1000)

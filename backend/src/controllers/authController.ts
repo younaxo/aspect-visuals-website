@@ -485,23 +485,32 @@ export async function forgotPassword(req: Request, res: Response) {
     }
 
     const user = await prisma.user.findUnique({ where: { email } })
-    if (user?.password) {
-      const token = createSecureToken()
-      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS)
 
-      await prisma.passwordReset.create({
-        data: { userId: user.id, token, expiresAt },
-      })
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { resetToken: token, resetTokenExpiry: expiresAt },
-      })
-
-      await sendPasswordResetEmail(email, token)
+    // По требованию продукта отвечаем явно, что аккаунта нет.
+    // Это раскрывает факт регистрации адреса, поэтому перебор
+    // сдерживается строгим лимитом на forgotPasswordLimiter.
+    if (!user || user.isDeleted) {
+      res.status(404).json({ message: 'Аккаунт с таким email не найден' })
+      return
     }
 
-    res.json({ message: 'Если аккаунт существует, мы отправили ссылку для сброса пароля' })
+    const token = createSecureToken()
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS)
+
+    await prisma.passwordReset.create({
+      data: { userId: user.id, token, expiresAt },
+    })
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken: token, resetTokenExpiry: expiresAt },
+    })
+
+    // Письмо уходит и тем, у кого пароля ещё нет: аккаунты из Discord
+    // и Telegram создаются без пароля, и раньше они не могли его задать вовсе
+    await sendPasswordResetEmail(email, token)
+
+    res.json({ message: 'Ссылка для смены пароля отправлена на почту' })
   } catch (error) {
     console.error('Forgot password error:', error)
     res.status(500).json({ message: 'Не удалось отправить ссылку для сброса пароля' })

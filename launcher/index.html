@@ -102,13 +102,34 @@
 
     /* Слот, поверх которого main размещает слой с виджетом Turnstile */
     .captcha-slot {
-      position: relative; width: 100%; height: 68px; margin-bottom: 14px;
-      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      position: relative; width: 100%; height: 66px; margin-bottom: 14px;
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      transition: height 0.22s var(--ease-out), background 0.22s var(--ease-out),
+                  border-color 0.22s var(--ease-out);
     }
-    .captcha-hint { font-size: 12px; color: #52525b; }
+    .captcha-hint {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 12px; color: #71717a;
+    }
+    .captcha-hint::before {
+      content: ""; width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.18); border-top-color: rgba(255,255,255,0.6);
+      animation: captchaSpin 0.7s linear infinite;
+    }
+    .captcha-slot.is-ready { background: transparent; border-color: transparent; }
     .captcha-slot.is-ready .captcha-hint { display: none; }
-    .captcha-slot.is-done { height: 34px; }
-    .captcha-slot.is-done .captcha-hint { display: block; color: #4ade80; }
+    .captcha-slot.is-done {
+      height: 38px;
+      background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.22);
+    }
+    .captcha-slot.is-done .captcha-hint { color: #4ade80; }
+    .captcha-slot.is-done .captcha-hint::before {
+      animation: none; border: 0; width: 13px; height: 13px;
+      background: no-repeat center/contain
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234ade80' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m20 6-11 11-5-5'/%3E%3C/svg%3E");
+    }
+    @keyframes captchaSpin { to { transform: rotate(360deg); } }
 
     .splash {
       position: absolute; inset: 0; z-index: 90; display: flex; flex-direction: column;
@@ -771,7 +792,7 @@
             <input class="auth-input" id="authPasswordConfirm" type="password" placeholder="повторите пароль" autocomplete="new-password" />
           </div>
           <div class="captcha-slot" id="captchaSlot">
-            <span class="captcha-hint" id="captchaHint">Загружаем проверку…</span>
+            <span class="captcha-hint" id="captchaHint">Загружаем проверку</span>
           </div>
           <button type="submit" class="auth-submit interactive" id="authSubmit">Войти</button>
           <div class="auth-login-only">
