@@ -101,35 +101,68 @@
 
 
     /* Слот, поверх которого main размещает слой с виджетом Turnstile */
+    /* Поле капчи: загрузка, готовность, успех и ошибка */
     .captcha-slot {
       position: relative; width: 100%; height: 66px; margin-bottom: 14px;
       border-radius: 10px; display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
-      transition: height 0.22s var(--ease-out), background 0.22s var(--ease-out),
-                  border-color 0.22s var(--ease-out);
+      transition: height 0.24s var(--ease-out), background 0.24s var(--ease-out),
+                  border-color 0.24s var(--ease-out);
+      overflow: hidden;
     }
     .captcha-hint {
-      display: inline-flex; align-items: center; gap: 7px;
-      font-size: 12px; color: #71717a;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12.5px; color: #71717a; letter-spacing: 0.01em;
     }
     .captcha-hint::before {
-      content: ""; width: 12px; height: 12px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.18); border-top-color: rgba(255,255,255,0.6);
-      animation: captchaSpin 0.7s linear infinite;
+      content: ""; width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.16); border-top-color: rgba(255,255,255,0.62);
+      animation: captchaSpin 0.75s linear infinite;
     }
+    .captcha-retry {
+      display: none; margin-left: 10px; height: 24px; padding: 0 10px;
+      border-radius: 6px; border: 1px solid rgba(255,255,255,0.14);
+      background: transparent; color: #a1a1aa; font-size: 11.5px; font-family: inherit;
+      transition: background 0.16s var(--ease-out), color 0.16s var(--ease-out);
+    }
+    .captcha-retry:hover { background: rgba(255,255,255,0.08); color: #fafafa; }
+
+    /* Виджет виден — рамка убирается, чтобы не было рамки в рамке */
     .captcha-slot.is-ready { background: transparent; border-color: transparent; }
     .captcha-slot.is-ready .captcha-hint { display: none; }
+
+    /* Успех */
     .captcha-slot.is-done {
-      height: 38px;
-      background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.22);
+      height: 40px;
+      background: rgba(74,222,128,0.07);
+      border-color: rgba(74,222,128,0.24);
     }
-    .captcha-slot.is-done .captcha-hint { color: #4ade80; }
+    .captcha-slot.is-done .captcha-hint { color: #4ade80; animation: captchaPop 0.3s var(--ease-out); }
     .captcha-slot.is-done .captcha-hint::before {
-      animation: none; border: 0; width: 13px; height: 13px;
+      animation: none; border: 0; width: 14px; height: 14px;
       background: no-repeat center/contain
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234ade80' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m20 6-11 11-5-5'/%3E%3C/svg%3E");
     }
+
+    /* Ошибка */
+    .captcha-slot.is-error {
+      height: 40px;
+      background: rgba(248,113,113,0.07);
+      border-color: rgba(248,113,113,0.24);
+    }
+    .captcha-slot.is-error .captcha-hint { color: #f87171; }
+    .captcha-slot.is-error .captcha-hint::before {
+      animation: none; border: 0; width: 14px; height: 14px;
+      background: no-repeat center/contain
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f87171' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+    }
+    .captcha-slot.is-error .captcha-retry { display: inline-flex; align-items: center; }
+
     @keyframes captchaSpin { to { transform: rotate(360deg); } }
+    @keyframes captchaPop {
+      0% { opacity: 0; transform: scale(0.94); }
+      100% { opacity: 1; transform: scale(1); }
+    }
 
     .splash {
       position: absolute; inset: 0; z-index: 90; display: flex; flex-direction: column;
@@ -793,6 +826,7 @@
           </div>
           <div class="captcha-slot" id="captchaSlot">
             <span class="captcha-hint" id="captchaHint">Загружаем проверку</span>
+            <button type="button" class="captcha-retry" id="captchaRetry">Пройти заново</button>
           </div>
           <button type="submit" class="auth-submit interactive" id="authSubmit">Войти</button>
           <div class="auth-login-only">
@@ -2666,6 +2700,15 @@
       let captchaMounted = false;
       let captchaUnsub = null;
 
+      function setCaptchaState(state, text) {
+        const slot = document.getElementById("captchaSlot");
+        const hint = document.getElementById("captchaHint");
+        if (!slot) return;
+        slot.classList.remove("is-ready", "is-done", "is-error");
+        if (state) slot.classList.add("is-" + state);
+        if (hint && text) hint.textContent = text;
+      }
+
       function captchaSlotBounds() {
         const slot = document.getElementById("captchaSlot");
         if (!slot) return null;
@@ -2686,8 +2729,8 @@
         if (!captchaUnsub) {
           captchaUnsub = av.captcha.onToken((token) => {
             captchaToken = token || "";
-            if (slot) { slot.classList.remove("is-ready"); slot.classList.add("is-done"); }
-            if (hint) hint.textContent = "Проверка пройдена";
+            setCaptchaState(captchaToken ? "done" : "error",
+              captchaToken ? "Проверка пройдена" : "Проверка не пройдена");
             // Виджет больше не нужен, слой убираем
             void av.captcha.unmount();
             captchaMounted = false;
@@ -2696,10 +2739,10 @@
 
         try {
           await av.captcha.mount(bounds);
-          if (slot) slot.classList.add("is-ready");
+          setCaptchaState("ready");
         } catch (err) {
           captchaMounted = false;
-          if (hint) hint.textContent = "Не удалось загрузить проверку";
+          setCaptchaState("error", "Не удалось загрузить проверку");
           console.warn("[Captcha]", err.message || err);
         }
       }
@@ -2712,11 +2755,16 @@
 
       function resetCaptcha() {
         captchaToken = "";
-        const slot = document.getElementById("captchaSlot");
-        const hint = document.getElementById("captchaHint");
-        if (slot) { slot.classList.remove("is-done", "is-ready"); }
-        if (hint) hint.textContent = "Загружаем проверку…";
+        setCaptchaState(null, "Загружаем проверку");
         void unmountCaptcha().then(mountCaptcha);
+      }
+
+      const captchaRetry = document.getElementById("captchaRetry");
+      if (captchaRetry) {
+        captchaRetry.addEventListener("click", (e) => {
+          e.preventDefault();
+          resetCaptcha();
+        });
       }
 
       // Слой позиционируется абсолютно, поэтому следим за прокруткой и размером

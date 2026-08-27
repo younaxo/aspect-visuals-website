@@ -1,9 +1,24 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { Button } from '../Common/Button'
-import { authApi } from '../../api'
+import api, { authApi } from '../../api'
 import { useToastStore } from '../../store/toastStore'
+
+interface ResetCheck {
+  valid: boolean
+  reason?: string
+  message?: string
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: string } | undefined)?.message
+    if (message) return message
+  }
+  return fallback
+}
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams()
@@ -15,14 +30,26 @@ export function ResetPasswordPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Ссылку проверяем сразу при открытии, чтобы не заполнять форму впустую.
+  // Токен при этой проверке не расходуется.
+  const checkQuery = useQuery({
+    queryKey: ['reset-check', token],
+    queryFn: async () => {
+      const { data } = await api.get('/api/auth/reset-password/check', { params: { token } })
+      return data as ResetCheck
+    },
+    enabled: Boolean(token),
+    retry: false,
+  })
+
+  const linkBroken = !token || checkQuery.isError
+  const linkMessage = !token
+    ? 'В ссылке нет токена сброса'
+    : errorMessage(checkQuery.error, 'Ссылка недействительна. Запросите новую.')
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     setError(null)
-
-    if (!token) {
-      setError('В ссылке нет токена сброса')
-      return
-    }
 
     if (password !== confirm) {
       setError('Пароли не совпадают')
@@ -35,9 +62,7 @@ export function ResetPasswordPage() {
       showToast('Пароль обновлён', 'success')
       navigate('/login', { replace: true })
     } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? (err.response?.data as { message?: string })?.message || 'Не удалось сбросить пароль'
-        : 'Не удалось сбросить пароль'
+      const message = errorMessage(err, 'Не удалось сбросить пароль')
       setError(message)
       showToast(message, 'error')
     } finally {
@@ -48,38 +73,54 @@ export function ResetPasswordPage() {
   return (
     <section className="auth-page content-panel liquid-glass ui-modal size-sm" style={{ margin: '40px auto' }}>
       <h1 className="page-title">Новый пароль</h1>
-      <p className="page-text">Придумайте новый пароль для аккаунта.</p>
 
-      <form className="auth-form" onSubmit={(event) => void submit(event)}>
-        <label className="profile-field">
-          <span>Новый пароль</span>
-          <input
-            className="profile-input"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            minLength={6}
-            required
-          />
-        </label>
-        <label className="profile-field">
-          <span>Подтверждение</span>
-          <input
-            className="profile-input"
-            type="password"
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-            minLength={6}
-            required
-          />
-        </label>
-        {error && <p className="error-text">{error}</p>}
-        <Button type="submit" disabled={busy}>
-          {busy ? 'Сохраняем…' : 'Сбросить пароль'}
-        </Button>
-      </form>
+      {checkQuery.isPending && token && <p className="page-text">Проверяем ссылку…</p>}
+
+      {linkBroken && (
+        <>
+          <p className="error-text">{linkMessage}</p>
+          <p className="page-text">Ссылка действует один час и срабатывает один раз.</p>
+          <Link to="/forgot-password">
+            <Button>Запросить новую ссылку</Button>
+          </Link>
+        </>
+      )}
+
+      {checkQuery.data?.valid && (
+        <>
+          <p className="page-text">Придумайте новый пароль для аккаунта.</p>
+          <form className="auth-form" onSubmit={(event) => void submit(event)}>
+            <label className="profile-field">
+              <span>Новый пароль</span>
+              <input
+                className="profile-input"
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                minLength={6}
+                required
+              />
+            </label>
+            <label className="profile-field">
+              <span>Подтверждение</span>
+              <input
+                className="profile-input"
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+                minLength={6}
+                required
+              />
+            </label>
+            {error && <p className="error-text">{error}</p>}
+            <Button type="submit" disabled={busy}>
+              {busy ? 'Сохраняем…' : 'Сбросить пароль'}
+            </Button>
+          </form>
+        </>
+      )}
 
       <p className="auth-links">
         <Link to="/login">Войти</Link>

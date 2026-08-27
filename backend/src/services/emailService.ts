@@ -63,24 +63,72 @@ async function sendMail({ to, subject, text, html }: MailInput): Promise<void> {
   console.log(`[email] отправлено "${subject}" → ${to}`)
 }
 
+/**
+ * Оформление письма в стиле лаунчера: тёмный фон, стеклянная карточка,
+ * белая акцентная кнопка. Вёрстка таблицами, инлайновые стили и никакого SVG —
+ * иначе почтовые клиенты ломают разметку.
+ */
 function layout(title: string, intro: string, buttonText: string, url: string, footer: string): string {
   return `<!doctype html>
-<html lang="ru"><body style="margin:0;padding:24px;background:#09090b;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#09090b;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${intro}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#09090b;padding:32px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" style="max-width:480px;background:#18181b;border:1px solid #27272a;border-radius:12px;padding:32px;">
-        <tr><td>
-          <p style="margin:0 0 4px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#71717a;">Aspect Visuals</p>
-          <h1 style="margin:0 0 16px;font-size:20px;color:#fafafa;">${title}</h1>
-          <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#a1a1aa;">${intro}</p>
-          <a href="${url}" style="display:inline-block;padding:11px 22px;border-radius:8px;background:#fafafa;color:#09090b;font-size:14px;font-weight:600;text-decoration:none;">${buttonText}</a>
-          <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#71717a;">${footer}</p>
-          <p style="margin:12px 0 0;font-size:12px;color:#52525b;word-break:break-all;">${url}</p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:460px;">
+
+        <tr><td align="center" style="padding-bottom:22px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="width:38px;height:38px;background:#fafafa;border-radius:10px;text-align:center;vertical-align:middle;
+                         font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:700;color:#09090b;line-height:38px;">A</td>
+              <td style="padding-left:11px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                         font-size:12px;font-weight:600;letter-spacing:.22em;color:#fafafa;">ASPECT VISUALS</td>
+            </tr>
+          </table>
         </td></tr>
+
+        <tr><td style="background:#18181b;border:1px solid #27272a;border-radius:14px;padding:32px;">
+          <h1 style="margin:0 0 14px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                     font-size:20px;font-weight:600;color:#fafafa;">${title}</h1>
+          <p style="margin:0 0 26px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                    font-size:14px;line-height:1.65;color:#a1a1aa;">${intro}</p>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr><td style="background:#fafafa;border-radius:9px;">
+              <a href="${url}" style="display:inline-block;padding:12px 26px;
+                 font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;
+                 color:#09090b;text-decoration:none;">${buttonText}</a>
+            </td></tr>
+          </table>
+
+          <div style="height:1px;background:#27272a;margin:26px 0 18px;"></div>
+
+          <p style="margin:0 0 10px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                    font-size:12px;line-height:1.65;color:#71717a;">${footer}</p>
+          <p style="margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                    font-size:11px;line-height:1.5;color:#52525b;word-break:break-all;">${url}</p>
+        </td></tr>
+
+        <tr><td align="center" style="padding-top:20px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+                                      font-size:11px;color:#3f3f46;">
+          Письмо отправлено автоматически, отвечать на него не нужно.<br />
+          aspectvisuals.su
+        </td></tr>
+
       </table>
+
     </td></tr>
   </table>
-</body></html>`
+</body>
+</html>`
 }
 
 export async function sendVerificationEmail(to: string, token: string): Promise<void> {

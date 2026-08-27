@@ -535,8 +535,20 @@ export async function resetPassword(req: Request, res: Response) {
     const record = await prisma.passwordReset.findUnique({ where: { token } })
     const now = new Date()
 
-    if (!record || record.usedAt || record.expiresAt < now) {
-      res.status(400).json({ message: 'Ссылка для сброса пароля недействительна или истекла' })
+    // Причину пишем в лог: без неё «ссылка недействительна» невозможно диагностировать
+    if (!record) {
+      console.warn(`[auth] сброс пароля: токен не найден (длина ${token.length})`)
+      res.status(400).json({ message: 'Ссылка недействительна. Запросите новую.' })
+      return
+    }
+    if (record.usedAt) {
+      console.warn(`[auth] сброс пароля: токен уже использован ${record.usedAt.toISOString()}`)
+      res.status(400).json({ message: 'Ссылка уже использована. Запросите новую.' })
+      return
+    }
+    if (record.expiresAt < now) {
+      console.warn(`[auth] сброс пароля: токен истёк ${record.expiresAt.toISOString()}`)
+      res.status(400).json({ message: 'Срок действия ссылки истёк. Запросите новую.' })
       return
     }
 
@@ -563,6 +575,36 @@ export async function resetPassword(req: Request, res: Response) {
   } catch (error) {
     console.error('Reset password error:', error)
     res.status(500).json({ message: 'Не удалось сбросить пароль' })
+  }
+}
+
+/** Проверка ссылки сброса при открытии страницы: токен не расходуется. */
+export async function checkResetToken(req: Request, res: Response) {
+  try {
+    const token = typeof req.query.token === 'string' ? req.query.token.trim() : ''
+    if (!token) {
+      res.status(400).json({ valid: false, reason: 'missing', message: 'В ссылке нет токена' })
+      return
+    }
+
+    const record = await prisma.passwordReset.findUnique({ where: { token } })
+    if (!record) {
+      res.status(404).json({ valid: false, reason: 'not_found', message: 'Ссылка недействительна. Запросите новую.' })
+      return
+    }
+    if (record.usedAt) {
+      res.status(410).json({ valid: false, reason: 'used', message: 'Ссылка уже использована. Запросите новую.' })
+      return
+    }
+    if (record.expiresAt < new Date()) {
+      res.status(410).json({ valid: false, reason: 'expired', message: 'Срок действия ссылки истёк. Запросите новую.' })
+      return
+    }
+
+    res.json({ valid: true, expiresAt: record.expiresAt.toISOString() })
+  } catch (error) {
+    console.error('Check reset token error:', error)
+    res.status(500).json({ valid: false, reason: 'error', message: 'Не удалось проверить ссылку' })
   }
 }
 

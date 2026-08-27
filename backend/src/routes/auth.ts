@@ -15,6 +15,7 @@ import {
   resetPassword,
   telegramConfig,
   telegramLogin,
+  checkResetToken,
   turnstileConfig,
   unlinkDiscord,
   verifyEmail,
@@ -40,6 +41,7 @@ router.post('/discord', optionalAuth, discordAuthUrl)
 router.get('/discord/callback', discordCallbackRedirect)
 router.post('/discord/callback', discordCallback)
 
+router.get('/reset-password/check', checkResetToken)
 router.get('/turnstile/config', turnstileConfig)
 // Страница капчи для лаунчера: отдаётся с нашего домена, чтобы виджет работал
 router.get('/captcha', captchaPage)
