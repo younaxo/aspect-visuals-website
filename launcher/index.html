@@ -99,6 +99,17 @@
     .auth-oauth-btn:active { transform: scale(0.98); }
     .auth-oauth-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
+
+    /* Слот, поверх которого main размещает слой с виджетом Turnstile */
+    .captcha-slot {
+      position: relative; width: 100%; height: 68px; margin-bottom: 14px;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    }
+    .captcha-hint { font-size: 12px; color: #52525b; }
+    .captcha-slot.is-ready .captcha-hint { display: none; }
+    .captcha-slot.is-done { height: 34px; }
+    .captcha-slot.is-done .captcha-hint { display: block; color: #4ade80; }
+
     .splash {
       position: absolute; inset: 0; z-index: 90; display: flex; flex-direction: column;
       align-items: center; justify-content: center; background: #09090b;
@@ -758,6 +769,9 @@
           <div class="auth-field-signup" style="margin-bottom:16px;">
             <label class="auth-label" for="authPasswordConfirm">Повтор пароля</label>
             <input class="auth-input" id="authPasswordConfirm" type="password" placeholder="повторите пароль" autocomplete="new-password" />
+          </div>
+          <div class="captcha-slot" id="captchaSlot">
+            <span class="captcha-hint" id="captchaHint">Загружаем проверку…</span>
           </div>
           <button type="submit" class="auth-submit interactive" id="authSubmit">Войти</button>
           <div class="auth-login-only">
@@ -1685,11 +1699,14 @@
         splash.classList.add("hide");
         launcherReady = false;
         splashRunning = false;
+        // Слой с капчей показываем только на экране входа
+        setTimeout(() => { void mountCaptcha(); }, 60);
       }
 
       function hideAuth() {
         authGate.classList.remove("open");
         authGate.setAttribute("aria-hidden", "true");
+        void unmountCaptcha();
       }
 
       function runSplashThenLauncher(opts) {
@@ -1818,17 +1835,15 @@
             return;
           }
         }
-        try {
-          // Капча открывается отдельным окном на нашем домене
-          let turnstileToken = "";
-          if (av && av.captcha) {
-            authError.style.color = "#a1a1aa";
-            authError.textContent = "Пройдите проверку в открывшемся окне…";
-            turnstileToken = await av.captcha();
-            authError.textContent = "";
-            authError.style.color = "#f87171";
-          }
+        if (av && av.captcha && !captchaToken) {
+          authError.style.color = "#a1a1aa";
+          authError.textContent = "Пройдите проверку выше.";
+          authSubmit.disabled = false;
+          return;
+        }
 
+        try {
+          const turnstileToken = captchaToken;
           const path = isSignUp ? "/api/auth/register" : "/api/auth/login";
           const body = isSignUp
             ? { email, password, username: nickname, turnstileToken }
@@ -1845,6 +1860,8 @@
             authError.style.color = "#f87171";
             authError.textContent = mapAuthError(err);
           }
+          // Turnstile-токен одноразовый, поэтому запрашиваем новый
+          resetCaptcha();
         } finally {
           authSubmit.disabled = false;
         }
@@ -2620,6 +2637,73 @@
         }
       });
 
+
+
+      // --- Встроенная капча ---
+      // main размещает слой с виджетом ровно поверх этого слота
+      let captchaToken = "";
+      let captchaMounted = false;
+      let captchaUnsub = null;
+
+      function captchaSlotBounds() {
+        const slot = document.getElementById("captchaSlot");
+        if (!slot) return null;
+        const r = slot.getBoundingClientRect();
+        if (r.width < 10 || r.height < 10) return null;
+        return { x: r.left, y: r.top, width: r.width, height: r.height };
+      }
+
+      async function mountCaptcha() {
+        if (captchaMounted || !av || !av.captcha) return;
+        const bounds = captchaSlotBounds();
+        if (!bounds) return;
+
+        captchaMounted = true;
+        const slot = document.getElementById("captchaSlot");
+        const hint = document.getElementById("captchaHint");
+
+        if (!captchaUnsub) {
+          captchaUnsub = av.captcha.onToken((token) => {
+            captchaToken = token || "";
+            if (slot) { slot.classList.remove("is-ready"); slot.classList.add("is-done"); }
+            if (hint) hint.textContent = "Проверка пройдена";
+            // Виджет больше не нужен, слой убираем
+            void av.captcha.unmount();
+            captchaMounted = false;
+          });
+        }
+
+        try {
+          await av.captcha.mount(bounds);
+          if (slot) slot.classList.add("is-ready");
+        } catch (err) {
+          captchaMounted = false;
+          if (hint) hint.textContent = "Не удалось загрузить проверку";
+          console.warn("[Captcha]", err.message || err);
+        }
+      }
+
+      async function unmountCaptcha() {
+        if (!av || !av.captcha) return;
+        captchaMounted = false;
+        try { await av.captcha.unmount(); } catch (_) {}
+      }
+
+      function resetCaptcha() {
+        captchaToken = "";
+        const slot = document.getElementById("captchaSlot");
+        const hint = document.getElementById("captchaHint");
+        if (slot) { slot.classList.remove("is-done", "is-ready"); }
+        if (hint) hint.textContent = "Загружаем проверку…";
+        void unmountCaptcha().then(mountCaptcha);
+      }
+
+      // Слой позиционируется абсолютно, поэтому следим за прокруткой и размером
+      window.addEventListener("resize", () => {
+        if (!captchaMounted || !av || !av.captcha) return;
+        const bounds = captchaSlotBounds();
+        if (bounds) void av.captcha.setBounds(bounds);
+      });
 
       // --- Свой выпадающий список, без нативного select ---
       function createSelect(host, options, onChange) {

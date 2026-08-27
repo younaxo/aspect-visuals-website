@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, WebContentsView, ipcMain, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -395,80 +395,93 @@ ipcMain.handle("mc-open-folder", async (_event, which) => {
   return { ok: true, path: target };
 });
 
-// Капча: страница живёт на нашем домене, поэтому виджет Turnstile работает,
-// в отличие от интерфейса лаунчера, который грузится с file://
-ipcMain.handle("captcha", async () => {
+// Капча встраивается прямо в окно лаунчера отдельным слоем.
+// Страница отдаётся с нашего домена, поэтому виджет Turnstile работает,
+// в отличие от интерфейса лаунчера, который грузится с file://.
+let captchaView = null;
+
+function destroyCaptchaView() {
+  if (!captchaView) return;
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.contentView.removeChildView(captchaView);
+    }
+    captchaView.webContents.close();
+  } catch (_) {}
+  captchaView = null;
+}
+
+ipcMain.handle("captcha-mount", async (_event, bounds) => {
+  if (!mainWindow || mainWindow.isDestroyed()) throw new Error("Окно недоступно");
+
   const cfg = loadSiteConfig();
   const apiUrl = String(cfg.apiUrl || "https://aspectvisuals.su").replace(/\/$/, "");
   const origin = new URL(apiUrl).origin;
-  const donePath = "/auth/captcha/done";
 
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const finish = (err, token) => {
-      if (settled) return;
-      settled = true;
-      if (win && !win.isDestroyed()) win.close();
-      if (err) reject(err);
-      else resolve(token);
-    };
+  destroyCaptchaView();
 
-    const win = new BrowserWindow({
-      parent: mainWindow || undefined,
-      modal: Boolean(mainWindow),
-      width: 420,
-      height: 340,
-      title: "Aspect Visuals — проверка",
-      icon: appIcon(),
-      autoHideMenuBar: true,
-      resizable: false,
-      backgroundColor: "#09090b",
-      webPreferences: { nodeIntegration: false, contextIsolation: true },
-    });
-
-    win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-
-    const tryCapture = (navUrl) => {
-      let parsed;
-      try {
-        parsed = new URL(String(navUrl || ""));
-      } catch (_) {
-        return false;
-      }
-      if (parsed.origin !== origin || parsed.pathname !== donePath) return false;
-
-      const match = /token=([^&]+)/.exec(parsed.hash || "");
-      if (!match) {
-        finish(new Error("Капча не вернула токен"));
-        return true;
-      }
-      finish(null, decodeURIComponent(match[1]));
-      return true;
-    };
-
-    const ALLOWED = [origin, "https://challenges.cloudflare.com"];
-    const allowed = (navUrl) => {
-      try {
-        return ALLOWED.indexOf(new URL(String(navUrl || "")).origin) !== -1;
-      } catch (_) {
-        return false;
-      }
-    };
-
-    win.webContents.on("will-redirect", (event, url) => {
-      if (tryCapture(url)) { event.preventDefault(); return; }
-      if (!allowed(url)) event.preventDefault();
-    });
-    win.webContents.on("will-navigate", (event, url) => {
-      if (tryCapture(url)) { event.preventDefault(); return; }
-      if (!allowed(url)) event.preventDefault();
-    });
-    win.webContents.on("did-navigate", (_e, url) => { tryCapture(url); });
-
-    win.on("closed", () => finish(new Error("Проверка отменена")));
-
-    win.loadURL(`${apiUrl}/api/auth/captcha`);
+  captchaView = new WebContentsView({
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
+  captchaView.setBackgroundColor("#00000000");
+
+  const wc = captchaView.webContents;
+  wc.setWindowOpenHandler(() => ({ action: "deny" }));
+
+  const ALLOWED = [origin, "https://challenges.cloudflare.com"];
+  const allowed = (url) => {
+    try {
+      return ALLOWED.indexOf(new URL(String(url || "")).origin) !== -1;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  // Токен приходит переходом на /auth/captcha/done#token=...
+  const capture = (event, url) => {
+    let parsed;
+    try {
+      parsed = new URL(String(url || ""));
+    } catch (_) {
+      return;
+    }
+    if (parsed.origin === origin && parsed.pathname === "/auth/captcha/done") {
+      if (event) event.preventDefault();
+      const match = /token=([^&]+)/.exec(parsed.hash || "");
+      if (match && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("captcha-token", decodeURIComponent(match[1]));
+      }
+      return;
+    }
+    if (event && !allowed(url)) event.preventDefault();
+  };
+
+  wc.on("will-navigate", capture);
+  wc.on("will-redirect", capture);
+  wc.on("did-navigate", (_e, url) => capture(null, url));
+
+  mainWindow.contentView.addChildView(captchaView);
+  captchaView.setBounds({
+    x: Math.round(bounds.x), y: Math.round(bounds.y),
+    width: Math.round(bounds.width), height: Math.round(bounds.height),
+  });
+
+  await wc.loadURL(`${apiUrl}/api/auth/captcha`);
+  return { ok: true };
+});
+
+ipcMain.handle("captcha-bounds", (_event, bounds) => {
+  if (!captchaView) return { ok: false };
+  captchaView.setBounds({
+    x: Math.round(bounds.x), y: Math.round(bounds.y),
+    width: Math.round(bounds.width), height: Math.round(bounds.height),
+  });
+  return { ok: true };
+});
+
+ipcMain.handle("captcha-unmount", () => {
+  destroyCaptchaView();
+  return { ok: true };
 });
 
 const TELEGRAM_CALLBACK = "https://aspectvisuals.su/auth/telegram/callback";

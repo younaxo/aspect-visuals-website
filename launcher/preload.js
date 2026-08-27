@@ -37,7 +37,16 @@ contextBridge.exposeInMainWorld("av", {
 
   telegramOAuth: () => ipcRenderer.invoke("telegram-oauth"),
 
-  captcha: () => ipcRenderer.invoke("captcha"),
+  captcha: {
+    mount: (bounds) => ipcRenderer.invoke("captcha-mount", bounds),
+    setBounds: (bounds) => ipcRenderer.invoke("captcha-bounds", bounds),
+    unmount: () => ipcRenderer.invoke("captcha-unmount"),
+    onToken: (callback) => {
+      const handler = (_event, token) => callback(token);
+      ipcRenderer.on("captcha-token", handler);
+      return () => ipcRenderer.removeListener("captcha-token", handler);
+    },
+  },
 
   minecraft: {
     status: () => ipcRenderer.invoke("mc-status"),
