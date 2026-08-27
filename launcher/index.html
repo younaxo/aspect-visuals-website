@@ -373,6 +373,94 @@
     .key-activate-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .key-activate-row .catalog-input { flex: 1; min-width: 200px; }
 
+
+    /* Профиль — структура и вид как на сайте */
+    .pf-card { display: flex; flex-direction: column; }
+    .pf-banner {
+      height: 150px; border-radius: 12px 12px 0 0; background-color: #18181b;
+      background-size: cover; background-position: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .pf-body { padding: 0 32px 32px; }
+    .pf-identity { display: flex; align-items: flex-end; gap: 16px; margin-top: -36px; flex-wrap: wrap; }
+    .pf-avatar-wrap { position: relative; flex-shrink: 0; }
+    .pf-avatar {
+      width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+      border: 4px solid #09090b; background: #27272a; display: block;
+    }
+    .pf-dot {
+      position: absolute; right: 4px; bottom: 4px; width: 16px; height: 16px;
+      border-radius: 50%; border: 3px solid #09090b; background: #a1a1aa;
+    }
+    .pf-avatar-wrap.status-online .pf-dot { background: #22c55e; }
+    .pf-avatar-wrap.status-idle .pf-dot { background: #eab308; }
+    .pf-avatar-wrap.status-dnd .pf-dot { background: #ef4444; }
+    .pf-avatar-wrap.status-offline .pf-dot { background: #71717a; }
+    .pf-meta { flex: 1; min-width: 0; padding-bottom: 4px; }
+    .pf-name-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .pf-name { font-size: 20px; font-weight: 700; color: #fafafa; overflow-wrap: anywhere; }
+    .pf-tag { font-size: 13px; color: #71717a; }
+    .pf-status { margin-top: 4px; font-size: 13px; color: #a1a1aa; overflow-wrap: anywhere; }
+    .pf-joined { margin-top: 2px; font-size: 12px; color: #71717a; }
+    .pf-actions { display: flex; gap: 8px; padding-bottom: 4px; }
+    .pf-error { margin-top: 12px; font-size: 13px; color: #f87171; }
+    .pf-view { margin-top: 20px; }
+    .pf-bio { font-size: 13px; color: #d4d4d8; line-height: 1.6; overflow-wrap: anywhere; }
+    .pf-bio p { margin-bottom: 8px; }
+    .pf-bio a { color: #fafafa; }
+    .pf-facts { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; padding: 0; }
+    .pf-facts li { font-size: 12px; color: #a1a1aa; display: inline-flex; align-items: center; gap: 6px; }
+    .pf-facts a { color: #a1a1aa; text-decoration: none; }
+    .pf-facts a:hover { color: #fafafa; text-decoration: underline; }
+    .pf-facts svg { width: 13px; height: 13px; fill: currentColor; }
+    .pf-form { margin-top: 20px; display: grid; gap: 14px; max-width: 520px; }
+    .profile-field { display: flex; flex-direction: column; gap: 6px; }
+    .profile-field > span { font-size: 13px; color: #a1a1aa; }
+    .pf-textarea { min-height: 110px; padding: 10px 12px; resize: vertical; line-height: 1.5; height: auto; }
+    .pf-section { margin-top: 26px; }
+    .pf-section h2 { font-size: 15px; font-weight: 600; color: #fafafa; margin-bottom: 10px; }
+    .role-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pf-subs { display: grid; gap: 8px; }
+
+    /* Полностью свой выпадающий список: никакого нативного select */
+    .av-select { position: relative; user-select: none; }
+    .av-select-trigger {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      width: 100%; height: 36px; padding: 0 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04);
+      color: #fafafa; font-size: 13px; font-family: inherit; text-align: left;
+      transition: border-color 0.18s var(--ease-out), background 0.18s var(--ease-out);
+    }
+    .av-select-trigger:hover { background: rgba(255,255,255,0.06); }
+    .av-select.open .av-select-trigger { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.06); }
+    .av-select-arrow {
+      width: 12px; height: 12px; flex-shrink: 0; color: #71717a;
+      fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      transition: transform 0.18s var(--ease-out);
+    }
+    .av-select.open .av-select-arrow { transform: rotate(180deg); }
+    .av-select-menu {
+      position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 60;
+      padding: 4px; border-radius: 10px; background: #18181b;
+      border: 1px solid #27272a; box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+      opacity: 0; transform: translateY(-4px); pointer-events: none;
+      transition: opacity 0.16s var(--ease-out), transform 0.16s var(--ease-out);
+      max-height: 220px; overflow-y: auto;
+    }
+    .av-select.open .av-select-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .av-option {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      padding: 8px 10px; border-radius: 7px; border: 0; background: transparent;
+      color: #a1a1aa; font-size: 13px; font-family: inherit; text-align: left;
+      transition: background 0.14s var(--ease-out), color 0.14s var(--ease-out);
+    }
+    .av-option:hover { background: rgba(255,255,255,0.07); color: #fafafa; }
+    .av-option.is-selected { background: rgba(255,255,255,0.1); color: #fafafa; }
+    .av-option-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #71717a; }
+    .av-option[data-value="online"] .av-option-dot { background: #22c55e; }
+    .av-option[data-value="idle"] .av-option-dot { background: #eab308; }
+    .av-option[data-value="dnd"] .av-option-dot { background: #ef4444; }
+
     .view-eyebrow { font-size: 12px; color: #71717a; letter-spacing: 0.08em; text-transform: uppercase; }
     .view-title { margin-top: 6px; font-size: 20px; font-weight: 600; color: #fafafa; }
     .view-sub { margin-top: 8px; font-size: 14px; color: #a1a1aa; }
@@ -961,11 +1049,78 @@
               </div>
             </div>
             <div class="view" id="view-profile">
-              <div class="panel" style="flex:1;padding:32px;overflow-y:auto;">
-                <h2 style="font-size:20px;font-weight:600;color:#fafafa;">Профиль</h2>
-                <p style="margin-top:8px;font-size:14px;color:#a1a1aa;">Данные с сайта, те же что в кабинете.</p>
-                <div id="profileRoles" style="margin-top:16px;"></div>
-                <p id="profileBio" style="margin-top:16px;font-size:13px;color:#a1a1aa;"></p>
+              <div class="panel" style="flex:1;overflow-y:auto;">
+                <article class="pf-card">
+                  <div class="pf-banner" id="pfBanner"></div>
+
+                  <div class="pf-body">
+                    <div class="pf-identity">
+                      <span class="pf-avatar-wrap" id="pfAvatarWrap">
+                        <img class="pf-avatar" id="pfAvatar" alt="" draggable="false" />
+                        <span class="pf-dot"></span>
+                      </span>
+
+                      <div class="pf-meta">
+                        <div class="pf-name-line">
+                          <span class="pf-name" id="pfName">—</span>
+                          <span class="pf-tag" id="pfTag"></span>
+                        </div>
+                        <p class="pf-status" id="pfStatus"></p>
+                        <p class="pf-joined" id="pfJoined"></p>
+                      </div>
+
+                      <div class="pf-actions">
+                        <button type="button" class="catalog-action is-ghost" id="pfEdit">Редактировать</button>
+                        <button type="button" class="catalog-action" id="pfSave" hidden>Сохранить</button>
+                        <button type="button" class="catalog-action is-ghost" id="pfCancel" hidden>Отмена</button>
+                      </div>
+                    </div>
+
+                    <p class="pf-error" id="pfError" hidden></p>
+
+                    <div class="pf-view" id="pfViewBlock">
+                      <div class="pf-bio" id="pfBio"></div>
+                      <ul class="pf-facts" id="pfFacts"></ul>
+                    </div>
+
+                    <form class="pf-form" id="pfForm" hidden>
+                      <label class="profile-field">
+                        <span>Имя пользователя</span>
+                        <input class="catalog-input" id="pfInputName" maxlength="32" />
+                      </label>
+                      <label class="profile-field">
+                        <span>Пользовательский статус</span>
+                        <input class="catalog-input" id="pfInputCustom" maxlength="128" placeholder="Чем сейчас заняты" />
+                      </label>
+                      <div class="profile-field">
+                        <span>Присутствие</span>
+                        <div class="av-select" id="pfPresence" data-value="online"></div>
+                      </div>
+                      <label class="profile-field">
+                        <span>О себе</span>
+                        <textarea class="catalog-input pf-textarea" id="pfInputBio" maxlength="1000" rows="5" placeholder="Markdown: **жирный**, *курсив*, ссылки"></textarea>
+                      </label>
+                      <label class="profile-field">
+                        <span>Местоположение</span>
+                        <input class="catalog-input" id="pfInputLocation" maxlength="80" placeholder="Город" />
+                      </label>
+                      <label class="profile-field">
+                        <span>Сайт</span>
+                        <input class="catalog-input" id="pfInputWebsite" maxlength="200" placeholder="https://" />
+                      </label>
+                    </form>
+
+                    <section class="pf-section">
+                      <h2>Роли</h2>
+                      <div class="role-list" id="profileRoles"></div>
+                    </section>
+
+                    <section class="pf-section">
+                      <h2>Подписки</h2>
+                      <div id="pfSubs" class="pf-subs"></div>
+                    </section>
+                  </div>
+                </article>
               </div>
             </div>
             <div class="view" id="view-balance">
@@ -1380,6 +1535,7 @@
         if (accountBalance) accountBalance.textContent = balance;
         if (balanceValue) balanceValue.textContent = balance;
         if (profileBio) profileBio.textContent = user.bio || user.customStatus || "Описание профиля появится здесь.";
+        if (!profileEditing) renderProfileView(user);
         const rolesHtml = renderUserRoles(user);
         if (rolesBox) rolesBox.innerHTML = rolesHtml;
         if (profileRoles) profileRoles.innerHTML = rolesHtml;
@@ -2445,6 +2601,226 @@
               void loadCatalog(name);
             });
           });
+        }
+      });
+
+
+      // --- Свой выпадающий список, без нативного select ---
+      function createSelect(host, options, onChange) {
+        if (!host || host.dataset.ready) return;
+        host.dataset.ready = "1";
+
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "av-select-trigger interactive";
+
+        const label = document.createElement("span");
+        const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        arrow.setAttribute("viewBox", "0 0 24 24");
+        arrow.setAttribute("class", "av-select-arrow");
+        const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        arrowPath.setAttribute("d", "m6 9 6 6 6-6");
+        arrow.appendChild(arrowPath);
+        trigger.append(label, arrow);
+
+        const menu = document.createElement("div");
+        menu.className = "av-select-menu";
+
+        const sync = () => {
+          const current = options.find((o) => o.value === host.dataset.value) || options[0];
+          label.textContent = current ? current.label : "";
+          menu.querySelectorAll(".av-option").forEach((el) => {
+            el.classList.toggle("is-selected", el.dataset.value === host.dataset.value);
+          });
+        };
+        host.sync = sync;
+
+        options.forEach((option) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "av-option interactive";
+          item.dataset.value = option.value;
+          const dot = document.createElement("span");
+          dot.className = "av-option-dot";
+          const text = document.createElement("span");
+          text.textContent = option.label;
+          item.append(dot, text);
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            host.dataset.value = option.value;
+            host.classList.remove("open");
+            sync();
+            if (onChange) onChange(option.value);
+          });
+          menu.appendChild(item);
+        });
+
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          // Одновременно открыт только один список
+          document.querySelectorAll(".av-select.open").forEach((el) => {
+            if (el !== host) el.classList.remove("open");
+          });
+          host.classList.toggle("open");
+        });
+
+        document.addEventListener("click", () => host.classList.remove("open"));
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") host.classList.remove("open");
+        });
+
+        host.append(trigger, menu);
+        sync();
+      }
+
+      // --- Профиль ---
+      const PRESENCE = [
+        { value: "online", label: "В сети" },
+        { value: "idle", label: "Отошёл" },
+        { value: "dnd", label: "Не беспокоить" },
+        { value: "offline", label: "Не в сети" },
+      ];
+
+      // Минимальный markdown: сначала экранируем, потом размечаем — без вставки сырого HTML
+      function renderBio(text) {
+        let html = escapeHtml(text);
+        html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
+        html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+        html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, "<a href='#' data-ext='$2'>$1</a>");
+        html = html.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
+        return "<p>" + html + "</p>";
+      }
+
+      function bindExternalLinks(root) {
+        if (!root) return;
+        root.querySelectorAll("[data-ext]").forEach((a) => {
+          a.addEventListener("click", (e) => {
+            e.preventDefault();
+            openExternal(a.dataset.ext);
+          });
+        });
+      }
+
+      let profileEditing = false;
+
+      function renderProfileView(user) {
+        if (!user) return;
+
+        const status = user.status || "online";
+        const wrap = document.getElementById("pfAvatarWrap");
+        if (wrap) wrap.className = "pf-avatar-wrap status-" + status;
+
+        const avatarEl = document.getElementById("pfAvatar");
+        if (avatarEl) avatarEl.src = mediaUrl(user.avatar, user.discordId);
+
+        const bannerEl = document.getElementById("pfBanner");
+        if (bannerEl) {
+          const banner = user.banner && mediaUrl(user.banner);
+          bannerEl.style.backgroundImage = banner ? "url('" + banner + "')" : "";
+        }
+
+        const nameEl = document.getElementById("pfName");
+        if (nameEl) nameEl.textContent = user.username || "—";
+        const tagEl = document.getElementById("pfTag");
+        if (tagEl) tagEl.textContent = accountTag(user);
+
+        const statusEl = document.getElementById("pfStatus");
+        if (statusEl) {
+          const preset = PRESENCE.find((p) => p.value === status);
+          statusEl.textContent = user.customStatus || (preset ? preset.label : "");
+        }
+
+        const joinedEl = document.getElementById("pfJoined");
+        if (joinedEl && user.createdAt) {
+          joinedEl.textContent = "На сайте с " + new Date(user.createdAt).toLocaleDateString("ru-RU", {
+            day: "numeric", month: "long", year: "numeric",
+          });
+        }
+
+        const bioEl = document.getElementById("pfBio");
+        if (bioEl) {
+          bioEl.innerHTML = user.bio ? renderBio(user.bio) : "";
+          bindExternalLinks(bioEl);
+        }
+
+        const facts = document.getElementById("pfFacts");
+        if (facts) {
+          const parts = [];
+          if (user.location) parts.push("<li>" + escapeHtml(user.location) + "</li>");
+          if (user.website) {
+            parts.push("<li><a href='#' data-ext='" + escapeHtml(user.website) + "'>"
+              + escapeHtml(user.website.replace(/^https?:\/\//, "")) + "</a></li>");
+          }
+          if (user.discordLinked && user.discordId) {
+            parts.push("<li><a href='#' data-ext='https://discord.com/users/"
+              + escapeHtml(user.discordId) + "'>Discord</a></li>");
+          }
+          facts.innerHTML = parts.join("");
+          bindExternalLinks(facts);
+        }
+
+        const subs = document.getElementById("pfSubs");
+        if (subs) {
+          const items = siteSubscriptions || [];
+          subs.innerHTML = items.length
+            ? items.map((sub) => "<div class='lib-card'><p style='font-size:13px;font-weight:500;color:#fafafa;'>"
+                + escapeHtml(sub.name || "Подписка") + "</p><p style='margin-top:4px;font-size:12px;color:#71717a;'>"
+                + (sub.expiresAt ? "до " + new Date(sub.expiresAt).toLocaleDateString("ru-RU") : "навсегда")
+                + "</p></div>").join("")
+            : "<p style='font-size:13px;color:#71717a;'>Нет активных подписок</p>";
+        }
+      }
+
+      function setProfileEditing(on) {
+        profileEditing = on;
+        document.getElementById("pfViewBlock").hidden = on;
+        document.getElementById("pfForm").hidden = !on;
+        document.getElementById("pfEdit").hidden = on;
+        document.getElementById("pfSave").hidden = !on;
+        document.getElementById("pfCancel").hidden = !on;
+        document.getElementById("pfError").hidden = true;
+
+        if (on && currentUser) {
+          document.getElementById("pfInputName").value = currentUser.username || "";
+          document.getElementById("pfInputCustom").value = currentUser.customStatus || "";
+          document.getElementById("pfInputBio").value = currentUser.bio || "";
+          document.getElementById("pfInputLocation").value = currentUser.location || "";
+          document.getElementById("pfInputWebsite").value = currentUser.website || "";
+          const presence = document.getElementById("pfPresence");
+          presence.dataset.value = currentUser.status || "online";
+          if (presence.sync) presence.sync();
+        }
+      }
+
+      createSelect(document.getElementById("pfPresence"), PRESENCE);
+
+      document.getElementById("pfEdit").addEventListener("click", () => setProfileEditing(true));
+      document.getElementById("pfCancel").addEventListener("click", () => setProfileEditing(false));
+
+      document.getElementById("pfSave").addEventListener("click", async () => {
+        const btn = document.getElementById("pfSave");
+        const err = document.getElementById("pfError");
+        btn.disabled = true;
+        err.hidden = true;
+        try {
+          const payload = {
+            username: document.getElementById("pfInputName").value.trim(),
+            customStatus: document.getElementById("pfInputCustom").value.trim() || null,
+            bio: document.getElementById("pfInputBio").value.trim() || null,
+            location: document.getElementById("pfInputLocation").value.trim() || null,
+            website: document.getElementById("pfInputWebsite").value.trim() || null,
+            status: document.getElementById("pfPresence").dataset.value || "online",
+          };
+          const data = await apiFetch("/api/profile", { method: "PUT", body: JSON.stringify(payload) });
+          if (data.user) applyUserToProfile(data.user, data.settings);
+          setProfileEditing(false);
+          toast("Профиль сохранён");
+        } catch (e) {
+          err.textContent = (e && e.message) || "Не удалось сохранить профиль";
+          err.hidden = false;
+        } finally {
+          btn.disabled = false;
         }
       });
 
