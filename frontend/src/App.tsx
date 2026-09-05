@@ -15,6 +15,7 @@ import { NewsPage } from './pages/NewsPage'
 import { NewsArticlePage } from './pages/NewsArticlePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { LinkClientPage } from './pages/LinkClientPage'
 import { Shop } from './components/Shop/Shop'
 import { MockPayPage } from './components/Shop/MockPayPage'
 import { ProfileHub } from './components/Profile/ProfileHub'
@@ -27,6 +28,7 @@ import { DownloadClient } from './components/Profile/DownloadClient'
 import { DailyBonus } from './components/Profile/DailyBonus'
 import { ConfigsPage } from './components/Profile/ConfigsPage'
 import { CosmeticsPage } from './components/Profile/CosmeticsPage'
+import { ClientSessions } from './components/Profile/ClientSessions'
 import { AdminRoute } from './components/Auth/AdminRoute'
 import { PromoCodes } from './components/Admin/PromoCodes'
 import { ActivationKeys } from './components/Admin/ActivationKeys'
@@ -108,6 +110,7 @@ function App() {
               }
             />
             <Route path="verify-email" element={<VerifyEmailPage />} />
+            <Route path="link" element={<LinkClientPage />} />
             <Route path="auth/discord/callback" element={<DiscordCallback />} />
             <Route path="discord-auth" element={<DiscordCallback />} />
             <Route element={<AdminRoute />}>
@@ -140,6 +143,7 @@ function App() {
                 <Route path="balance" element={<ProfilePlaceholder title="Баланс" text="Здесь будет история операций и пополнение." />} />
                 <Route path="subscriptions" element={<MySubscriptions />} />
                 <Route path="download" element={<DownloadClient />} />
+                <Route path="sessions" element={<ClientSessions />} />
                 <Route path="support" element={<ProfilePlaceholder title="Поддержка" text="Напишите в чат или на support@aspectvisuals.su." />} />
                 <Route path="settings" element={<Settings />} />
               </Route>

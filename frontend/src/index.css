@@ -3811,3 +3811,95 @@ html[data-animations='off'] *::after {
   align-items: center;
   gap: 8px;
 }
+
+/* Подключение Minecraft-клиента */
+.link-client {
+  max-width: 520px;
+}
+
+.link-client-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.link-client-code {
+  width: 100%;
+  padding: 14px 16px;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: var(--radius);
+  color: #fafafa;
+  font-family: var(--font-main);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+  user-select: text;
+  -webkit-user-select: text;
+  transition: border-color 0.2s var(--ease-out);
+}
+
+.link-client-code:focus {
+  outline: none;
+  border-color: rgba(250, 250, 250, 0.35);
+}
+
+.link-client-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.link-client-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: var(--radius);
+}
+
+.link-client-facts > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.link-client-facts dt {
+  color: rgba(250, 250, 250, 0.55);
+  font-size: 13px;
+}
+
+.link-client-facts dd {
+  color: #fafafa;
+  font-size: 14px;
+  text-align: right;
+}
+
+.link-client-code-value {
+  letter-spacing: 0.16em;
+  font-weight: 600;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.link-client-note {
+  font-size: 13px;
+}
+
+.link-client-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.client-sessions .subscription-item span {
+  display: block;
+  margin-top: 4px;
+}
