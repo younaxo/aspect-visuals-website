@@ -50,6 +50,7 @@ model User {
   news                   News[]
   launchTokens           LaunchToken[]
   gameSessions           GameSession[]
+  deviceAuthorizations   DeviceAuthorization[]
   deletedAt              DateTime?
   isDeleted              Boolean             @default(false)
   adminLogs              AdminLog[]
@@ -465,21 +466,53 @@ model LaunchToken {
   @@index([expiresAt])
 }
 
-// Игровая сессия: создаётся клиентом в обмен на launch-токен
+// Игровая сессия: создаётся лаунчером в обмен на launch-токен
+// либо Minecraft-клиентом после подтверждения device-кода на сайте
 model GameSession {
-  id            String      @id @default(cuid())
+  id            String               @id @default(cuid())
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  launchTokenId String      @unique
-  launchToken   LaunchToken @relation(fields: [launchTokenId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  launchTokenId String?              @unique
+  launchToken   LaunchToken?         @relation(fields: [launchTokenId], references: [id], onDelete: Cascade)
+  deviceAuthId  String?              @unique
+  deviceAuth    DeviceAuthorization? @relation(fields: [deviceAuthId], references: [id], onDelete: SetNull)
+  kind          String               @default("launcher")
+  label         String?
   roles         String[]
   ip            String?
-  startedAt     DateTime    @default(now())
-  lastSeenAt    DateTime    @default(now())
+  expiresAt     DateTime?
+  startedAt     DateTime             @default(now())
+  lastSeenAt    DateTime             @default(now())
   endedAt       DateTime?
   endedReason   String?
 
   @@index([userId, endedAt])
+  @@index([kind])
+}
+
+// Подтверждение входа Minecraft-клиента по одноразовому коду.
+// deviceCode хранится только как sha256: утечка базы не даёт войти в аккаунт.
+model DeviceAuthorization {
+  id            String       @id @default(cuid())
+  deviceCodeHash String      @unique
+  userCode      String       @unique
+  status        String       @default("PENDING")
+  clientName    String       @default("Aspect Visuals")
+  clientVersion String?
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestedIp   String?
+  approvedIp    String?
+  lastPolledAt  DateTime?
+  pollCount     Int          @default(0)
+  expiresAt     DateTime
+  approvedAt    DateTime?
+  consumedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  session       GameSession?
+
+  @@index([expiresAt])
+  @@index([status])
 }
 
 // Версия клиента с подписанным манифестом файлов
