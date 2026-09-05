@@ -141,4 +141,30 @@ export const bonusApi = {
   redeemCode: (code: string) => api.post('/api/bonus/redeem', { code }),
 }
 
+export interface DeviceAuthorizationInfo {
+  userCode: string
+  clientName: string
+  clientVersion: string | null
+  status: 'PENDING' | 'APPROVED' | 'DENIED' | 'EXPIRED'
+  requestedAt: string
+  expiresAt: string
+}
+
+export interface ClientSessionInfo {
+  id: string
+  label: string
+  startedAt: string
+  lastSeenAt: string
+  expiresAt: string | null
+  current: boolean
+}
+
+export const clientApi = {
+  device: (code: string) => api.get<DeviceAuthorizationInfo>(`/api/client/auth/device/${code}`),
+  approve: (code: string) => api.post(`/api/client/auth/device/${code}/approve`),
+  deny: (code: string) => api.post(`/api/client/auth/device/${code}/deny`),
+  sessions: () => api.get<{ sessions: ClientSessionInfo[] }>('/api/client/sessions'),
+  revoke: (id: string) => api.delete(`/api/client/sessions/${id}`),
+}
+
 export default api
