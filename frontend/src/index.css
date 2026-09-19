@@ -3936,3 +3936,97 @@ html[data-animations='off'] *::after {
   display: block;
   margin-top: 4px;
 }
+
+/*
+ * Сетки модулей и экранов на главной. Радиусы и отступы — числовая шкала
+ * Aspect, поверхности и границы — её же токены.
+ */
+
+.module-grid,
+.screen-grid {
+  list-style: none;
+  display: grid;
+  gap: var(--aspect-10);
+  margin-top: var(--aspect-20);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.module-card {
+  display: flex;
+  gap: var(--aspect-12);
+  padding: var(--aspect-14);
+  border-radius: var(--aspect-12);
+  background: var(--aspect-card);
+  border: var(--aspect-1) solid var(--aspect-border);
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.module-card:hover {
+  background: var(--aspect-card-hover);
+  border-color: var(--aspect-border-hover);
+}
+
+.module-icon {
+  flex-shrink: 0;
+  width: var(--aspect-28);
+  height: var(--aspect-28);
+  display: grid;
+  place-items: center;
+  border-radius: var(--aspect-8);
+  background: var(--aspect-fill);
+  border: var(--aspect-1) solid var(--aspect-border);
+  color: var(--aspect-text);
+}
+
+.module-card h3,
+.screen-card h3 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--aspect-text);
+}
+
+.module-card p,
+.screen-card p {
+  margin-top: var(--aspect-4);
+  font-family: var(--font-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--aspect-text-secondary);
+}
+
+.screen-card {
+  padding: var(--aspect-16);
+  border-radius: var(--aspect-12);
+  background: var(--aspect-card);
+  border: var(--aspect-1) solid var(--aspect-border);
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.screen-card:hover {
+  background: var(--aspect-card-hover);
+  border-color: var(--aspect-border-hover);
+}
+
+.screen-card h3 {
+  margin-top: var(--aspect-12);
+}
+
+.screen-points {
+  list-style: none;
+  margin-top: var(--aspect-12);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aspect-6);
+}
+
+.screen-points li {
+  padding: var(--aspect-4) var(--aspect-8);
+  border-radius: var(--aspect-round);
+  background: var(--aspect-fill);
+  border: var(--aspect-1) solid var(--aspect-border);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--aspect-text-secondary);
+}
