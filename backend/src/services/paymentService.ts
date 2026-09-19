@@ -131,7 +131,10 @@ function createMockPayment(input: CreatePaymentInput): CreatedPayment {
 }
 
 export async function createPayment(input: CreatePaymentInput): Promise<CreatedPayment> {
-  const requested = input.provider || (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'rollypay'
+  // Провайдер по умолчанию остаётся прежним: подключение RollyPay не должно
+  // на живом сайте молча переключить приём денег на кассу, ключей от которой
+  // на сервере ещё нет. RollyPay включается явно — PAYMENT_PROVIDER=rollypay.
+  const requested = input.provider || (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'unitpay'
 
   try {
     if (requested === 'rollypay') {

@@ -137,3 +137,20 @@ test('конфиг берёт ключи своего режима и не см�
     process.env = saved
   }
 })
+
+test('без ключей RollyPay считается неподключённым и не выбирается по умолчанию', () => {
+  const saved = { ...process.env }
+  try {
+    delete process.env.ROLLYPAY_TEST_API_KEY
+    delete process.env.ROLLYPAY_TEST_SIGNING_SECRET
+    delete process.env.ROLLYPAY_LIVE_API_KEY
+    delete process.env.ROLLYPAY_LIVE_SIGNING_SECRET
+    process.env.ROLLYPAY_MODE = 'test'
+    assert.equal(rollypayConfig(), null)
+
+    process.env.ROLLYPAY_MODE = 'live'
+    assert.equal(rollypayConfig(), null)
+  } finally {
+    process.env = saved
+  }
+})
