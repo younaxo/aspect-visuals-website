@@ -7,6 +7,8 @@ import { Button } from '../Common/Button'
 import { CustomSelect } from '../Common/CustomSelect'
 import { Modal } from '../Common/Modal'
 
+type PaymentMethod = 'rollypay' | 'unitpay' | 'stripe'
+
 interface PaymentModalProps {
   amount: number
   onClose: () => void
@@ -16,7 +18,7 @@ export function PaymentModal({ amount, onClose }: PaymentModalProps) {
   const items = useCartStore((state) => state.items)
   const promoCode = useCartStore((state) => state.promoCode)
   const showToast = useToastStore((state) => state.showToast)
-  const [method, setMethod] = useState<'unitpay' | 'stripe'>('unitpay')
+  const [method, setMethod] = useState<PaymentMethod>('rollypay')
   const [busy, setBusy] = useState(false)
 
   const pay = async () => {
@@ -45,8 +47,9 @@ export function PaymentModal({ amount, onClose }: PaymentModalProps) {
         <span>Способ</span>
         <CustomSelect
           value={method}
-          onChange={(value) => setMethod(value as 'unitpay' | 'stripe')}
+          onChange={(value) => setMethod(value as PaymentMethod)}
           options={[
+            { value: 'rollypay', label: 'Карта, СБП — RollyPay' },
             { value: 'unitpay', label: 'UnitPay' },
             { value: 'stripe', label: 'Stripe' },
           ]}

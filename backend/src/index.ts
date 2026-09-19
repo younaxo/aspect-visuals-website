@@ -53,7 +53,16 @@ app.use(
     credentials: true,
   }),
 )
-app.use(express.json())
+// Сырое тело нужно для проверки подписи колбэков RollyPay: HMAC считается от
+// байтов, как их отправил провайдер, а JSON.stringify(req.body) переставляет
+// пробелы и порядок ключей — подпись после него не сходится.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      ;(req as express.Request & { rawBody?: string }).rawBody = buf.toString('utf8')
+    },
+  }),
+)
 app.use('/uploads', express.static(UPLOADS_DIR))
 
 app.use('/api/auth', authRoutes)

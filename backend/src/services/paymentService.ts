@@ -1,7 +1,13 @@
 import crypto from 'crypto'
 import axios from 'axios'
+import {
+  createRollyPayPayment,
+  isPaidCallback,
+  parseRollyPayCallback,
+  rollypayConfig,
+} from './rollypay'
 
-export type PaymentProvider = 'unitpay' | 'stripe' | 'mock'
+export type PaymentProvider = 'rollypay' | 'unitpay' | 'stripe' | 'mock'
 
 export interface CreatePaymentInput {
   orderId: string
@@ -91,6 +97,31 @@ async function createStripePayment(input: CreatePaymentInput): Promise<CreatedPa
   }
 }
 
+async function createRollyPay(input: CreatePaymentInput): Promise<CreatedPayment> {
+  const config = rollypayConfig()
+  if (!config) {
+    throw new Error('RollyPay не настроен')
+  }
+
+  const payment = await createRollyPayPayment(
+    {
+      orderId: input.orderId,
+      amount: input.amount,
+      description: input.description,
+      customerId: input.email || null,
+      successRedirectUrl: `${frontendUrl()}/shop/checkout?paid=1&order=${encodeURIComponent(input.orderId)}`,
+      failRedirectUrl: `${frontendUrl()}/shop/checkout?canceled=1&order=${encodeURIComponent(input.orderId)}`,
+    },
+    config,
+  )
+
+  return {
+    provider: 'rollypay',
+    paymentId: payment.paymentId,
+    confirmationUrl: payment.payUrl,
+  }
+}
+
 function createMockPayment(input: CreatePaymentInput): CreatedPayment {
   return {
     provider: 'mock',
@@ -100,9 +131,12 @@ function createMockPayment(input: CreatePaymentInput): CreatedPayment {
 }
 
 export async function createPayment(input: CreatePaymentInput): Promise<CreatedPayment> {
-  const requested = input.provider || (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'unitpay'
+  const requested = input.provider || (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'rollypay'
 
   try {
+    if (requested === 'rollypay') {
+      return await createRollyPay(input)
+    }
     if (requested === 'stripe') {
       return await createStripePayment(input)
     }
@@ -145,6 +179,15 @@ export function handleWebhook(payload: Record<string, unknown>, provider: Paymen
       orderId: account || null,
       paymentId: account ? `unitpay_${account}` : null,
       success: method === 'pay' || method === '',
+    }
+  }
+
+  if (provider === 'rollypay') {
+    const callback = parseRollyPayCallback(payload)
+    return {
+      orderId: callback.orderId,
+      paymentId: callback.paymentId,
+      success: isPaidCallback(callback),
     }
   }
 
