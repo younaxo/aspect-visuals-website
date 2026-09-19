@@ -52,6 +52,7 @@
   --aspect-warning: #ffd6ad;
 
   /* Числовая шкала макета: отступы и радиусы берутся из неё */
+  --aspect-0-5: 0.5px;
   --aspect-1: 1px;
   --aspect-2: 2px;
   --aspect-4: 4px;
@@ -70,6 +71,10 @@
   --aspect-48: 48px;
   --aspect-64: 64px;
   --aspect-96: 96px;
+  --aspect-128: 128px;
+  --aspect-256: 256px;
+  --aspect-384: 384px;
+  --aspect-512: 512px;
   --aspect-round: 1024px;
 
   /* Размытие стекла: в макете поверхности лежат поверх сцены */

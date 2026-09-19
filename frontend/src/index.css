@@ -74,7 +74,7 @@ html::-webkit-scrollbar-thumb {
   background: rgba(250, 250, 250, 0.22);
   border: 2px solid transparent;
   background-clip: padding-box;
-  border-radius: 99px;
+  border-radius: var(--aspect-round);
 }
 
 html::-webkit-scrollbar-thumb:hover {
@@ -211,15 +211,19 @@ select,
   gap: 6px;
 }
 
+/*
+ * Пункт навигации — та же капсула, что вкладка в UI Kit: высота 32,
+ * выбранный залит белым с тёмным текстом.
+ */
 .header-link {
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 10px;
-  color: var(--aspect-text-secondary);
-  font-size: 13px;
+  height: var(--aspect-32);
+  padding: 0 var(--aspect-16);
+  border-radius: var(--aspect-round);
+  color: var(--aspect-text-disabled);
+  font-size: var(--aspect-12);
   font-weight: 500;
   text-decoration: none;
   overflow: hidden;
@@ -227,14 +231,17 @@ select,
 }
 
 .header-link:hover {
-  color: var(--aspect-text);
+  color: var(--aspect-text-secondary);
   background: var(--aspect-fill);
 }
 
+.header-link.active:hover {
+  color: var(--aspect-base-strong);
+}
+
 .header-link.active {
-  color: var(--aspect-text);
-  background: rgba(250, 250, 250, 0.18);
-  box-shadow: inset 0 1px 0 rgba(250, 250, 250, 0.25);
+  color: var(--aspect-base-strong);
+  background: var(--aspect-accent);
 }
 
 .header-actions {
@@ -248,7 +255,7 @@ select,
   width: 40px;
   height: 40px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: transparent;
   color: var(--aspect-text-secondary);
   display: grid;
@@ -289,7 +296,7 @@ select,
   height: 44px;
   padding: 4px 12px 4px 4px;
   border: 1px solid var(--aspect-border-hover);
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: var(--aspect-fill);
   color: inherit;
   font-family: inherit;
@@ -330,7 +337,7 @@ select,
 .avatar {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   object-fit: cover;
   background: var(--aspect-fill-strong);
   border: 1px solid var(--aspect-border-hover);
@@ -342,7 +349,7 @@ select,
   bottom: -1px;
   width: 8px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-success);
   border: 2px solid var(--aspect-base-strong);
 }
@@ -430,7 +437,7 @@ select,
   align-items: center;
   height: 40px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   color: var(--aspect-text-secondary);
   font-size: 13px;
   font-weight: 500;
@@ -506,23 +513,27 @@ select,
 .footer-socials {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
+  gap: var(--aspect-8);
+  margin-top: var(--aspect-18);
 }
 
+/* Button Circle из UI Kit: круг 32x32 с карточной заливкой. */
 .footer-social {
-  width: 36px;
-  height: 36px;
+  width: var(--aspect-32);
+  height: var(--aspect-32);
   display: grid;
   place-items: center;
-  border-radius: 10px;
-  background: var(--aspect-fill);
+  border-radius: var(--aspect-round);
+  background: var(--aspect-card);
+  border: var(--aspect-1) solid var(--aspect-border);
   color: var(--aspect-text-secondary);
-  transition: background 0.22s var(--ease-out), color 0.22s var(--ease-out);
+  transition: background 0.22s var(--ease-out), border-color 0.22s var(--ease-out),
+    color 0.22s var(--ease-out);
 }
 
 .footer-social:hover {
-  background: var(--aspect-fill-hover);
+  background: var(--aspect-card-hover);
+  border-color: var(--aspect-border-hover);
   color: var(--aspect-text);
 }
 
@@ -533,7 +544,7 @@ select,
   margin-top: 14px;
   height: 34px;
   padding: 0 12px 0 10px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border);
   font-size: 12px;
@@ -553,7 +564,7 @@ select,
 .footer-status-dot {
   width: 7px;
   height: 7px;
-  border-radius: 99px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-success);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
 }
@@ -633,7 +644,7 @@ select,
   display: block;
   width: 48px;
   height: 32px;
-  border-radius: 4px;
+  border-radius: var(--aspect-4);
 }
 
 .page-stack {
@@ -642,17 +653,18 @@ select,
   gap: 16px;
 }
 
+/* Панели и карточки: скругление 12 и волосяная граница 0.5, как в UI Kit. */
 .hero-panel,
 .content-panel,
 .feature-card {
   background: var(--aspect-card);
-  border: var(--aspect-1) solid var(--aspect-border);
-  border-radius: var(--radius);
+  border: var(--aspect-0-5) solid var(--aspect-border);
+  border-radius: var(--aspect-12);
 }
 
 .hero-panel,
 .content-panel {
-  padding: 36px 24px;
+  padding: var(--aspect-32) var(--aspect-24);
 }
 
 .eyebrow {
@@ -704,33 +716,44 @@ select,
 }
 
 .feature-card {
-  padding: 22px;
+  padding: var(--aspect-24);
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.feature-card:hover {
+  background: var(--aspect-card-hover);
+  border-color: var(--aspect-border-hover);
 }
 
 .feature-card h2 {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--aspect-14);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .feature-card p {
-  margin-top: 8px;
+  margin-top: var(--aspect-8);
   font-family: var(--font-secondary);
-  font-size: 14px;
+  font-size: var(--aspect-12);
   line-height: 1.55;
   color: var(--aspect-text-secondary);
 }
 
+/*
+ * Кнопки по макету: высота 48 совпадает с полем ввода, поэтому кнопка рядом
+ * с полем встаёт вровень. Скругление полное — в UI Kit прямоугольных
+ * элементов управления нет вовсе, все они капсулы.
+ */
 .btn-primary,
 .btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 10px;
+  gap: var(--aspect-8);
+  height: var(--aspect-48);
+  padding: 0 var(--aspect-20);
+  border-radius: var(--aspect-round);
   font-family: var(--font-main);
   font-size: 13px;
   font-weight: 600;
@@ -780,7 +803,7 @@ select,
   gap: 10px;
   padding: 10px 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: transparent;
   color: var(--aspect-text-secondary);
   font-family: var(--font-main);
@@ -833,7 +856,7 @@ select,
   margin-top: 28px;
   width: 180px;
   height: 2px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-fill-strong);
   overflow: hidden;
 }
@@ -842,7 +865,7 @@ select,
   display: block;
   height: 100%;
   background: var(--aspect-accent);
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   transition: width 0.35s linear;
 }
 
@@ -861,7 +884,7 @@ select,
 :focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.75);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: var(--aspect-8);
 }
 
 @media (min-width: 768px) {
@@ -957,7 +980,7 @@ select,
 .avatar-xl .avatar {
   width: 96px;
   height: 96px;
-  border-radius: 16px;
+  border-radius: var(--aspect-12);
 }
 
 .status-idle .online-dot {
@@ -1055,14 +1078,28 @@ select,
 
 .profile-input {
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--aspect-border-hover);
-  border-radius: 10px;
-  background: var(--aspect-fill);
+  height: var(--aspect-48);
+  padding: 0 var(--aspect-16);
+  border: var(--aspect-1) solid var(--aspect-border);
+  border-radius: var(--aspect-round);
+  background: var(--aspect-input);
   color: var(--aspect-text);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--aspect-12);
+  transition: border-color 0.2s var(--ease-out);
+}
+
+.profile-input::placeholder {
+  color: var(--aspect-text-tertiary);
+}
+
+.profile-input:hover {
+  border-color: var(--aspect-border-hover);
+}
+
+.profile-input:focus {
+  border-color: var(--aspect-border-type);
+  outline: none;
 }
 
 select.profile-input {
@@ -1074,8 +1111,8 @@ select.profile-input {
 }
 
 .profile-input-compact {
-  height: 32px;
-  padding: 0 10px;
+  height: var(--aspect-32);
+  padding: 0 var(--aspect-12);
 }
 
 .profile-input-tag {
@@ -1191,7 +1228,7 @@ select.profile-input {
 .ui-tooltip {
   max-width: min(280px, calc(100vw - 16px));
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   border: 1px solid var(--aspect-border-hover);
   background: rgba(18, 18, 20, 0.96);
   color: var(--aspect-text);
@@ -1224,7 +1261,7 @@ select.profile-input {
 .tooltip-anchor:focus-visible {
   outline: 1px solid rgba(255, 255, 255, 0.35);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--aspect-6);
 }
 
 .discord-settings-card {
@@ -1257,7 +1294,7 @@ select.profile-input {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: #5865f2;
   color: var(--aspect-text);
 }
@@ -1299,7 +1336,7 @@ select.profile-input {
   align-items: center;
   height: 22px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1323,7 +1360,7 @@ select.profile-input {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   border: 1px solid var(--aspect-border);
   background: var(--aspect-fill);
 }
@@ -1331,7 +1368,7 @@ select.profile-input {
 .discord-settings-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   object-fit: cover;
   border: 1px solid var(--aspect-border-hover);
 }
@@ -1456,7 +1493,7 @@ select.profile-input {
 
 .markdown-body code {
   padding: 0.1em 0.35em;
-  border-radius: 6px;
+  border-radius: var(--aspect-6);
   background: var(--aspect-fill-hover);
   font-size: 0.9em;
 }
@@ -1478,7 +1515,7 @@ select.profile-input {
   gap: 8px;
   height: 34px;
   padding: 0 12px 0 10px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   border: 1px solid var(--aspect-border-type);
   background: rgba(88, 101, 242, 0.16);
   color: var(--aspect-text);
@@ -1534,7 +1571,7 @@ select.profile-input {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border);
   font-size: 12px;
@@ -1557,7 +1594,7 @@ select.profile-input {
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: var(--aspect-fill);
   font-size: 13px;
   color: var(--aspect-text-secondary);
@@ -1596,7 +1633,7 @@ select.profile-input {
   height: 100%;
   overflow: hidden;
   border: 1px solid var(--aspect-border-type);
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-card);
   color: var(--aspect-text-secondary);
   cursor: pointer;
@@ -1605,7 +1642,7 @@ select.profile-input {
 
 .image-upload.avatar .image-upload-surface,
 .image-upload.avatar img {
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
 }
 
 .image-upload.banner .image-upload-surface {
@@ -1647,7 +1684,7 @@ select.profile-input {
   height: 28px;
   padding: 0 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--aspect-8);
   background: rgba(0, 0, 0, 0.65);
   color: var(--aspect-text);
   font-size: 11px;
@@ -1694,7 +1731,7 @@ select.profile-input {
   gap: 16px;
   min-height: 72px;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   cursor: pointer;
 }
 
@@ -1725,36 +1762,43 @@ select.profile-input {
   min-width: 140px;
 }
 
+/*
+ * Переключатель из макета: 40x16, бегунок 22x13 с отступом 1.5. Выключенный
+ * — тёмная дорожка с белым бегунком, включённый — белая дорожка с тёмным.
+ * Раньше это была вдвое более крупная капсула, не встречавшаяся в макете.
+ */
 .settings-toggle {
   appearance: none;
-  width: 44px;
-  height: 26px;
-  border-radius: 999px;
-  background: var(--aspect-fill-strong);
+  width: 40px;
+  height: var(--aspect-16);
+  border-radius: var(--aspect-round);
+  background: rgba(26, 26, 26, 0.25);
+  border: var(--aspect-1) solid var(--aspect-border);
   position: relative;
   cursor: pointer;
   flex-shrink: 0;
-  border: 0;
+  transition: background 0.22s var(--ease-out);
 }
 
 .settings-toggle::after {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 99px;
+  top: 0.5px;
+  left: 0.5px;
+  width: var(--aspect-22);
+  height: 13px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-accent);
-  transition: transform 0.22s var(--ease-out);
+  transition: transform 0.22s var(--ease-out), background 0.22s var(--ease-out);
 }
 
 .settings-toggle:checked {
-  background: var(--accent);
+  background: var(--aspect-accent);
 }
 
 .settings-toggle:checked::after {
-  transform: translateX(18px);
+  transform: translateX(15px);
+  background: var(--aspect-base-strong);
 }
 
 html[data-compact='true'] .profile-meta {
@@ -1881,10 +1925,10 @@ html[data-theme='light'] .subscription-item {
 .auth-card {
   width: 400px;
   max-width: 100%;
-  background: var(--aspect-base-strong);
-  border: 1px solid var(--aspect-border-type);
-  border-radius: 16px;
-  padding: 28px;
+  background: var(--aspect-card);
+  border: var(--aspect-0-5) solid var(--aspect-border);
+  border-radius: var(--aspect-12);
+  padding: var(--aspect-24);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
@@ -1912,32 +1956,51 @@ html[data-theme='light'] .subscription-item {
   color: var(--aspect-text-tertiary);
 }
 
+/*
+ * Группа вкладок — капсула с вложенными капсулами, как Selector в UI Kit.
+ * Отступ 2.5 и зазор 2 взяты оттуда же: вкладка 27 внутри дорожки 32.
+ */
 .auth-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 4px;
-  background: var(--aspect-card);
-  border-radius: 12px;
-  margin-bottom: 20px;
+  gap: var(--aspect-2);
+  padding: var(--aspect-2);
+  background: var(--aspect-input);
+  border: var(--aspect-1) solid var(--aspect-border);
+  border-radius: var(--aspect-round);
+  margin-bottom: var(--aspect-20);
 }
 
+/*
+ * Вкладки по макету: капсула, выбранная залита белым и несёт тёмный текст,
+ * остальные приглушены до 0.24. Подсветка фоном светлее прежней заливки —
+ * в макете выбранная вкладка контрастная, а не чуть более светлая.
+ */
 .auth-tab {
   border: 0;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: var(--aspect-round);
+  height: 27px;
+  padding: 0 var(--aspect-16);
   background: transparent;
-  color: var(--aspect-text-secondary);
+  color: var(--aspect-text-disabled);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--aspect-12);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s var(--ease-out);
 }
 
+.auth-tab:hover {
+  color: var(--aspect-text-secondary);
+}
+
 .auth-tab.active {
-  background: var(--aspect-fill-strong);
-  color: var(--aspect-text);
+  background: var(--aspect-accent);
+  color: var(--aspect-base-strong);
+}
+
+.auth-tab.active:hover {
+  color: var(--aspect-base-strong);
 }
 
 .auth-form-gate {
@@ -1957,22 +2020,35 @@ html[data-theme='light'] .subscription-item {
   margin-bottom: 6px;
 }
 
+/*
+ * Поле ввода по макету: капсула высотой 48 на тёмной подложке, граница
+ * светлеет по ступеням 0.05 → 0.1 → 0.16 (покой, наведение, ввод).
+ * Прежний фокус подсвечивался белой рамкой с ореолом, чего в макете нет.
+ */
 .auth-input {
   width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1px solid var(--aspect-border-type);
-  background: var(--aspect-card);
+  height: var(--aspect-48);
+  padding: 0 var(--aspect-16);
+  border-radius: var(--aspect-round);
+  border: var(--aspect-1) solid var(--aspect-border);
+  background: var(--aspect-input);
   color: var(--aspect-text);
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--aspect-12);
   outline: none;
+  transition: border-color 0.2s var(--ease-out);
+}
+
+.auth-input::placeholder {
+  color: var(--aspect-text-tertiary);
+}
+
+.auth-input:hover {
+  border-color: var(--aspect-border-hover);
 }
 
 .auth-input:focus {
-  border-color: rgba(250, 250, 250, 0.7);
-  box-shadow: 0 0 0 3px rgba(250, 250, 250, 0.15);
+  border-color: var(--aspect-border-type);
 }
 
 .auth-forgot-wrap {
@@ -2002,7 +2078,7 @@ html[data-theme='light'] .subscription-item {
   height: 44px;
   margin-top: 8px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-accent);
   color: var(--aspect-base-strong);
   font-family: inherit;
@@ -2073,11 +2149,12 @@ html[data-theme='light'] .subscription-item {
   gap: 8px;
 }
 
+/* Тот же элемент управления, что и основная кнопка: капсула высотой 48. */
 .auth-oauth-btn {
   width: 100%;
-  height: 42px;
-  border: 1px solid var(--aspect-border-type);
-  border-radius: 12px;
+  height: var(--aspect-48);
+  border: var(--aspect-1) solid var(--aspect-border);
+  border-radius: var(--aspect-round);
   background: var(--aspect-card);
   color: var(--aspect-text);
   font-family: inherit;
@@ -2163,7 +2240,7 @@ html[data-theme='light'] .subscription-item {
 .toast {
   position: relative;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: var(--aspect-6);
   border: 1px solid var(--aspect-border);
   background: rgba(18, 18, 18, 0.98);
   backdrop-filter: blur(12px);
@@ -2283,7 +2360,7 @@ html[data-theme='light'] .subscription-item {
 .shop-panel {
   flex: 1;
   padding: 32px;
-  border-radius: 16px;
+  border-radius: var(--aspect-12);
   background: rgba(18, 18, 24, 0.86);
   border: 1px solid rgba(250, 250, 250, 0.16);
 }
@@ -2315,7 +2392,7 @@ html[data-theme='light'] .subscription-item {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   padding: 16px;
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border);
@@ -2352,7 +2429,7 @@ html[data-theme='light'] .subscription-item {
   margin-top: 8px;
   height: 36px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: var(--aspect-accent);
   color: var(--aspect-base-strong);
   font-family: inherit;
@@ -2386,7 +2463,7 @@ html[data-theme='light'] .subscription-item {
 .shop-filter {
   height: 36px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   border: 1px solid var(--aspect-border);
   background: var(--aspect-fill);
   color: var(--aspect-text-secondary);
@@ -2448,7 +2525,7 @@ html[data-theme='light'] .subscription-item {
   align-self: flex-start;
   height: 22px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-accent);
   color: var(--aspect-base-strong);
   font-size: 11px;
@@ -2480,7 +2557,7 @@ html[data-theme='light'] .subscription-item {
 .shop-modal {
   width: min(420px, 100%);
   padding: 24px;
-  border-radius: 16px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-card);
   border: 1px solid rgba(250, 250, 250, 0.28);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
@@ -2505,7 +2582,7 @@ html[data-theme='light'] .subscription-item {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: var(--aspect-fill);
 }
 
@@ -2533,7 +2610,7 @@ html[data-theme='light'] .subscription-item {
   margin: 12px 0;
   padding: 12px;
   overflow: auto;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: rgba(0, 0, 0, 0.35);
   font-family: ui-monospace, monospace;
   font-size: 13px;
@@ -2564,7 +2641,7 @@ html[data-theme='light'] .subscription-item {
 .test-sub-box {
   margin-top: 16px;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-fill);
 }
 
@@ -2674,7 +2751,7 @@ html[data-theme='light'] .shop-lib-btn {
   align-items: center;
   height: 36px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: var(--aspect-8);
   color: var(--aspect-text-secondary);
   text-decoration: none;
   font-size: 13px;
@@ -2729,7 +2806,7 @@ html[data-theme='light'] .shop-lib-btn {
 .admin-inline-bar {
   flex: 1;
   height: 8px;
-  border-radius: 99px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-fill-hover);
   overflow: hidden;
 }
@@ -2818,7 +2895,7 @@ html[data-theme='light'] .shop-lib-btn {
   padding: 0 14px;
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border-hover);
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   color: var(--aspect-text);
   font-size: 15px;
   outline: none;
@@ -2833,7 +2910,7 @@ html[data-theme='light'] .shop-lib-btn {
   margin-top: 18px;
   width: 100%;
   height: 48px;
-  border-radius: 14px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-accent);
   box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
   border: 0;
@@ -2875,7 +2952,7 @@ html[data-theme='light'] .shop-lib-btn {
 .admin-tab {
   height: 36px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   border: 1px solid var(--aspect-border-hover);
   background: var(--aspect-fill);
   color: var(--aspect-text-secondary);
@@ -2922,7 +2999,7 @@ html[data-theme='light'] .shop-lib-btn {
   gap: 12px;
   align-items: center;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-fill);
 }
 
@@ -2973,7 +3050,7 @@ html[data-theme='light'] .shop-lib-btn {
   height: 36px;
   padding: 0 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: transparent;
   color: var(--aspect-text-secondary);
   cursor: pointer;
@@ -2990,7 +3067,7 @@ html[data-theme='light'] .shop-lib-btn {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: 99px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-error);
   color: var(--aspect-text);
   font-size: 11px;
@@ -3032,7 +3109,7 @@ html[data-theme='light'] .shop-lib-btn {
 
 .chat-message.is-pinned {
   padding: 8px;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: rgba(250, 250, 250, 0.04);
 }
 
@@ -3069,7 +3146,7 @@ html[data-theme='light'] .shop-lib-btn {
 .chat-actions button {
   height: 26px;
   padding: 0 8px;
-  border-radius: 8px;
+  border-radius: var(--aspect-8);
   border: 1px solid var(--aspect-border);
   background: var(--aspect-fill);
   color: var(--aspect-text);
@@ -3215,7 +3292,7 @@ html[data-theme='light'] .shop-lib-btn {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 99px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-base-strong);
   color: var(--aspect-text);
   font-size: 10px;
@@ -3238,7 +3315,7 @@ html[data-theme='light'] .shop-lib-btn {
   justify-content: space-between;
   gap: 8px;
   border: 1px solid var(--aspect-border-hover);
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-fill);
   color: var(--aspect-text);
   font-family: inherit;
@@ -3257,7 +3334,7 @@ html[data-theme='light'] .shop-lib-btn {
   right: 0;
   top: calc(100% + 8px);
   padding: 8px;
-  border-radius: 14px;
+  border-radius: var(--aspect-12);
   overflow: hidden;
 }
 
@@ -3280,7 +3357,7 @@ html[data-theme='light'] .shop-lib-btn {
   min-height: 36px;
   padding: 0 10px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: transparent;
   color: var(--aspect-text);
   text-align: left;
@@ -3312,7 +3389,7 @@ html[data-theme='light'] .shop-lib-btn {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
-  border-radius: 18px;
+  border-radius: var(--aspect-16);
 }
 
 .ui-modal.size-md {
@@ -3363,7 +3440,7 @@ html[data-theme='light'] .shop-lib-btn {
   width: 36px;
   height: 36px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   background: var(--aspect-fill);
   color: var(--aspect-text-secondary);
   cursor: pointer;
@@ -3405,7 +3482,7 @@ html[data-theme='light'] .shop-lib-btn {
   width: 100%;
   height: 36px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: var(--aspect-8);
   color: var(--aspect-text-secondary);
   text-decoration: none;
   font-size: 13px;
@@ -3507,7 +3584,7 @@ html[data-theme='light'] .shop-lib-btn {
 .activate-kind {
   height: 34px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   border: 1px solid var(--aspect-border-hover);
   background: var(--aspect-fill);
   color: var(--aspect-text-secondary);
@@ -3542,14 +3619,14 @@ html[data-theme='light'] .shop-lib-btn {
 }
 
 .profile-dropdown {
-  border-radius: 16px;
+  border-radius: var(--aspect-12);
   border: 1px solid var(--aspect-border-type);
   border-top: 1px solid var(--aspect-border-type);
   top: calc(100% + 8px);
 }
 
 .profile-chip.open {
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
 }
 
 .dropdown-link:hover {
@@ -3570,7 +3647,7 @@ html[data-theme='light'] .shop-lib-btn {
   gap: 6px;
   height: 28px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border);
   font-size: 12px;
@@ -3620,7 +3697,7 @@ html[data-theme='light'] .shop-lib-btn {
   gap: 14px;
   align-items: flex-start;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--aspect-12);
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border);
 }
@@ -3628,7 +3705,7 @@ html[data-theme='light'] .shop-lib-btn {
 .install-num {
   width: 28px;
   height: 28px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   display: grid;
   place-items: center;
   background: var(--aspect-accent);
@@ -3651,7 +3728,7 @@ html[data-theme='light'] .shop-lib-btn {
 }
 
 .lib-card {
-  border-radius: 10px;
+  border-radius: var(--aspect-8);
   padding: 16px;
   background: var(--aspect-fill);
   border: 1px solid var(--aspect-border);
@@ -3779,7 +3856,7 @@ html[data-animations='off'] *::after {
   width: 100%;
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--aspect-8);
   object-fit: cover;
   aspect-ratio: 16 / 9;
 }
@@ -3799,7 +3876,7 @@ html[data-animations='off'] *::after {
 
 .news-pin {
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--aspect-round);
   background: var(--aspect-fill-hover);
   color: var(--aspect-text);
   font-size: 11px;
@@ -3951,13 +4028,14 @@ html[data-animations='off'] *::after {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
+/* Карточка модуля: 12 скругление и волосяная граница 0.5 — как в UI Kit. */
 .module-card {
   display: flex;
   gap: var(--aspect-12);
-  padding: var(--aspect-14);
+  padding: var(--aspect-16);
   border-radius: var(--aspect-12);
   background: var(--aspect-card);
-  border: var(--aspect-1) solid var(--aspect-border);
+  border: var(--aspect-0-5) solid var(--aspect-border);
   transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 
@@ -3966,24 +4044,39 @@ html[data-animations='off'] *::after {
   border-color: var(--aspect-border-hover);
 }
 
+/* Button Circle из UI Kit: 32x32, круг, карточная заливка. */
 .module-icon {
   flex-shrink: 0;
-  width: var(--aspect-28);
-  height: var(--aspect-28);
+  width: var(--aspect-32);
+  height: var(--aspect-32);
   display: grid;
   place-items: center;
-  border-radius: var(--aspect-8);
-  background: var(--aspect-fill);
+  border-radius: var(--aspect-round);
+  background: var(--aspect-card);
   border: var(--aspect-1) solid var(--aspect-border);
   color: var(--aspect-text);
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.module-card:hover .module-icon,
+.screen-card:hover .module-icon {
+  background: var(--aspect-card-hover);
+  border-color: var(--aspect-border-hover);
 }
 
 .module-card h3,
 .screen-card h3 {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: var(--aspect-14);
   font-weight: 600;
   letter-spacing: -0.01em;
+  /* В макете заголовок в покое приглушён и разгорается под курсором. */
+  color: var(--aspect-text-secondary);
+  transition: color 0.2s var(--ease-out);
+}
+
+.module-card:hover h3,
+.screen-card:hover h3 {
   color: var(--aspect-text);
 }
 
@@ -3991,7 +4084,7 @@ html[data-animations='off'] *::after {
 .screen-card p {
   margin-top: var(--aspect-4);
   font-family: var(--font-secondary);
-  font-size: 13px;
+  font-size: var(--aspect-12);
   line-height: 1.5;
   color: var(--aspect-text-secondary);
 }
@@ -4000,7 +4093,7 @@ html[data-animations='off'] *::after {
   padding: var(--aspect-16);
   border-radius: var(--aspect-12);
   background: var(--aspect-card);
-  border: var(--aspect-1) solid var(--aspect-border);
+  border: var(--aspect-0-5) solid var(--aspect-border);
   transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 
@@ -4021,12 +4114,15 @@ html[data-animations='off'] *::after {
   gap: var(--aspect-6);
 }
 
+/* Пилюля как «Premium» в макете: высота 20, скругление 8, кегль 10. */
 .screen-points li {
-  padding: var(--aspect-4) var(--aspect-8);
-  border-radius: var(--aspect-round);
-  background: var(--aspect-fill);
+  display: inline-flex;
+  align-items: center;
+  height: var(--aspect-20);
+  padding: 0 var(--aspect-8);
+  border-radius: var(--aspect-8);
+  background: var(--aspect-card-hover);
   border: var(--aspect-1) solid var(--aspect-border);
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: var(--aspect-10);
   color: var(--aspect-text-secondary);
 }
