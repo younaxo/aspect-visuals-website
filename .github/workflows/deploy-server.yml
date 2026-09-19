@@ -1,0 +1,101 @@
+name: Deploy to server
+
+# Выкат на боевой сервер: сборка фронтенда и пересборка бэкенда.
+#
+# Подключается раннер GitHub, а не человек и не агент: приватный ключ лежит
+# в секретах репозитория, попадает в раннер на время одного прогона и в логи
+# не печатается.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - "deploy/**"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/deploy-server.yml"
+  workflow_dispatch:
+
+concurrency:
+  # Два выката одновременно оставили бы на сервере половину одной сборки и
+  # половину другой, поэтому прогоны выстраиваются в очередь.
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check deploy credentials
+        id: creds
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          if [ -n "$DEPLOY_SSH_KEY" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PATH" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Выкат пропущен: не заданы секреты DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_USER или DEPLOY_PATH."
+          fi
+
+      - name: Prepare SSH
+        if: steps.creds.outputs.ready == 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+
+          # Отпечаток сервера берётся из секрета, если он задан: иначе первое
+          # подключение доверяет любому ответившему хосту, и подменённый сервер
+          # получил бы наш ключ.
+          if [ -n "$DEPLOY_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::DEPLOY_KNOWN_HOSTS не задан: отпечаток сервера принимается без проверки."
+            ssh-keyscan -H "$DEPLOY_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy
+        if: steps.creds.outputs.ready == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          set -euo pipefail
+          PORT="${DEPLOY_PORT:-22}"
+
+          # set -e внутри: если git pull или сборка упадут, выкат обязан
+          # остановиться, а не перезапускать бэкенд на старых файлах.
+          ssh -i ~/.ssh/id_deploy -p "$PORT" -o BatchMode=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+
+          cd frontend
+          npm ci
+          npm run build
+          cd ..
+
+          docker compose -f docker-compose.prod.yml up -d --build backend
+          docker image prune -f
+          EOF
+
+      - name: Clean up key
+        if: always()
+        run: rm -f ~/.ssh/id_deploy
