@@ -37,10 +37,28 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_WEBSOCKET_URL: ${{ vars.VITE_WEBSOCKET_URL }}
 
-      - name: Deploy to Vercel
+      # Секреты задаются в настройках репозитория. Отдельная проверка нужна,
+      # потому что сам шаг при пустом токене падает внутри action и раньше
+      # был прикрыт continue-on-error: выкат не проходил, а сборка при этом
+      # оставалась зелёной, и об этом никто не узнавал.
+      - name: Check Vercel credentials
+        id: vercel
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Выкат на Vercel пропущен: не заданы секреты VERCEL_TOKEN, VERCEL_ORG_ID или VERCEL_PROJECT_ID."
+          fi
+
+      - name: Deploy to Vercel
+        if: steps.vercel.outputs.ready == 'true'
         uses: amondnet/vercel-action@v25
-        continue-on-error: true
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
