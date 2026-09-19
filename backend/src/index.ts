@@ -16,6 +16,7 @@ import contentRoutes from './routes/content'
 import newsRoutes from './routes/news'
 import catalogRoutes from './routes/catalog'
 import launchRoutes from './routes/launch'
+import clientRoutes from './routes/client'
 import { registerChatSocket } from './sockets/chatSocket'
 import { ensureUploadDirs, UPLOADS_DIR } from './utils/media'
 
@@ -52,7 +53,16 @@ app.use(
     credentials: true,
   }),
 )
-app.use(express.json())
+// Сырое тело нужно для проверки подписи колбэков RollyPay: HMAC считается от
+// байтов, как их отправил провайдер, а JSON.stringify(req.body) переставляет
+// пробелы и порядок ключей — подпись после него не сходится.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      ;(req as express.Request & { rawBody?: string }).rawBody = buf.toString('utf8')
+    },
+  }),
+)
 app.use('/uploads', express.static(UPLOADS_DIR))
 
 app.use('/api/auth', authRoutes)
@@ -66,6 +76,7 @@ app.use('/api/content', contentRoutes)
 app.use('/api', newsRoutes)
 app.use('/api', catalogRoutes)
 app.use('/api', launchRoutes)
+app.use('/api/client', clientRoutes)
 app.use('/api', profileRoutes)
 
 app.get('/api/health', (_req, res) => {

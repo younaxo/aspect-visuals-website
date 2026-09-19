@@ -112,12 +112,12 @@ export interface RedeemResult {
  * Токен сессии выдаётся клиенту при обмене и нужен для heartbeat и выхода.
  * Без него хватило бы знания одного sessionId, чтобы завершить чужую сессию.
  */
-export function signSessionToken(sessionId: string, userId: string): string {
+export function signSessionToken(sessionId: string, userId: string, ttlMs: number = SESSION_TTL_MS): string {
   return signPayload({
     sid: sessionId,
     sub: userId,
     aud: SESSION_AUDIENCE,
-    exp: Math.floor((Date.now() + SESSION_TTL_MS) / 1000),
+    exp: Math.floor((Date.now() + ttlMs) / 1000),
   })
 }
 
@@ -159,9 +159,10 @@ export async function redeemLaunchToken(token: string, ip?: string): Promise<Red
     return { ok: false, reason: 'Аккаунт заблокирован' }
   }
 
-  // Ограничение параллельных подключений
+  // Ограничение параллельных подключений лаунчера.
+  // Сессии Minecraft-клиента живут отдельно и сюда не попадают.
   const active = await prisma.gameSession.findMany({
-    where: { userId: user.id, endedAt: null },
+    where: { userId: user.id, endedAt: null, kind: 'launcher' },
     orderBy: { startedAt: 'asc' },
   })
   if (active.length >= MAX_ACTIVE_SESSIONS) {
@@ -175,6 +176,7 @@ export async function redeemLaunchToken(token: string, ip?: string): Promise<Red
     data: {
       userId: user.id,
       launchTokenId: record.id,
+      kind: 'launcher',
       // Роли назначает сервер по данным аккаунта, присланному клиентом не доверяем
       roles: user.roles.map((role) => role.name),
       ip: ip || null,

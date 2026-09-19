@@ -1,0 +1,100 @@
+/*
+ * Дизайн-система Aspect Visuals.
+ *
+ * Значения перенесены из переменных Figma (набор «Aspect») без округления:
+ * прозрачности там заданы сотыми долями, и замена их на близкие hex меняет
+ * глубину стекла. Раньше эти же цвета были вписаны в правила вручную и
+ * расходились с макетом — отсюда единый слой.
+ */
+
+:root {
+  /* Акцент */
+  --aspect-accent: #ffffff;
+  --aspect-accent-soft: rgba(255, 255, 255, 0.16);
+  --aspect-accent-hover: #f5f5f5;
+  --aspect-accent-glow: rgba(255, 255, 255, 0.1);
+
+  /* Текст */
+  --aspect-text: rgba(255, 255, 255, 0.94);
+  --aspect-text-secondary: rgba(255, 255, 255, 0.58);
+  --aspect-text-tertiary: rgba(255, 255, 255, 0.36);
+  --aspect-text-disabled: rgba(255, 255, 255, 0.24);
+
+  /* Поверхности */
+  --aspect-glass: rgba(11, 11, 13, 0.68);
+  --aspect-card: rgba(17, 17, 19, 0.62);
+  --aspect-card-hover: rgba(25, 25, 27, 0.72);
+  --aspect-input: rgba(11, 11, 13, 0.72);
+  --aspect-border: rgba(255, 255, 255, 0.05);
+  --aspect-border-hover: rgba(255, 255, 255, 0.1);
+  --aspect-border-type: rgba(255, 255, 255, 0.16);
+
+  /*
+   * Заливки поверхностей. В Figma белый по чёрному разложен по тем же трём
+   * ступеням прозрачности, что и границы, — отдельной шкалы для заливок там
+   * нет, поэтому она выведена из них, чтобы hover-состояния на сайте не
+   * разъезжались на 0.03/0.04/0.06/0.08/0.12/0.14/0.18/0.22.
+   */
+  --aspect-fill: rgba(255, 255, 255, 0.05);
+  --aspect-fill-hover: rgba(255, 255, 255, 0.1);
+  --aspect-fill-strong: rgba(255, 255, 255, 0.16);
+
+  /* Фон */
+  --aspect-overlay: rgba(0, 0, 0, 0.18);
+  --aspect-overlay-strong: rgba(0, 0, 0, 0.3);
+  --aspect-base: rgba(8, 8, 9, 0.9);
+  --aspect-base-strong: #080809;
+
+  /* Системные состояния */
+  --aspect-info: #89a5ff;
+  --aspect-success: #a9f4a5;
+  --aspect-error: #f98e90;
+  --aspect-warning: #ffd6ad;
+
+  /* Числовая шкала макета: отступы и радиусы берутся из неё */
+  --aspect-1: 1px;
+  --aspect-2: 2px;
+  --aspect-4: 4px;
+  --aspect-6: 6px;
+  --aspect-8: 8px;
+  --aspect-10: 10px;
+  --aspect-12: 12px;
+  --aspect-14: 14px;
+  --aspect-16: 16px;
+  --aspect-18: 18px;
+  --aspect-20: 20px;
+  --aspect-22: 22px;
+  --aspect-24: 24px;
+  --aspect-28: 28px;
+  --aspect-32: 32px;
+  --aspect-48: 48px;
+  --aspect-64: 64px;
+  --aspect-96: 96px;
+  --aspect-round: 1024px;
+
+  /* Размытие стекла: в макете поверхности лежат поверх сцены */
+  --aspect-blur: 24px;
+}
+
+/*
+ * Стеклянная поверхность из макета: заливка, тонкая граница и размытие
+ * подложки. Граница обязательна — без неё карточка теряет край на светлых
+ * участках фона.
+ */
+.aspect-glass {
+  background: var(--aspect-glass);
+  border: var(--aspect-1) solid var(--aspect-border);
+  backdrop-filter: blur(var(--aspect-blur));
+  -webkit-backdrop-filter: blur(var(--aspect-blur));
+}
+
+.aspect-card {
+  background: var(--aspect-card);
+  border: var(--aspect-1) solid var(--aspect-border);
+  border-radius: var(--aspect-8);
+}
+
+.aspect-card:hover {
+  background: var(--aspect-card-hover);
+  border-color: var(--aspect-border-hover);
+}

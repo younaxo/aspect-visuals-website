@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '../utils/prisma'
 import type { AuthRequest } from '../middleware/auth'
 import { createPayment, handleWebhook, type PaymentProvider } from '../services/paymentService'
+import { rollypayConfig, verifyRollyPaySignature } from '../services/rollypay'
 import {
   giveRole,
   notifyPurchase,
@@ -366,8 +367,64 @@ async function fulfillOrder(orderId: string) {
   }
 }
 
+function configuredProvider(): PaymentProvider {
+  return (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'rollypay'
+}
+
+function mockPaymentsAllowed(): boolean {
+  return process.env.PAYMENT_MOCK === 'true' || process.env.NODE_ENV !== 'production'
+}
+
+/**
+ * Колбэк платёжной системы.
+ *
+ * Провайдер приходит из запроса, то есть его называет тот, кто стучится, —
+ * поэтому подлинность решает не он, а подпись. Для RollyPay это HMAC-SHA256 от
+ * «timestamp.тело» на signing_secret кассы; без неё запрос отклоняется, иначе
+ * любой POST с чужим orderId выдавал бы подписку бесплатно. Ветка mock по той
+ * же причине работает только там, где мок-оплата включена явно.
+ */
 export async function confirmPurchase(req: AuthRequest, res: Response) {
-  const provider = (asString(req.query.provider) || asString(req.body?.provider) || 'unitpay') as PaymentProvider
+  const provider = (asString(req.query.provider) ||
+    asString(req.body?.provider) ||
+    configuredProvider()) as PaymentProvider
+
+  // Принимаем колбэк только от той системы, через которую выставляем счета.
+  // Раньше провайдера выбирал сам запрос, и ветку без проверки подписи можно
+  // было выбрать снаружи, подставив чужой orderId.
+  if (provider !== configuredProvider() && !(provider === 'mock' && mockPaymentsAllowed())) {
+    res.status(400).json({ message: 'Платёжная система не подключена' })
+    return
+  }
+
+  if (provider === 'rollypay') {
+    const config = rollypayConfig()
+    if (!config) {
+      res.status(503).json({ message: 'RollyPay не настроен' })
+      return
+    }
+
+    const rawBody = (req as AuthRequest & { rawBody?: string }).rawBody
+    if (typeof rawBody !== 'string') {
+      res.status(400).json({ message: 'Пустое тело колбэка' })
+      return
+    }
+
+    const signed = verifyRollyPaySignature(
+      rawBody,
+      asString(req.header('X-Signature')),
+      asString(req.header('X-Timestamp')),
+      config.signingSecret,
+    )
+    if (!signed) {
+      res.status(401).json({ message: 'Подпись колбэка не совпала' })
+      return
+    }
+  } else if (provider === 'mock' && !mockPaymentsAllowed()) {
+    res.status(403).json({ message: 'Мок-оплата отключена' })
+    return
+  }
+
   const payload = { ...req.query, ...req.body } as Record<string, unknown>
   const result = handleWebhook(payload, provider)
 
@@ -377,6 +434,7 @@ export async function confirmPurchase(req: AuthRequest, res: Response) {
   }
 
   await fulfillOrder(result.orderId)
+  // RollyPay ждёт 2xx в пределах 10 секунд, иначе повторит доставку.
   res.json({ result: { message: 'OK' } })
 }
 
