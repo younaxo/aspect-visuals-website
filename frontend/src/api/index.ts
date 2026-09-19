@@ -100,6 +100,7 @@ export const authApi = {
 export const shopApi = {
   subscriptions: () => api.get('/api/shop/subscriptions'),
   products: () => api.get('/api/shop/products'),
+  paymentMethods: () => api.get('/api/shop/payment-methods'),
   subscription: (id: string) => api.get(`/api/shop/subscriptions/${id}`),
   applyPromo: (code: string, amount: number) => api.post('/api/shop/apply-promo', { code, amount }),
   purchase: (payload: {

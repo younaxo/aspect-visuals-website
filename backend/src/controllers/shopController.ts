@@ -212,8 +212,13 @@ export async function createPurchase(req: AuthRequest, res: Response) {
 
     const giftToUserId = asString(req.body?.giftToUserId) || null
     const promoCode = asString(req.body?.promoCode)
-    const paymentMethod = asString(req.body?.paymentMethod) || 'unitpay'
-    const provider = (paymentMethod === 'stripe' ? 'stripe' : 'unitpay') as PaymentProvider
+    // Способ приходит от покупателя, поэтому сверяем его со списком, а не
+    // доверяем строке: RollyPay раньше молча превращался в UnitPay, потому
+    // что сюда его не добавили вместе с самой интеграцией.
+    const paymentMethod = asString(req.body?.paymentMethod)
+    const provider = (availableProviders().includes(paymentMethod as PaymentProvider)
+      ? paymentMethod
+      : configuredProvider()) as PaymentProvider
 
     const promoCheck = promoCode ? await inspectPromo(promoCode, req.userId, 0) : null
     if (promoCode && promoCheck && !promoCheck.ok) {
@@ -367,8 +372,31 @@ async function fulfillOrder(orderId: string) {
   }
 }
 
+/**
+ * Способы оплаты, которые сервер действительно может провести.
+ *
+ * Список нужен и форме оплаты: предлагать кассу, ключей от которой нет,
+ * значит показывать покупателю кнопку, которая всегда возвращает ошибку.
+ */
+function availableProviders(): PaymentProvider[] {
+  const providers: PaymentProvider[] = []
+  if (rollypayConfig()) providers.push('rollypay')
+  if (process.env.UNITPAY_PUBLIC_KEY && process.env.UNITPAY_SECRET_KEY) providers.push('unitpay')
+  if (process.env.STRIPE_SECRET_KEY) providers.push('stripe')
+  if (mockPaymentsAllowed()) providers.push('mock')
+  return providers
+}
+
+export function getPaymentMethods(_req: AuthRequest, res: Response) {
+  const providers = availableProviders()
+  res.json({
+    methods: providers,
+    preferred: providers.includes(configuredProvider()) ? configuredProvider() : providers[0] || null,
+  })
+}
+
 function configuredProvider(): PaymentProvider {
-  return (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'rollypay'
+  return (process.env.PAYMENT_PROVIDER as PaymentProvider | undefined) || 'unitpay'
 }
 
 function mockPaymentsAllowed(): boolean {

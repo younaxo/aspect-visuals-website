@@ -8,6 +8,7 @@ import {
   checkTestSubscription,
   confirmPurchase,
   createPurchase,
+  getPaymentMethods,
   getProducts,
   getSubscriptionById,
   getSubscriptions,
@@ -21,6 +22,7 @@ const purchaseLimiter = rateLimit('shop-purchase', 30, 15 * 60 * 1000)
 
 router.get('/subscriptions', getSubscriptions)
 router.get('/products', getProducts)
+router.get('/payment-methods', getPaymentMethods)
 router.get('/subscriptions/:id', getSubscriptionById)
 router.post('/apply-promo', authMiddleware, applyPromo)
 router.post('/purchase', authMiddleware, purchaseLimiter, createPurchase)
